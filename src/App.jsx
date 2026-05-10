@@ -36,7 +36,7 @@ import {
   Clock
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 // --- Firebase 初始化 ---
@@ -318,8 +318,6 @@ const translations = {
     nav: { dashboard: '概览', tasks: '任务', calendar: '日历', stats: '统计', shop: '商店', settings: '设置' },
     daysNames: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
     language: '语言 (Language)',
-    translating: '智能翻译中...',
-    translateFailed: '界面已切换，但自定义数据翻译失败。',
     optionalTarget: '目标/配速要求 (选填)',
     targetLabel: '目标',
     cancel: '取消',
@@ -354,7 +352,9 @@ const translations = {
     emptyHistory: '还没有兑换过奖励哦~',
     redeemSuccess: '兑换成功！',
     enjoyReward: '快去享受你的【{reward}】吧！',
-    close: '关闭'
+    close: '关闭',
+    translating: '智能翻译中...',
+    translateFailed: '界面已切换，但自定义数据翻译失败。'
   },
   en: {
     loading: 'Loading cloud data...',
@@ -393,8 +393,6 @@ const translations = {
     nav: { dashboard: 'Home', tasks: 'Tasks', calendar: 'Calendar', stats: 'Stats', shop: 'Shop', settings: 'Settings' },
     daysNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     language: 'Language (语言)',
-    translating: 'Translating...',
-    translateFailed: 'UI switched, but custom data translation failed.',
     optionalTarget: 'Target/Pace (Optional)',
     targetLabel: 'Target',
     cancel: 'Cancel',
@@ -429,14 +427,16 @@ const translations = {
     emptyHistory: 'No redemption history yet.',
     redeemSuccess: 'Success!',
     enjoyReward: 'Go enjoy your [{reward}]!',
-    close: 'Close'
+    close: 'Close',
+    translating: 'Translating...',
+    translateFailed: 'UI switched, but custom data translation failed.'
   }
 };
 
 // 初始默认数据
 const defaultData = {
   points: 0,
-  language: 'zh',
+  language: 'en',
   theme: 'purple',
   avatar: '', 
   parentPin: '',
@@ -444,28 +444,28 @@ const defaultData = {
   dailyBonusPoints: 50,
   completedDays: [], 
   customRewards: [
-    { id: 1, name: '放纵餐 (Cheat Meal)', cost: 500, icon: '🍔' },
-    { id: 2, name: '购买新轴承 (New Bearings)', cost: 1200, icon: '⚙️' },
-    { id: 3, name: '免做一组核心 (Skip Core Set)', cost: 300, icon: '🛋️' },
-    { id: 4, name: '新训练服基金 (New Gear Fund)', cost: 3000, icon: '👕' },
+    { id: 1, name: 'Cheat Meal (放纵餐)', cost: 500, icon: '🍔' },
+    { id: 2, name: 'New Bearings (新轴承)', cost: 1200, icon: '⚙️' },
+    { id: 3, name: 'Skip Core Set (免做核心)', cost: 300, icon: '🛋️' },
+    { id: 4, name: 'New Gear Fund (新训练服)', cost: 3000, icon: '👕' },
   ],
   rewardHistory: [],
   races: [
-    { id: 1, name: '全国锦标赛 (National Champ)', date: '2026-11-20' }
+    { id: 1, name: 'National Champ (全国锦标赛)', date: '2026-11-20' }
   ],
   weeklyTemplate: {
-    0: '休息日 (Rest Day)',
-    1: '力量日 (Strength Day)',
-    2: '爆发力/短冲 (Power/Sprint)',
-    3: '有氧耐力日 (Conditioning)',
-    4: '技术/冰上模仿 (Technique)',
-    5: '间歇体能 (Intervals)',
-    6: '长距离/专项耐力 (Endurance)',
+    0: 'Rest Day (休息日)',
+    1: 'Strength Day (力量日)',
+    2: 'Power/Sprint (爆发力)',
+    3: 'Conditioning (有氧耐力)',
+    4: 'Technique (技术模仿)',
+    5: 'Intervals (间歇体能)',
+    6: 'Endurance (专项耐力)',
   },
   tasks: [
-    { id: 1, text: '慢跑热身 (Jogging)', target: '15分钟', completed: false, isTemplate: true },
-    { id: 2, text: '滑行板 (Slide Board)', target: '5组 x 1分钟', completed: false, isTemplate: true },
-    { id: 3, text: '靠墙静蹲 (Wall Sit)', target: '3组 x 1.5分钟', completed: false, isTemplate: true },
+    { id: 1, text: 'Jogging (慢跑热身)', target: '15 mins', completed: false, isTemplate: true },
+    { id: 2, text: 'Slide Board (滑行板)', target: '5 sets x 1 min', completed: false, isTemplate: true },
+    { id: 3, text: 'Wall Sit (靠墙静蹲)', target: '3 sets x 1.5 mins', completed: false, isTemplate: true },
   ],
   records: [
     { date: '2026-05-01', time: 48.5 },
@@ -501,6 +501,8 @@ export default function App() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
   const [activeDistance, setActiveDistance] = useState('500m');
+  
+  // 恢复之前缺失的翻译加载状态
   const [isTranslating, setIsTranslating] = useState(false);
 
   const [editingTaskId, setEditingTaskId] = useState(null);
@@ -517,7 +519,6 @@ export default function App() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   
-  // 新增：保存成功状态动画反馈
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [viewDate, setViewDate] = useState(() => {
@@ -573,7 +574,9 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
-    const userRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main');
+    // 修复 Firebase 路径错误问题：确保 appId 不包含可能破坏路径的斜杠
+    const safeAppId = appId.replace(/\//g, '_');
+    const userRef = doc(db, 'artifacts', safeAppId, 'users', user.uid, 'profile', 'main');
     const unsub = onSnapshot(userRef, (docSnap) => {
       if (docSnap.exists()) {
         setData({ ...defaultData, ...docSnap.data() });
@@ -610,7 +613,8 @@ export default function App() {
     if (!user) return;
     const merged = { ...data, ...newData };
     setData(merged); 
-    const userRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main');
+    const safeAppId = appId.replace(/\//g, '_');
+    const userRef = doc(db, 'artifacts', safeAppId, 'users', user.uid, 'profile', 'main');
     const safeData = JSON.parse(JSON.stringify(merged));
     await setDoc(userRef, safeData, { merge: true });
   };
@@ -779,7 +783,9 @@ export default function App() {
   };
 
   const translateDynamicData = async (targetLang, currentData) => {
-    const apiKey = "";
+    // 👇 注意：在本地 Vercel 部署时，请把 API Key 填入下面双引号中！
+    // 在当前网页预览环境中，保持为空即可，系统会自动提供临时密钥。
+    const apiKey = ""; 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
     const promptText = `Translate the string values in the following JSON to ${targetLang === 'en' ? 'English' : 'Simplified Chinese'}. Keep the exact JSON structure. Do NOT change keys or IDs.\n\n${JSON.stringify({
       weeklyTemplate: currentData.weeklyTemplate,
@@ -797,6 +803,12 @@ export default function App() {
       try {
         const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
         const result = await res.json();
+        
+        if (!res.ok) {
+           console.error("API Error:", result);
+           throw new Error("API request failed");
+        }
+
         if (result.candidates && result.candidates[0]) {
            const text = result.candidates[0].content.parts[0].text;
            const parsed = JSON.parse(text);
@@ -1017,14 +1029,14 @@ export default function App() {
                   type="text" 
                   value={editTaskText}
                   onChange={(e) => setEditTaskText(e.target.value)}
-                  className={`w-full ${tc.inputBg} rounded-lg px-3 py-2 ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+                  className={`w-full ${tc.inputBg} border-2 ${tc.borderLight} rounded-lg px-3 py-2 ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} focus:border-transparent transition-colors`}
                 />
                 <input 
                   type="text" 
                   value={editTaskTarget}
                   onChange={(e) => setEditTaskTarget(e.target.value)}
                   placeholder={t.optionalTarget}
-                  className={`w-full ${tc.inputBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+                  className={`w-full ${tc.inputBg} border-2 ${tc.borderLight} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} focus:border-transparent transition-colors`}
                 />
                 <div className="flex justify-end gap-2 mt-1">
                   <button onClick={cancelEditTask} className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${tc.btnCancel}`}>
@@ -1110,7 +1122,7 @@ export default function App() {
               value={newTaskText}
               onChange={(e) => setNewTaskText(e.target.value)}
               placeholder={t.addCustom}
-              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+              className={`w-full ${tc.inputBg} border-2 ${tc.borderLight} rounded-xl px-4 py-3 ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} focus:border-transparent transition-colors`}
               onKeyPress={(e) => e.key === 'Enter' && addTask()}
             />
             <div className="flex gap-2">
@@ -1119,7 +1131,7 @@ export default function App() {
                 value={newTaskTarget}
                 onChange={(e) => setNewTaskTarget(e.target.value)}
                 placeholder={t.optionalTarget}
-                className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-3 text-sm ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+                className={`flex-1 min-w-0 ${tc.inputBg} border-2 ${tc.borderLight} rounded-xl px-4 py-3 text-sm ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} focus:border-transparent transition-colors`}
                 onKeyPress={(e) => e.key === 'Enter' && addTask()}
               />
               <button 
@@ -1316,11 +1328,8 @@ export default function App() {
         customRewards: formRewards.map(r => ({ ...r, cost: parseInt(r.cost, 10) || 0 })) 
       });
       
-      // 触发成功动画与震动
       setSaveSuccess(true);
-      if (navigator.vibrate) navigator.vibrate(50); // 手机端轻微震动反馈
-      
-      // 2秒后恢复按钮原状
+      if (navigator.vibrate) navigator.vibrate(50); 
       setTimeout(() => setSaveSuccess(false), 2000);
     };
 
@@ -1403,6 +1412,20 @@ export default function App() {
         <div>
           <h2 className={`text-2xl font-black ${tc.textHeading}`}>{t.settings}</h2>
           <p className={`text-sm ${tc.textMuted} mt-1`}>{t.customizePlan}</p>
+        </div>
+
+        {/* Language Option properly placed here at the top */}
+        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
+          <h3 className={`${tc.textHeading} font-bold flex items-center gap-2 shrink-0`}>
+            <Globe size={18} /> {t.language}
+          </h3>
+          <button 
+            onClick={toggleLanguage}
+            disabled={isTranslating}
+            className={`${tc.badgeBg} ${tc.textPrimary} px-4 py-2 rounded-lg font-bold text-sm hover:opacity-80 transition-colors disabled:opacity-50 flex items-center gap-2 shrink-0 whitespace-nowrap`}
+          >
+            {isTranslating ? <><Loader2 size={16} className="animate-spin" /> {t.translating}</> : (data.language === 'en' ? '🇨🇳 中文' : '🇬🇧 English')}
+          </button>
         </div>
 
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm border-2 ${data.parentPin && !isUnlocked ? 'border-orange-300 bg-orange-50/30' : tc.borderLight}`}>
@@ -1491,19 +1514,6 @@ export default function App() {
         </div>
 
         {renderThemeSelector()}
-
-        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
-          <h3 className={`${tc.textHeading} font-bold flex items-center gap-2 shrink-0`}>
-            <Globe size={18} /> {t.language}
-          </h3>
-          <button 
-            onClick={toggleLanguage}
-            disabled={isTranslating}
-            className={`${tc.badgeBg} ${tc.textPrimary} px-4 py-2 rounded-lg font-bold text-sm hover:opacity-80 transition-colors disabled:opacity-50 flex items-center gap-2 shrink-0 whitespace-nowrap`}
-          >
-            {isTranslating ? <><Loader2 size={16} className="animate-spin" /> {t.translating}</> : (data.language === 'en' ? '🇨🇳 中文' : '🇬🇧 English')}
-          </button>
-        </div>
 
         {isParentMode && (
           <>
