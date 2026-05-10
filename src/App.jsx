@@ -785,7 +785,7 @@ export default function App() {
   const translateDynamicData = async (targetLang, currentData) => {
     // 👇 注意：在本地 Vercel 部署时，请把 API Key 填入下面双引号中！
     // 在当前网页预览环境中，保持为空即可，系统会自动提供临时密钥。
-    const apiKey = ""; 
+    const apiKey = "AIzaSyBE2Tz8Vxgo9WdtV1487YU9iuOW-pTbwLw"; 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
     const promptText = `Translate the string values in the following JSON to ${targetLang === 'en' ? 'English' : 'Simplified Chinese'}. Keep the exact JSON structure. Do NOT change keys or IDs.\n\n${JSON.stringify({
       weeklyTemplate: currentData.weeklyTemplate,
