@@ -441,7 +441,6 @@ const defaultData = {
   pointsPerTask: 20,
   dailyBonusPoints: 50,
   completedDays: [], 
-  // 新增：可自定义的商品库与兑换记录
   customRewards: [
     { id: 1, name: '放纵餐 (Cheat Meal)', cost: 500, icon: '🍔' },
     { id: 2, name: '购买新轴承 (New Bearings)', cost: 1200, icon: '⚙️' },
@@ -486,7 +485,6 @@ const getPrevDayStr = (dateStr) => {
 };
 
 export default function App() {
-  // 核心应用状态 (Hooks)
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -511,7 +509,7 @@ export default function App() {
   const [formTemplate, setFormTemplate] = useState(defaultData.weeklyTemplate);
   const [formPointsPerTask, setFormPointsPerTask] = useState(defaultData.pointsPerTask);
   const [formDailyBonus, setFormDailyBonus] = useState(defaultData.dailyBonusPoints);
-  const [formRewards, setFormRewards] = useState(defaultData.customRewards); // 新增：商店表单状态
+  const [formRewards, setFormRewards] = useState(defaultData.customRewards);
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pinInput, setPinInput] = useState('');
@@ -526,7 +524,6 @@ export default function App() {
   const [activeLibraryCat, setActiveLibraryCat] = useState(0);
   const [addedLibraryTaskIds, setAddedLibraryTaskIds] = useState([]);
 
-  // 新增：商店相关 UI 状态
   const [showHistory, setShowHistory] = useState(false);
   const [celebration, setCelebration] = useState(null);
 
@@ -555,7 +552,7 @@ export default function App() {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        await signInAnonymously(auth);
+        await signInAnonymously(auth); // 只留这一句简单的匿名登录
       } catch (error) {
         console.error("Auth error:", error);
       }
@@ -754,7 +751,6 @@ export default function App() {
     }
   };
 
-  // --- 新增：商店购买与撒花逻辑 ---
   const buyReward = (reward) => {
     if (data.points >= reward.cost) {
       const newHistoryItem = {
@@ -772,7 +768,6 @@ export default function App() {
         rewardHistory: updatedHistory
       });
 
-      // 触发全屏庆祝弹窗
       setCelebration(reward);
       setTimeout(() => setCelebration(null), 3000);
     }
@@ -862,7 +857,6 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  // --- 页面视图 ---
   const DashboardView = () => {
     const activeRaces = (data.races || (data.raceDate ? [{ id: 1, name: t.raceDate, date: data.raceDate }] : []))
       .map(r => ({
@@ -1054,10 +1048,10 @@ export default function App() {
               ) : (
                 <Circle className={`${tc.textMuted} mr-3 shrink-0 opacity-50`} size={24} />
               )}
-              <div className={`flex-1 flex flex-col ${task.completed ? tc.textMuted + ' line-through' : tc.appText}`}>
-                <span className="text-base font-medium">{task.text}</span>
+              <div className={`flex-1 flex flex-col min-w-0 ${task.completed ? tc.textMuted + ' line-through' : tc.appText}`}>
+                <span className="text-base font-medium truncate">{task.text}</span>
                 {task.target && (
-                  <span className={`text-xs mt-0.5 font-bold ${task.completed ? tc.textMuted : tc.textPrimary}`}>
+                  <span className={`text-xs mt-0.5 font-bold truncate ${task.completed ? tc.textMuted : tc.textPrimary}`}>
                     🎯 {t.targetLabel}: {task.target}
                   </span>
                 )}
@@ -1120,12 +1114,12 @@ export default function App() {
                 value={newTaskTarget}
                 onChange={(e) => setNewTaskTarget(e.target.value)}
                 placeholder={t.optionalTarget}
-                className={`flex-1 ${tc.inputBg} rounded-xl px-4 py-3 text-sm ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+                className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-3 text-sm ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
                 onKeyPress={(e) => e.key === 'Enter' && addTask()}
               />
               <button 
                 onClick={addTask}
-                className={`${tc.btnPrimary} px-5 rounded-xl shadow-md transition-colors flex items-center justify-center`}
+                className={`${tc.btnPrimary} px-5 py-3 rounded-xl shadow-md transition-colors flex items-center justify-center shrink-0`}
               >
                 <Plus size={24} />
               </button>
@@ -1248,11 +1242,11 @@ export default function App() {
                   value={newRecordTime}
                   onChange={(e) => setNewRecordTime(e.target.value)}
                   placeholder={t.inputTime}
-                  className={`flex-1 ${tc.inputBg} rounded-xl px-4 py-3 ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+                  className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-3 ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
                 />
                 <button 
                   onClick={addRecord}
-                  className={`${tc.btnPrimary} px-6 py-3 rounded-xl font-bold shadow-md transition-colors`}
+                  className={`${tc.btnPrimary} px-6 py-3 rounded-xl font-bold shadow-md transition-colors shrink-0 whitespace-nowrap`}
                 >
                   {t.save}
                 </button>
@@ -1314,7 +1308,7 @@ export default function App() {
         weeklyTemplate: formTemplate,
         pointsPerTask: parseInt(formPointsPerTask, 10) || 0,
         dailyBonusPoints: parseInt(formDailyBonus, 10) || 0,
-        customRewards: formRewards.map(r => ({ ...r, cost: parseInt(r.cost, 10) || 0 })) // 保存自定义商品
+        customRewards: formRewards.map(r => ({ ...r, cost: parseInt(r.cost, 10) || 0 })) 
       });
       setPinError('保存成功 ✅');
       setTimeout(() => setPinError(''), 2000);
@@ -1408,7 +1402,7 @@ export default function App() {
               {t.parentMode}
             </h3>
             {data.parentPin && isUnlocked && (
-              <button onClick={() => setIsUnlocked(false)} className={`text-xs font-bold ${tc.btnCancel} px-3 py-1.5 rounded-lg`}>
+              <button onClick={() => setIsUnlocked(false)} className={`text-xs font-bold ${tc.btnCancel} px-3 py-1.5 rounded-lg shrink-0 whitespace-nowrap`}>
                 {t.lockNow}
               </button>
             )}
@@ -1424,9 +1418,9 @@ export default function App() {
                   value={pinInput}
                   onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
                   placeholder={t.pinPlaceholder}
-                  className={`flex-1 ${tc.inputBg} rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold`}
+                  className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold`}
                 />
-                <button onClick={handleSetPin} className={`${tc.btnPrimary} px-4 rounded-xl font-bold text-sm shadow-sm`}>
+                <button onClick={handleSetPin} className={`${tc.btnPrimary} px-4 py-2 rounded-xl font-bold text-sm shadow-sm shrink-0 whitespace-nowrap`}>
                   {t.setPin}
                 </button>
               </div>
@@ -1443,9 +1437,9 @@ export default function App() {
                   value={pinInput}
                   onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
                   placeholder="****"
-                  className={`flex-1 bg-white border border-orange-200 focus:ring-orange-400 rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold text-gray-800`}
+                  className={`flex-1 min-w-0 bg-white border border-orange-200 focus:ring-orange-400 rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold text-gray-800`}
                 />
-                <button onClick={handleUnlock} className={`bg-orange-500 hover:bg-orange-400 text-white px-4 rounded-xl font-bold text-sm shadow-sm flex items-center gap-1`}>
+                <button onClick={handleUnlock} className={`bg-orange-500 hover:bg-orange-400 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center gap-1 shrink-0 whitespace-nowrap`}>
                   <Unlock size={16} /> {t.unlock}
                 </button>
               </div>
@@ -1455,7 +1449,7 @@ export default function App() {
           {data.parentPin && isUnlocked && (
             <div className="flex justify-between items-center bg-green-50 p-3 rounded-xl border border-green-100">
               <span className="text-sm font-bold text-green-700">权限已解锁</span>
-              <button onClick={handleRemovePin} className="text-xs font-bold text-red-500 hover:bg-red-50 px-2 py-1 rounded">
+              <button onClick={handleRemovePin} className="text-xs font-bold text-red-500 hover:bg-red-50 px-2 py-1 rounded shrink-0 whitespace-nowrap">
                 {t.removePin}
               </button>
             </div>
@@ -1489,13 +1483,13 @@ export default function App() {
         {renderThemeSelector()}
 
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
-          <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
+          <h3 className={`${tc.textHeading} font-bold flex items-center gap-2 shrink-0`}>
             <Globe size={18} /> {t.language}
           </h3>
           <button 
             onClick={toggleLanguage}
             disabled={isTranslating}
-            className={`${tc.badgeBg} ${tc.textPrimary} px-4 py-2 rounded-lg font-bold text-sm hover:opacity-80 transition-colors disabled:opacity-50 flex items-center gap-2`}
+            className={`${tc.badgeBg} ${tc.textPrimary} px-4 py-2 rounded-lg font-bold text-sm hover:opacity-80 transition-colors disabled:opacity-50 flex items-center gap-2 shrink-0 whitespace-nowrap`}
           >
             {isTranslating ? <><Loader2 size={16} className="animate-spin" /> {t.translating}</> : (data.language === 'en' ? '🇨🇳 中文' : '🇬🇧 English')}
           </button>
@@ -1503,7 +1497,6 @@ export default function App() {
 
         {isParentMode && (
           <>
-            {/* 新增：自定义商店商品管理 (仅家长可见) */}
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <div className="flex justify-between items-center">
                 <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
@@ -1511,7 +1504,7 @@ export default function App() {
                 </h3>
                 <button 
                   onClick={() => setFormRewards([...formRewards, { id: Date.now(), name: '', cost: 100, icon: '🎁' }])}
-                  className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors`}
+                  className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
                 >
                   <Plus size={16} />
                 </button>
@@ -1537,7 +1530,7 @@ export default function App() {
                           setFormRewards(newRewards);
                         }}
                         placeholder="Emoji"
-                        className={`w-14 text-center ${tc.cardBg} rounded-lg px-2 py-2 text-xl focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                        className={`w-14 shrink-0 text-center ${tc.cardBg} rounded-lg px-2 py-2 text-xl focus:outline-none focus:ring-1 ${tc.focusRing}`}
                       />
                       <input 
                         type="text" 
@@ -1548,11 +1541,11 @@ export default function App() {
                           setFormRewards(newRewards);
                         }}
                         placeholder="商品名称"
-                        className={`flex-1 ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                        className={`flex-1 min-w-0 ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
                       />
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs font-bold ${tc.textMuted}`}>所需积分:</span>
+                      <span className={`text-xs font-bold ${tc.textMuted} shrink-0`}>所需积分:</span>
                       <input 
                         type="number" 
                         value={reward.cost}
@@ -1561,7 +1554,7 @@ export default function App() {
                           newRewards[index].cost = e.target.value;
                           setFormRewards(newRewards);
                         }}
-                        className={`flex-1 ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                        className={`flex-1 min-w-0 ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
                       />
                     </div>
                   </div>
@@ -1576,7 +1569,7 @@ export default function App() {
                 </h3>
                 <button 
                   onClick={() => setFormRaces([...formRaces, { id: Date.now(), name: '', date: '' }])}
-                  className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors`}
+                  className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
                 >
                   <Plus size={16} />
                 </button>
@@ -1585,7 +1578,6 @@ export default function App() {
               <div className="space-y-3">
                 {formRaces.map((race, index) => (
                   <div key={race.id} className={`flex flex-col gap-2 p-3 ${tc.inputBg} rounded-xl relative`}>
-                    {/* 移除了 formRaces.length > 1 的限制，现在任何时候都可以删除 */}
                     <button 
                       onClick={() => setFormRaces(formRaces.filter(r => r.id !== race.id))}
                       className={`absolute top-3 right-3 ${tc.textMuted} hover:text-red-500 transition-colors`}
@@ -1632,7 +1624,7 @@ export default function App() {
                       type="text" 
                       value={formTemplate[index] || ''}
                       onChange={(e) => setFormTemplate({...formTemplate, [index]: e.target.value})}
-                      className={`flex-1 ${tc.inputBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                      className={`flex-1 min-w-0 ${tc.inputBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
                     />
                   </div>
                 ))}
@@ -1645,21 +1637,21 @@ export default function App() {
               </h3>
               <div className="space-y-3">
                 <div className={`flex items-center justify-between gap-3 ${tc.inputBg} p-3 rounded-xl`}>
-                  <span className={`text-sm font-bold ${tc.appText}`}>{t.pointsPerTask}</span>
+                  <span className={`text-sm font-bold ${tc.appText} shrink-0`}>{t.pointsPerTask}</span>
                   <input 
                     type="number" 
                     value={formPointsPerTask}
                     onChange={(e) => setFormPointsPerTask(e.target.value)}
-                    className={`w-24 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                    className={`w-24 shrink-0 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
                   />
                 </div>
                 <div className={`flex items-center justify-between gap-3 ${tc.inputBg} p-3 rounded-xl`}>
-                  <span className={`text-sm font-bold ${tc.appText}`}>{t.dailyBonusPoints}</span>
+                  <span className={`text-sm font-bold ${tc.appText} shrink-0`}>{t.dailyBonusPoints}</span>
                   <input 
                     type="number" 
                     value={formDailyBonus}
                     onChange={(e) => setFormDailyBonus(e.target.value)}
-                    className={`w-24 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                    className={`w-24 shrink-0 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
                   />
                 </div>
               </div>
@@ -1690,11 +1682,11 @@ export default function App() {
     return (
       <div className={`fixed inset-0 z-50 flex flex-col ${tc.appBg} transition-colors duration-300`}>
         <div className={`flex items-center justify-between px-5 py-4 ${tc.headerBg} border-b ${tc.borderLight}`}>
-          <button onClick={() => setShowLibrary(false)} className={`p-2 -ml-2 ${tc.textMuted} hover:${tc.textPrimary}`}>
+          <button onClick={() => setShowLibrary(false)} className={`p-2 -ml-2 ${tc.textMuted} hover:${tc.textPrimary} shrink-0`}>
             <ArrowLeft size={24} />
           </button>
-          <h2 className={`text-lg font-black ${tc.textHeading}`}>{t.openLibrary}</h2>
-          <div className="w-8"></div>
+          <h2 className={`text-lg font-black ${tc.textHeading} truncate`}>{t.openLibrary}</h2>
+          <div className="w-8 shrink-0"></div>
         </div>
 
         <div className={`flex gap-2 px-5 py-3 overflow-x-auto no-scrollbar border-b ${tc.borderLight}`}>
@@ -1702,7 +1694,7 @@ export default function App() {
             <button
               key={idx}
               onClick={() => setActiveLibraryCat(idx)}
-              className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+              className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all shrink-0 ${
                 activeLibraryCat === idx 
                   ? tc.btnPrimary + ' shadow-md' 
                   : tc.cardBg + ' ' + tc.textPrimary + ' hover:opacity-80'
@@ -1718,19 +1710,19 @@ export default function App() {
             const isAdded = addedLibraryTaskIds.includes(idx);
             return (
               <div key={idx} className={`p-4 ${tc.cardBg} rounded-xl shadow-sm flex items-center justify-between transition-all`}>
-                <div className="flex-1 pr-4">
-                  <div className={`font-bold ${tc.appText} text-base mb-1`}>{libTask.text}</div>
-                  <div className={`text-xs font-medium ${tc.textPrimary}`}>🎯 {t.targetLabel}: {libTask.target}</div>
+                <div className="flex-1 pr-4 min-w-0">
+                  <div className={`font-bold ${tc.appText} text-base mb-1 truncate`}>{libTask.text}</div>
+                  <div className={`text-xs font-medium ${tc.textPrimary} truncate`}>🎯 {t.targetLabel}: {libTask.target}</div>
                 </div>
                 <button
                   onClick={() => addFromLibrary(libTask, idx)}
                   disabled={isAdded}
-                  className={`p-2 rounded-xl transition-all flex flex-col items-center justify-center min-w-[56px] ${
+                  className={`p-2 rounded-xl transition-all flex flex-col items-center justify-center min-w-[56px] shrink-0 ${
                     isAdded ? 'bg-green-100 text-green-600' : tc.badgeBg + ' ' + tc.textPrimary + ' hover:opacity-80'
                   }`}
                 >
                   {isAdded ? <Check size={20} /> : <Plus size={20} />}
-                  {isAdded && <span className="text-[10px] mt-0.5">{t.taskAdded}</span>}
+                  {isAdded && <span className="text-[10px] mt-0.5 whitespace-nowrap">{t.taskAdded}</span>}
                 </button>
               </div>
             );
@@ -1740,7 +1732,6 @@ export default function App() {
     );
   };
 
-  // --- 新增：兑换记录模态框 ---
   const RewardHistoryModal = () => {
     if (!showHistory) return null;
     const history = data.rewardHistory || [];
@@ -1748,11 +1739,11 @@ export default function App() {
     return (
       <div className={`fixed inset-0 z-50 flex flex-col ${tc.appBg} transition-colors duration-300`}>
         <div className={`flex items-center justify-between px-5 py-4 ${tc.headerBg} border-b ${tc.borderLight}`}>
-          <button onClick={() => setShowHistory(false)} className={`p-2 -ml-2 ${tc.textMuted} hover:${tc.textPrimary}`}>
+          <button onClick={() => setShowHistory(false)} className={`p-2 -ml-2 ${tc.textMuted} hover:${tc.textPrimary} shrink-0`}>
             <ArrowLeft size={24} />
           </button>
           <h2 className={`text-lg font-black ${tc.textHeading}`}>{t.rewardHistory}</h2>
-          <div className="w-8"></div>
+          <div className="w-8 shrink-0"></div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-3">
@@ -1764,14 +1755,14 @@ export default function App() {
               const dateStr = d.toLocaleDateString(data.language === 'en' ? 'en-US' : 'zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' });
               return (
                 <div key={item.id} className={`p-4 ${tc.cardBg} rounded-xl shadow-sm flex items-center justify-between`}>
-                  <div className="flex items-center gap-3">
-                    <div className={`text-2xl ${tc.badgeBg} w-12 h-12 flex items-center justify-center rounded-full`}>{item.icon}</div>
-                    <div>
-                      <div className={`font-bold ${tc.appText} mb-0.5`}>{item.name}</div>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`text-2xl ${tc.badgeBg} w-12 h-12 flex items-center justify-center rounded-full shrink-0`}>{item.icon}</div>
+                    <div className="min-w-0">
+                      <div className={`font-bold ${tc.appText} mb-0.5 truncate`}>{item.name}</div>
                       <div className={`text-xs ${tc.textMuted}`}>{dateStr}</div>
                     </div>
                   </div>
-                  <div className="text-yellow-500 font-black text-sm">-{item.cost} {t.points}</div>
+                  <div className="text-yellow-500 font-black text-sm shrink-0 pl-2">-{item.cost} {t.points}</div>
                 </div>
               );
             })
@@ -1795,7 +1786,7 @@ export default function App() {
       
       <header className={`flex justify-between items-center px-5 py-3 sticky top-0 ${tc.headerBg} backdrop-blur-md z-10 border-b ${tc.borderLight} shadow-sm transition-colors duration-300`}>
         <div className="flex items-center gap-2.5">
-          <div className="h-10 w-10 min-w-[40px] rounded-xl shadow-md border border-cyan-100/60 bg-gradient-to-br from-cyan-50 via-blue-100 to-blue-300 flex items-center justify-center relative overflow-hidden group">
+          <div className="h-10 w-10 min-w-[40px] rounded-xl shadow-md border border-cyan-100/60 bg-gradient-to-br from-cyan-50 via-blue-100 to-blue-300 flex items-center justify-center relative overflow-hidden group shrink-0">
              <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/80 to-transparent"></div>
              <div className="absolute bottom-0 inset-x-0 h-1/3 bg-gradient-to-t from-blue-500/30 to-transparent"></div>
              <Flame size={22} strokeWidth={2} className="absolute text-orange-600/40 fill-orange-500/20 scale-y-[-0.6] translate-y-[16px] blur-[2px] z-0" />
@@ -1803,7 +1794,7 @@ export default function App() {
              <div className="absolute bottom-2 right-1.5 w-3 h-[1.5px] bg-white/50 -rotate-45 rounded-full"></div>
              <div className="absolute bottom-3 right-3 w-1.5 h-[1.5px] bg-white/60 -rotate-45 rounded-full"></div>
           </div>
-          <div className="flex flex-col justify-center">
+          <div className="flex flex-col justify-center min-w-0">
             <div className="flex items-baseline">
               <span className={`text-xl font-black italic tracking-tight ${tc.textHeading}`}>BLAZE</span>
               <span className={`text-xl font-black italic tracking-tighter ${tc.textPrimary}`}>SKATE</span>
@@ -1814,7 +1805,7 @@ export default function App() {
           </div>
         </div>
         
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center shrink-0">
           <div className={`flex items-center gap-1 ${tc.badgeOrange} px-3 py-1.5 rounded-full`}>
             <Flame size={16} />
             <span className="font-bold text-sm">{computedStreak}</span>
@@ -1825,9 +1816,9 @@ export default function App() {
           </div>
           
           {data.avatar ? (
-            <img src={data.avatar} alt="User Avatar" className={`w-10 h-10 rounded-full object-cover border-2 ${tc.borderLight} shadow-sm ml-1`} />
+            <img src={data.avatar} alt="User Avatar" className={`w-10 h-10 rounded-full object-cover border-2 ${tc.borderLight} shadow-sm ml-1 shrink-0`} />
           ) : (
-            <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center border-2 ${tc.borderLight} shadow-sm ml-1`}>
+            <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center border-2 ${tc.borderLight} shadow-sm ml-1 shrink-0`}>
               <User size={18} className={tc.textPrimary} />
             </div>
           )}
@@ -1871,11 +1862,9 @@ export default function App() {
         </div>
       </nav>
 
-      {/* 浮层弹窗挂载 */}
       {TaskLibraryModal()}
       {RewardHistoryModal()}
 
-      {/* 新增：撒花庆祝弹窗 */}
       {celebration && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-white p-8 rounded-[2rem] flex flex-col items-center shadow-2xl animate-[bounce_1s_ease-in-out]">
