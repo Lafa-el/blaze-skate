@@ -783,10 +783,14 @@ export default function App() {
   };
 
   const translateDynamicData = async (targetLang, currentData) => {
-    // 👇 注意：在本地 Vercel 部署时，请把 API Key 填入下面双引号中！
-    // 在当前网页预览环境中，保持为空即可，系统会自动提供临时密钥。
+    // 恢复：智能翻译动态数据
+  const translateDynamicData = async (targetLang, currentData) => {
+    // 👇 注意 1：把你从 Google AI Studio 申请到的 API Key 填入下面的双引号中！
     const apiKey = "AIzaSyBE2Tz8Vxgo9WdtV1487YU9iuOW-pTbwLw"; 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+    
+    // 👇 注意 2：这里已经换成了最稳定的公共通用模型 gemini-1.5-flash
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    
     const promptText = `Translate the string values in the following JSON to ${targetLang === 'en' ? 'English' : 'Simplified Chinese'}. Keep the exact JSON structure. Do NOT change keys or IDs.\n\n${JSON.stringify({
       weeklyTemplate: currentData.weeklyTemplate,
       tasks: currentData.tasks.map(t => ({ id: t.id, text: t.text, target: t.target || null })),
@@ -804,6 +808,7 @@ export default function App() {
         const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
         const result = await res.json();
         
+        // 增加错误日志打印，方便排查问题
         if (!res.ok) {
            console.error("API Error:", result);
            throw new Error("API request failed");
