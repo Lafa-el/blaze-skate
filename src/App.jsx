@@ -313,6 +313,7 @@ const translations = {
     raceDate: '比赛目标日期',
     weeklyTemplate: '一周训练模板',
     saveSettings: '保存设置',
+    savedSuccessfully: '保存成功！',
     loggedIn: '已登录 • 账号 ID:',
     nav: { dashboard: '概览', tasks: '任务', calendar: '日历', stats: '统计', shop: '商店', settings: '设置' },
     daysNames: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
@@ -387,6 +388,7 @@ const translations = {
     raceDate: 'Race Target Date',
     weeklyTemplate: 'Weekly Template',
     saveSettings: 'Save Settings',
+    savedSuccessfully: 'Saved!',
     loggedIn: 'Logged in • User ID:',
     nav: { dashboard: 'Home', tasks: 'Tasks', calendar: 'Calendar', stats: 'Stats', shop: 'Shop', settings: 'Settings' },
     daysNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
@@ -514,6 +516,9 @@ export default function App() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
+  
+  // 新增：保存成功状态动画反馈
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [viewDate, setViewDate] = useState(() => {
     const d = new Date();
@@ -552,7 +557,7 @@ export default function App() {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        await signInAnonymously(auth); // 只留这一句简单的匿名登录
+        await signInAnonymously(auth);
       } catch (error) {
         console.error("Auth error:", error);
       }
@@ -1310,8 +1315,13 @@ export default function App() {
         dailyBonusPoints: parseInt(formDailyBonus, 10) || 0,
         customRewards: formRewards.map(r => ({ ...r, cost: parseInt(r.cost, 10) || 0 })) 
       });
-      setPinError('保存成功 ✅');
-      setTimeout(() => setPinError(''), 2000);
+      
+      // 触发成功动画与震动
+      setSaveSuccess(true);
+      if (navigator.vibrate) navigator.vibrate(50); // 手机端轻微震动反馈
+      
+      // 2秒后恢复按钮原状
+      setTimeout(() => setSaveSuccess(false), 2000);
     };
 
     const handleSetPin = () => {
@@ -1455,7 +1465,7 @@ export default function App() {
             </div>
           )}
 
-          {pinError && <div className={`text-xs ${pinError.includes('✅') ? 'text-green-600' : 'text-red-500'} font-bold mt-2 ${pinError.includes('✅') ? '' : 'animate-pulse'}`}>{pinError}</div>}
+          {pinError && <div className={`text-xs text-red-500 font-bold mt-2 animate-pulse`}>{pinError}</div>}
         </div>
 
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex items-center justify-between`}>
@@ -1657,11 +1667,27 @@ export default function App() {
               </div>
             </div>
 
+            {/* 新的按钮反馈交互 */}
             <button 
               onClick={handleSaveSettings}
-              className={`w-full ${tc.btnPrimary} py-4 rounded-xl font-bold shadow-md flex items-center justify-center gap-2 transition-colors`}
+              disabled={saveSuccess}
+              className={`w-full py-4 rounded-xl font-bold shadow-md flex items-center justify-center gap-2 transition-all duration-300 ${
+                saveSuccess 
+                  ? 'bg-green-500 hover:bg-green-500 text-white scale-[0.98]' 
+                  : tc.btnPrimary
+              }`}
             >
-              <Save size={20} /> {t.saveSettings}
+              {saveSuccess ? (
+                <>
+                  <CheckCircle2 size={20} className="animate-bounce" /> 
+                  {t.savedSuccessfully}
+                </>
+              ) : (
+                <>
+                  <Save size={20} /> 
+                  {t.saveSettings}
+                </>
+              )}
             </button>
           </>
         )}
