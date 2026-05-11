@@ -36,7 +36,8 @@ import {
   Clock,
   Quote,
   Sparkles,
-  Info
+  Info,
+  Crown
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
@@ -386,7 +387,19 @@ const translations = {
       '把每一次起跑都当作决赛来对待。',
       '注意呼吸节奏，让氧气充分进入肌肉。',
       '细节决定成败：脚踝的支撑一定要稳固。'
-    ]
+    ],
+    proTitle: '升级 BLAZE PRO',
+    proSubtitle: '解锁全部高阶训练功能',
+    proPrice: '¥98',
+    proPeriod: '/ 年',
+    proFeatures: [
+      '无限制的自定义成绩项目与进度分析',
+      '高阶起跑与单圈配速曲线智能对比',
+      '解锁全部 8 款专属沉浸式训练主题',
+      '完整的教练排课与家长多设备云同步'
+    ],
+    upgradeNow: '立即升级',
+    comingSoon: '支付系统即将上线，敬请期待！'
   },
   en: {
     loading: 'Loading cloud data...',
@@ -490,7 +503,19 @@ const translations = {
       'Treat every start practice like an Olympic final.',
       'Mind your breathing rhythm, oxygenate those muscles.',
       'Details matter: keep your ankles locked and supported.'
-    ]
+    ],
+    proTitle: 'Upgrade to BLAZE PRO',
+    proSubtitle: 'Unlock all advanced training features',
+    proPrice: '$14.99',
+    proPeriod: '/ year',
+    proFeatures: [
+      'Unlimited custom distances & analytics',
+      'Advanced start & lap pacing charts',
+      'Unlock all 8 premium app themes',
+      'Advanced coach & parent cloud sync'
+    ],
+    upgradeNow: 'Upgrade Now',
+    comingSoon: 'Payment system coming soon!'
   }
 };
 
@@ -605,6 +630,9 @@ export default function App() {
 
   const [showHistory, setShowHistory] = useState(false);
   const [celebration, setCelebration] = useState(null);
+
+  // PRO Modal State
+  const [showProModal, setShowProModal] = useState(false);
 
   const statsScrollRef = useRef(null);
   const [statsCanScroll, setStatsCanScroll] = useState({ left: false, right: true });
@@ -1639,6 +1667,24 @@ export default function App() {
           <p className={`text-sm ${tc.textMuted} mt-1`}>{t.customizePlan}</p>
         </div>
 
+        {/* PRO 会员升级横幅 */}
+        <div 
+          onClick={() => setShowProModal(true)}
+          className={`relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-5 rounded-2xl shadow-lg flex justify-between items-center text-white cursor-pointer hover:opacity-95 transition-all transform hover:scale-[1.02]`}
+        >
+          <Sparkles className="absolute right-10 top-2 opacity-20" size={60} />
+          <div>
+            <h3 className="font-black text-lg flex items-center gap-1.5 tracking-tight">
+              <Crown size={22} className="text-yellow-200 fill-yellow-200/20" /> 
+              {t.proTitle}
+            </h3>
+            <p className="text-xs font-medium opacity-90 mt-0.5">{t.proSubtitle}</p>
+          </div>
+          <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm">
+            <ChevronRight size={20} className="text-white" />
+          </div>
+        </div>
+
         {/* 语言选项置顶，纯静态切换 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
           <h3 className={`${tc.textHeading} font-bold flex items-center gap-2 shrink-0`}>
@@ -2083,6 +2129,71 @@ export default function App() {
     );
   };
 
+  // --- 新增：PRO 会员全屏展示弹窗 ---
+  const ProShowcaseModal = () => {
+    if (!showProModal) return null;
+    return (
+      <div className="fixed inset-0 z-[70] flex flex-col bg-slate-900 text-slate-100 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+        {/* 顶部导航 */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 sticky top-0 bg-slate-900/90 backdrop-blur-md z-10">
+          <button onClick={() => setShowProModal(false)} className="p-2 -ml-2 text-slate-400 hover:text-white shrink-0 transition-colors">
+            <X size={24} />
+          </button>
+          <h2 className="text-lg font-black text-white tracking-widest uppercase opacity-80">Blaze Pro</h2>
+          <div className="w-8 shrink-0"></div>
+        </div>
+
+        <div className="flex-1 px-6 pt-8 pb-32">
+          {/* 大图标与标题 */}
+          <div className="flex flex-col items-center text-center mb-10">
+            <div className="w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl flex items-center justify-center shadow-[0_10px_40px_rgba(245,158,11,0.3)] mb-6 relative">
+              <Sparkles size={40} className="absolute -top-4 -right-4 text-yellow-300 animate-pulse" />
+              <Crown size={48} className="text-white fill-white/20" />
+            </div>
+            <h1 className="text-3xl font-black text-white mb-2">{t.proTitle}</h1>
+            <p className="text-slate-400 font-medium">{t.proSubtitle}</p>
+          </div>
+
+          {/* 价格区块 */}
+          <div className="bg-slate-800/50 border border-slate-700 rounded-3xl p-6 mb-8 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500"></div>
+            <div className="text-slate-400 text-sm font-bold line-through mb-1 opacity-60">
+              {data.language === 'en' ? '$29.99' : '¥198'}
+            </div>
+            <div className="flex items-baseline justify-center gap-1">
+              <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">
+                {t.proPrice}
+              </span>
+              <span className="text-slate-400 font-bold">{t.proPeriod}</span>
+            </div>
+          </div>
+
+          {/* 特权列表 */}
+          <div className="space-y-5">
+            {t.proFeatures.map((feature, idx) => (
+              <div key={idx} className="flex items-start gap-4">
+                <div className="mt-0.5 bg-orange-500/20 p-1.5 rounded-full shrink-0">
+                  <Check size={16} className="text-orange-400" />
+                </div>
+                <span className="text-slate-200 font-medium leading-relaxed">{feature}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 底部吸底按钮 */}
+        <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-slate-900 via-slate-900 to-transparent pb-safe">
+          <button 
+            onClick={() => alert(t.comingSoon)}
+            className="w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black text-lg py-4 rounded-2xl shadow-[0_8px_30px_rgba(245,158,11,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
+          >
+            {t.upgradeNow}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className={`min-h-screen ${THEMES.purple.appBg} flex flex-col items-center justify-center ${THEMES.purple.textPrimary} font-sans max-w-md mx-auto shadow-2xl`}>
@@ -2180,6 +2291,7 @@ export default function App() {
 
       {TaskLibraryModal()}
       {RewardHistoryModal()}
+      {ProShowcaseModal()}
 
       {celebration && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
