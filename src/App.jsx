@@ -33,7 +33,9 @@ import {
   Lock,
   Unlock,
   ShieldCheck,
-  Clock
+  Clock,
+  Quote,
+  Sparkles
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
@@ -356,7 +358,30 @@ const translations = {
     unlockedStatus: '权限已解锁',
     emojiPlaceholder: '图标 (Emoji)',
     itemNamePlaceholder: '商品名称',
-    pointsRequired: '所需积分:'
+    pointsRequired: '所需积分:',
+    dailyProgress: '今日任务进度',
+    completedTasks: '已完成 {completed}/{total}',
+    weeklyActivity: '本周活跃星图',
+    recentHighlight: '最新高光时刻',
+    noRecentRecord: '暂无近期记录',
+    keepItUp: '继续保持！',
+    greetings: [
+      '夜深了，良好的睡眠也是训练的一部分 🌙',
+      '清晨唤醒，准备好今天的训练了吗？ ☀️',
+      '上午好，专注训练每一刻！ 🎯',
+      '下午好，保持状态，冲刺 PB！ ⚡',
+      '晚间恢复，记得充分拉伸 🧘'
+    ],
+    coachTipTitle: '训练锦囊',
+    tips: [
+      '注意弯道交替步时的重心转移，尽量压低身姿。',
+      '肌肉的酸痛是成长的声音，坚持住！',
+      '上冰前检查一下冰刀是否需要打磨了。',
+      '核心力量是滑冰稳定性的基石，不要忽视核心训练。',
+      '把每一次起跑都当作决赛来对待。',
+      '注意呼吸节奏，让氧气充分进入肌肉。',
+      '细节决定成败：脚踝的支撑一定要稳固。'
+    ]
   },
   en: {
     loading: 'Loading cloud data...',
@@ -433,7 +458,30 @@ const translations = {
     unlockedStatus: 'Unlocked',
     emojiPlaceholder: 'Emoji',
     itemNamePlaceholder: 'Item Name',
-    pointsRequired: 'Cost:'
+    pointsRequired: 'Cost:',
+    dailyProgress: 'Daily Progress',
+    completedTasks: 'Completed {completed}/{total}',
+    weeklyActivity: 'Weekly Activity',
+    recentHighlight: 'Recent Highlight',
+    noRecentRecord: 'No recent records',
+    keepItUp: 'Keep it up!',
+    greetings: [
+      'Late night. Rest is part of your training. 🌙',
+      'Morning! Ready to crush today\'s training? ☀️',
+      'Good morning, stay focused! 🎯',
+      'Good afternoon, keep pushing for that PB! ⚡',
+      'Evening recovery, don\'t forget to stretch. 🧘'
+    ],
+    coachTipTitle: 'Training Tip',
+    tips: [
+      'Focus on weight transfer during corner crossovers. Stay low.',
+      'Muscle soreness is the sound of growth. Keep pushing!',
+      'Check your blades before hitting the ice. Do they need sharpening?',
+      'Core strength is the foundation of your stability.',
+      'Treat every start practice like an Olympic final.',
+      'Mind your breathing rhythm, oxygenate those muscles.',
+      'Details matter: keep your ankles locked and supported.'
+    ]
   }
 };
 
@@ -832,16 +880,123 @@ export default function App() {
     const nearestRace = activeRaces.length > 0 ? activeRaces[0] : null;
     const otherRaces = activeRaces.slice(1);
 
+    // 计算今日进度数据
+    const totalTasks = data.tasks.length;
+    const completedTasks = data.tasks.filter(t => t.completed).length;
+    const progressPercent = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+    // 计算本周打卡星图数据
+    const dayOfWeek = currentTime.getDay(); 
+    const startOfWeek = new Date(currentTime);
+    startOfWeek.setDate(currentTime.getDate() - dayOfWeek);
+    
+    const currentWeek = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const isCompleted = (data.completedDays || []).includes(dateStr);
+      
+      const dDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+      const todayDateOnly = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate()).getTime();
+      const isFuture = dDateOnly > todayDateOnly;
+      
+      currentWeek.push({
+        name: t.daysNames[i],
+        nameDisplay: data.language === 'en' ? t.daysNames[i].substring(0,3) : t.daysNames[i].replace('周',''),
+        isCompleted,
+        isFuture,
+        isToday: i === dayOfWeek
+      });
+    }
+
+    // 计算最新高光时刻数据
+    const allRecords = [
+      ...(data.records || []).map(r => ({ ...r, distance: '500m' })),
+      ...(data.records777 || []).map(r => ({ ...r, distance: '777m' })),
+      ...(data.records1000 || []).map(r => ({ ...r, distance: '1000m' })),
+      ...(data.records1500 || []).map(r => ({ ...r, distance: '1500m' })),
+      ...(data.recordsStart || []).map(r => ({ ...r, distance: data.language === 'en' ? 'Start' : '起跑' })),
+      ...(data.recordsLap || []).map(r => ({ ...r, distance: data.language === 'en' ? 'Lap' : '单圈' }))
+    ];
+    allRecords.sort((a, b) => {
+      const dateA = a.date.includes('-') ? a.date : `${currentTime.getFullYear()}-${a.date.replace('/', '-')}`;
+      const dateB = b.date.includes('-') ? b.date : `${currentTime.getFullYear()}-${b.date.replace('/', '-')}`;
+      return dateB.localeCompare(dateA);
+    });
+    const latestRecord = allRecords.length > 0 ? allRecords[0] : null;
+
+    // --- 新增：计算不同时间段的问候语 ---
+    const hour = currentTime.getHours();
+    let greetingIndex = 0;
+    if (hour >= 5 && hour < 9) greetingIndex = 1; // 5:00 - 9:00 (清晨)
+    else if (hour >= 9 && hour < 12) greetingIndex = 2; // 9:00 - 12:00 (上午)
+    else if (hour >= 12 && hour < 18) greetingIndex = 3; // 12:00 - 18:00 (下午)
+    else if (hour >= 18 && hour < 23) greetingIndex = 4; // 18:00 - 23:00 (晚间)
+    else greetingIndex = 0; // 23:00 - 5:00 (深夜)
+
+    // --- 新增：计算每日随机贴士 (根据一年中的第几天循环) ---
+    const dayOfYear = Math.floor((currentTime - new Date(currentTime.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+    const tipIndex = dayOfYear % t.tips.length;
+
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
+        {/* 顶部标题与日期 */}
         <div className={`${tc.cardBg} p-6 rounded-2xl shadow-sm`}>
           <h2 className={`${tc.textPrimary} opacity-80 text-sm font-semibold flex items-center gap-2`}>
             <Calendar size={16} /> 
             {currentTime.toLocaleDateString(data.language === 'en' ? 'en-US' : 'zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })}
           </h2>
-          <h1 className={`text-3xl font-black ${tc.textHeading} mt-2 tracking-tight`}>{t.ready}</h1>
+          <h1 className={`text-2xl font-black ${tc.textHeading} mt-2 tracking-tight leading-snug`}>{t.greetings[greetingIndex]}</h1>
         </div>
 
+        {/* 模块：每日速滑教练贴士 */}
+        <div className={`bg-gradient-to-br ${tc.navActive} border ${tc.borderLight} p-5 rounded-2xl shadow-sm relative overflow-hidden`}>
+          <Quote size={80} className={`absolute -right-2 -bottom-2 opacity-5 ${tc.textPrimary} -rotate-12`} />
+          <div className={`flex items-center gap-2 mb-2 ${tc.textPrimary}`}>
+            <Sparkles size={18} className="animate-pulse" />
+            <span className="text-sm font-bold">{t.coachTipTitle}</span>
+          </div>
+          <p className={`text-sm ${tc.textHeading} font-medium leading-relaxed relative z-10 pr-4`}>
+            "{t.tips[tipIndex]}"
+          </p>
+        </div>
+
+        {/* 模块1：今日任务进度条 */}
+        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
+          <div className="flex justify-between items-end mb-3">
+            <h3 className={`text-sm font-bold ${tc.textHeading} flex items-center gap-2`}><CheckCircle2 size={18} className={tc.textPrimary} /> {t.dailyProgress}</h3>
+            <span className={`text-xs font-bold ${tc.textMuted}`}>{t.completedTasks.replace('{completed}', completedTasks).replace('{total}', totalTasks)}</span>
+          </div>
+          <div className={`h-3 w-full ${tc.badgeBg} rounded-full overflow-hidden`}>
+            <div 
+              className={`h-full bg-gradient-to-r ${tc.gradientIcon} transition-all duration-500 ease-out`} 
+              style={{ width: `${progressPercent}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* 模块2：本周活跃星图 */}
+        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
+          <h3 className={`text-sm font-bold ${tc.textHeading} mb-4 flex items-center gap-2`}><Flame size={18} className="text-orange-500" /> {t.weeklyActivity}</h3>
+          <div className="flex justify-between items-center px-1">
+            {currentWeek.map((day, idx) => (
+              <div key={idx} className="flex flex-col items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  day.isCompleted ? `bg-gradient-to-br ${tc.gradientIcon} text-white shadow-md scale-110` :
+                  day.isFuture ? `${tc.badgeBg} opacity-40 text-gray-400` :
+                  day.isToday ? `border-2 ${tc.borderLight} ${tc.textPrimary} bg-white` :
+                  `${tc.badgeBg} ${tc.textMuted} opacity-60`
+                }`}>
+                  {day.isCompleted ? <Flame size={16} /> : <span className="text-[11px] font-bold">{day.nameDisplay[0]}</span>}
+                </div>
+                <span className={`text-[10px] font-bold ${day.isToday ? tc.textPrimary : tc.textMuted}`}>{day.nameDisplay}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 原有卡片：比赛倒计时与今日核心 */}
         <div className="grid grid-cols-2 gap-4">
           <div className={`bg-gradient-to-br ${tc.gradientCard} p-5 rounded-2xl shadow-md flex flex-col justify-between`}>
             <div className="flex items-center gap-2 mb-2 opacity-90">
@@ -865,6 +1020,28 @@ export default function App() {
           </div>
         </div>
 
+        {/* 模块3：最新高光时刻 */}
+        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
+          <div className={`flex items-center gap-2 mb-3 ${tc.textMuted}`}>
+            <Award size={18} className="text-yellow-500" />
+            <span className="text-sm font-bold">{t.recentHighlight}</span>
+          </div>
+          {latestRecord ? (
+            <div className="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl">
+              <div>
+                <div className={`text-2xl font-black ${tc.textPrimary}`}>{latestRecord.time}s</div>
+                <div className={`text-xs ${tc.textMuted} mt-1 font-medium`}>{latestRecord.date.replace(/-/g, '/')} • {latestRecord.distance}</div>
+              </div>
+              <div className={`px-3 py-1.5 ${tc.badgeYellow} rounded-lg text-xs font-bold shadow-sm`}>
+                {t.keepItUp}
+              </div>
+            </div>
+          ) : (
+            <div className={`text-sm ${tc.textMuted} py-2`}>{t.noRecentRecord}</div>
+          )}
+        </div>
+
+        {/* 其他比赛 */}
         {otherRaces.length > 0 && (
           <div className="space-y-2 mt-4">
             <h3 className={`text-sm font-bold ${tc.textHeading} px-1 mb-2`}>{t.upcomingRaces}</h3>
