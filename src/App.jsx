@@ -351,6 +351,8 @@ const translations = {
     pinLengthError: '密码必须是4位数字',
     rewardHistory: '兑换记录',
     shopManagement: '商店商品管理',
+    distanceManagement: '成绩项目管理',
+    newDistance: '新项目',
     emptyHistory: '还没有兑换过奖励哦~',
     redeemSuccess: '兑换成功！',
     enjoyReward: '快去享受你的【{reward}】吧！',
@@ -451,6 +453,8 @@ const translations = {
     pinLengthError: 'PIN must be 4 digits',
     rewardHistory: 'History',
     shopManagement: 'Shop Management',
+    distanceManagement: 'Stats Categories',
+    newDistance: 'New Category',
     emptyHistory: 'No redemption history yet.',
     redeemSuccess: 'Success!',
     enjoyReward: 'Go enjoy your [{reward}]!',
@@ -501,6 +505,7 @@ const defaultData = {
     { id: 3, name: 'Skip Core Set', cost: 300, icon: '🛋️' },
     { id: 4, name: 'New Gear Fund', cost: 3000, icon: '👕' },
   ],
+  customDistances: ['Start', 'Lap', '500m', '777m', '1000m', '1500m'],
   rewardHistory: [],
   races: [
     { id: 1, name: 'National Champ', date: '2026-11-20' }
@@ -538,12 +543,25 @@ const getPrevDayStr = (dateStr) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 };
 
+// 辅助函数：根据不同的项目名称获取它在数据库里的存储Key
+const getRecordsKey = (dist) => {
+  if (dist === '500m') return 'records';
+  if (dist === '777m') return 'records777';
+  if (dist === '1000m') return 'records1000';
+  if (dist === '1500m') return 'records1500';
+  if (dist === '起跑' || dist === 'Start') return 'recordsStart';
+  if (dist === '单圈' || dist === 'Lap') return 'recordsLap';
+  return `records_${dist}`; // 对于全新的自定义名称（如 "111m"），生成新的专属key
+};
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [data, setData] = useState(defaultData);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  const currentDistNames = data.customDistances || (data.language === 'en' ? ['Start', 'Lap', '500m', '777m', '1000m', '1500m'] : ['起跑', '单圈', '500m', '777m', '1000m', '1500m']);
 
   const [newTaskText, setNewTaskText] = useState('');
   const [newTaskTarget, setNewTaskTarget] = useState('');
@@ -552,7 +570,7 @@ export default function App() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
-  const [activeDistance, setActiveDistance] = useState('500m');
+  const [activeDistance, setActiveDistance] = useState(currentDistNames[0]);
   
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editTaskText, setEditTaskText] = useState('');
@@ -563,6 +581,7 @@ export default function App() {
   const [formPointsPerTask, setFormPointsPerTask] = useState(defaultData.pointsPerTask);
   const [formDailyBonus, setFormDailyBonus] = useState(defaultData.dailyBonusPoints);
   const [formRewards, setFormRewards] = useState(defaultData.customRewards);
+  const [formDistances, setFormDistances] = useState(currentDistNames);
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pinInput, setPinInput] = useState('');
@@ -582,7 +601,6 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [celebration, setCelebration] = useState(null);
 
-  // --- 新增：为统计页面的滑动选项卡添加状态和 Ref ---
   const statsScrollRef = useRef(null);
   const [statsCanScroll, setStatsCanScroll] = useState({ left: false, right: true });
 
@@ -602,8 +620,14 @@ export default function App() {
       const timer = setTimeout(handleStatsScroll, 100);
       return () => clearTimeout(timer);
     }
-  }, [activeTab, data.language, activeDistance]);
+  }, [activeTab, data.language, activeDistance, currentDistNames]);
 
+  // 当选项被删除或改变时，确保当前激活的距离始终有效
+  useEffect(() => {
+    if (currentDistNames.length > 0 && !currentDistNames.includes(activeDistance)) {
+      setActiveDistance(currentDistNames[0]);
+    }
+  }, [currentDistNames, activeDistance]);
 
   const t = translations[data.language || 'zh'];
   const tc = THEMES[data.theme] || THEMES.purple;
@@ -646,7 +670,6 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
-    // 修复 Firebase 路径错误问题：确保 appId 不包含可能破坏路径的斜杠
     const safeAppId = appId.replace(/\//g, '_');
     const userRef = doc(db, 'artifacts', safeAppId, 'users', user.uid, 'profile', 'main');
     const unsub = onSnapshot(userRef, (docSnap) => {
@@ -677,7 +700,11 @@ export default function App() {
     setFormPointsPerTask(data.pointsPerTask ?? 20);
     setFormDailyBonus(data.dailyBonusPoints ?? 50);
     setFormRewards(data.customRewards || defaultData.customRewards);
-  }, [data.races, data.raceDate, data.weeklyTemplate, data.pointsPerTask, data.dailyBonusPoints, data.customRewards]);
+    
+    // 初始化设置表单中的距离列表
+    const initialDistances = data.customDistances || (data.language === 'en' ? ['Start', 'Lap', '500m', '777m', '1000m', '1500m'] : ['起跑', '单圈', '500m', '777m', '1000m', '1500m']);
+    setFormDistances(initialDistances);
+  }, [data.races, data.raceDate, data.weeklyTemplate, data.pointsPerTask, data.dailyBonusPoints, data.customRewards, data.customDistances, data.language]);
 
   const isParentMode = !data.parentPin || isUnlocked;
 
@@ -804,18 +831,7 @@ export default function App() {
       const newRecord = { date: dateStr, time: time };
       
       let updateObj = {};
-      const keyMap = {
-        '500m': 'records',
-        '777m': 'records777',
-        '1000m': 'records1000',
-        '1500m': 'records1500',
-        '起跑': 'recordsStart',
-        '单圈': 'recordsLap',
-        'Start': 'recordsStart',
-        'Lap': 'recordsLap'
-      };
-      
-      const key = keyMap[activeDistance] || 'records';
+      const key = getRecordsKey(activeDistance);
       
       const updatedRecords = [...(data[key] || []), newRecord];
       updatedRecords.sort((a, b) => {
@@ -852,6 +868,66 @@ export default function App() {
       setCelebration(reward);
       setTimeout(() => setCelebration(null), 3000);
     }
+  };
+
+  const translateDynamicData = async (targetLang, currentData) => {
+    // 👇 注意：在本地 Vercel 部署时，请把 API Key 填入下面双引号中！
+    const apiKey = ""; 
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+    const promptText = `Translate the string values in the following JSON to ${targetLang === 'en' ? 'English' : 'Simplified Chinese'}. Keep the exact JSON structure. Do NOT change keys or IDs.\n\n${JSON.stringify({
+      weeklyTemplate: currentData.weeklyTemplate,
+      tasks: currentData.tasks.map(t => ({ id: t.id, text: t.text, target: t.target || null })),
+      customRewards: currentData.customRewards.map(r => ({ id: r.id, name: r.name })),
+      customDistances: currentData.customDistances || ['Start', 'Lap', '500m', '777m', '1000m', '1500m']
+    })}`;
+
+    const payload = {
+      contents: [{ parts: [{ text: promptText }] }],
+      generationConfig: { responseMimeType: "application/json" }
+    };
+
+    const delays = [1000, 2000, 4000, 8000, 16000];
+    for (let i = 0; i < 5; i++) {
+      try {
+        const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
+        const result = await res.json();
+        
+        if (!res.ok) {
+           console.error("API Error:", result);
+           throw new Error("API request failed");
+        }
+
+        if (result.candidates && result.candidates[0]) {
+           const text = result.candidates[0].content.parts[0].text;
+           const parsed = JSON.parse(text);
+           const newTasks = currentData.tasks.map(t => {
+              const translatedTask = parsed.tasks.find(pt => pt.id === t.id);
+              return { 
+                ...t, 
+                text: translatedTask ? translatedTask.text : t.text,
+                target: (translatedTask && translatedTask.target !== undefined) ? translatedTask.target : (t.target || null)
+              };
+           });
+           const newRewards = currentData.customRewards.map(r => {
+              const translatedReward = parsed.customRewards?.find(pr => pr.id === r.id);
+              return {
+                ...r,
+                name: translatedReward ? translatedReward.name : r.name
+              };
+           });
+           return { 
+             weeklyTemplate: parsed.weeklyTemplate, 
+             tasks: newTasks, 
+             customRewards: newRewards,
+             customDistances: parsed.customDistances || currentData.customDistances
+           };
+        }
+      } catch (error) {
+        if (i === 4) return null;
+        await new Promise(r => setTimeout(r, delays[i]));
+      }
+    }
+    return null;
   };
 
   const handleImageUpload = (e) => {
@@ -933,15 +1009,12 @@ export default function App() {
       });
     }
 
-    // 计算最新高光时刻数据
-    const allRecords = [
-      ...(data.records || []).map(r => ({ ...r, distance: '500m' })),
-      ...(data.records777 || []).map(r => ({ ...r, distance: '777m' })),
-      ...(data.records1000 || []).map(r => ({ ...r, distance: '1000m' })),
-      ...(data.records1500 || []).map(r => ({ ...r, distance: '1500m' })),
-      ...(data.recordsStart || []).map(r => ({ ...r, distance: data.language === 'en' ? 'Start' : '起跑' })),
-      ...(data.recordsLap || []).map(r => ({ ...r, distance: data.language === 'en' ? 'Lap' : '单圈' }))
-    ];
+    // 计算最新高光时刻数据，遍历所有自定义项目
+    const allRecords = currentDistNames.flatMap(dist => {
+      const key = getRecordsKey(dist);
+      return (data[key] || []).map(r => ({ ...r, distance: dist }));
+    });
+    
     allRecords.sort((a, b) => {
       const dateA = a.date.includes('-') ? a.date : `${currentTime.getFullYear()}-${a.date.replace('/', '-')}`;
       const dateB = b.date.includes('-') ? b.date : `${currentTime.getFullYear()}-${b.date.replace('/', '-')}`;
@@ -949,16 +1022,16 @@ export default function App() {
     });
     const latestRecord = allRecords.length > 0 ? allRecords[0] : null;
 
-    // --- 新增：计算不同时间段的问候语 ---
+    // 计算不同时间段的问候语
     const hour = currentTime.getHours();
     let greetingIndex = 0;
-    if (hour >= 5 && hour < 9) greetingIndex = 1; // 5:00 - 9:00 (清晨)
-    else if (hour >= 9 && hour < 12) greetingIndex = 2; // 9:00 - 12:00 (上午)
-    else if (hour >= 12 && hour < 18) greetingIndex = 3; // 12:00 - 18:00 (下午)
-    else if (hour >= 18 && hour < 23) greetingIndex = 4; // 18:00 - 23:00 (晚间)
-    else greetingIndex = 0; // 23:00 - 5:00 (深夜)
+    if (hour >= 5 && hour < 9) greetingIndex = 1; // 清晨
+    else if (hour >= 9 && hour < 12) greetingIndex = 2; // 上午
+    else if (hour >= 12 && hour < 18) greetingIndex = 3; // 下午
+    else if (hour >= 18 && hour < 23) greetingIndex = 4; // 晚间
+    else greetingIndex = 0; // 深夜
 
-    // --- 新增：计算每日随机贴士 (根据一年中的第几天循环) ---
+    // 计算每日随机贴士
     const dayOfYear = Math.floor((currentTime - new Date(currentTime.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
     const tipIndex = dayOfYear % t.tips.length;
 
@@ -1294,18 +1367,9 @@ export default function App() {
   );
 
   const StatsView = () => {
-    const distNames = data.language === 'en' 
-      ? ['Start', 'Lap', '500m', '777m', '1000m', '1500m'] 
-      : ['起跑', '单圈', '500m', '777m', '1000m', '1500m'];
-
     const getRecords = () => {
-      if (activeDistance === '500m') return data.records || [];
-      if (activeDistance === '777m') return data.records777 || [];
-      if (activeDistance === '1000m') return data.records1000 || [];
-      if (activeDistance === '1500m') return data.records1500 || [];
-      if (activeDistance === '起跑' || activeDistance === 'Start') return data.recordsStart || [];
-      if (activeDistance === '单圈' || activeDistance === 'Lap') return data.recordsLap || [];
-      return [];
+      const key = getRecordsKey(activeDistance);
+      return data[key] || [];
     };
 
     const currentRecords = getRecords();
@@ -1375,14 +1439,13 @@ export default function App() {
             onScroll={handleStatsScroll}
             className="flex gap-2 overflow-x-auto py-1 no-scrollbar w-full scroll-smooth"
           >
-            {distNames.map(dist => {
-              const internalDist = dist === 'Start' ? '起跑' : dist === 'Lap' ? '单圈' : dist;
+            {currentDistNames.map(dist => {
               return (
                 <button
                   key={dist}
-                  onClick={() => setActiveDistance(internalDist)}
+                  onClick={() => setActiveDistance(dist)}
                   className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                    (activeDistance === dist || activeDistance === internalDist)
+                    (activeDistance === dist)
                       ? tc.btnPrimary + ' shadow-md' 
                       : tc.cardBg + ' ' + tc.textPrimary + ' hover:opacity-80'
                   }`}
@@ -1405,7 +1468,7 @@ export default function App() {
 
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <div className="flex justify-between items-center mb-2">
-            <h3 className={`${tc.textHeading} font-bold`}>{activeDistance === '起跑' && data.language === 'en' ? 'Start' : activeDistance === '单圈' && data.language === 'en' ? 'Lap' : activeDistance} {t.recentRecords}</h3>
+            <h3 className={`${tc.textHeading} font-bold`}>{activeDistance} {t.recentRecords}</h3>
             <span className={`text-xs font-bold ${tc.badgeBg} ${tc.textPrimary} px-2 py-1 rounded-md`}>
               {t.latest}: {currentRecords.length > 0 ? currentRecords[currentRecords.length - 1].time : '--'}s
             </span>
@@ -1496,7 +1559,8 @@ export default function App() {
         weeklyTemplate: formTemplate,
         pointsPerTask: parseInt(formPointsPerTask, 10) || 0,
         dailyBonusPoints: parseInt(formDailyBonus, 10) || 0,
-        customRewards: formRewards.map(r => ({ ...r, cost: parseInt(r.cost, 10) || 0 })) 
+        customRewards: formRewards.map(r => ({ ...r, cost: parseInt(r.cost, 10) || 0 })),
+        customDistances: formDistances
       });
       
       setSaveSuccess(true);
@@ -1570,6 +1634,7 @@ export default function App() {
           <p className={`text-sm ${tc.textMuted} mt-1`}>{t.customizePlan}</p>
         </div>
 
+        {/* 语言选项置顶，纯静态切换 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
           <h3 className={`${tc.textHeading} font-bold flex items-center gap-2 shrink-0`}>
             <Globe size={18} /> {t.language}
@@ -1671,6 +1736,43 @@ export default function App() {
 
         {isParentMode && (
           <>
+            {/* 新增：成绩项目距离管理 */}
+            <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
+              <div className="flex justify-between items-center">
+                <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
+                  <LineChart size={18} /> {t.distanceManagement}
+                </h3>
+                <button 
+                  onClick={() => setFormDistances([...formDistances, t.newDistance])}
+                  className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {formDistances.map((dist, index) => (
+                  <div key={index} className={`flex items-center gap-1 ${tc.inputBg} pl-3 pr-1 py-1.5 rounded-xl border border-transparent focus-within:${tc.borderLight}`}>
+                    <input 
+                      type="text" 
+                      value={dist}
+                      onChange={(e) => {
+                        const newDists = [...formDistances];
+                        newDists[index] = e.target.value;
+                        setFormDistances(newDists);
+                      }}
+                      className={`w-16 bg-transparent text-sm font-bold ${tc.appText} focus:outline-none`}
+                    />
+                    <button 
+                      onClick={() => setFormDistances(formDistances.filter((_, i) => i !== index))}
+                      className={`p-1 ${tc.textMuted} hover:text-red-500 transition-colors rounded-lg`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <div className="flex justify-between items-center">
                 <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
