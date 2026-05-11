@@ -352,9 +352,7 @@ const translations = {
     emptyHistory: '还没有兑换过奖励哦~',
     redeemSuccess: '兑换成功！',
     enjoyReward: '快去享受你的【{reward}】吧！',
-    close: '关闭',
-    translating: '智能翻译中...',
-    translateFailed: '界面已切换，但自定义数据翻译失败。'
+    close: '关闭'
   },
   en: {
     loading: 'Loading cloud data...',
@@ -427,9 +425,7 @@ const translations = {
     emptyHistory: 'No redemption history yet.',
     redeemSuccess: 'Success!',
     enjoyReward: 'Go enjoy your [{reward}]!',
-    close: 'Close',
-    translating: 'Translating...',
-    translateFailed: 'UI switched, but custom data translation failed.'
+    close: 'Close'
   }
 };
 
@@ -502,9 +498,6 @@ export default function App() {
   });
   const [activeDistance, setActiveDistance] = useState('500m');
   
-  // 恢复之前缺失的翻译加载状态
-  const [isTranslating, setIsTranslating] = useState(false);
-
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editTaskText, setEditTaskText] = useState('');
   const [editTaskTarget, setEditTaskTarget] = useState('');
@@ -780,61 +773,6 @@ export default function App() {
       setCelebration(reward);
       setTimeout(() => setCelebration(null), 3000);
     }
-  };
-
-  const translateDynamicData = async (targetLang, currentData) => {
-    // 👇 注意：在本地 Vercel 部署时，请把 API Key 填入下面双引号中！
-    // 在当前网页预览环境中，保持为空即可，系统会自动提供临时密钥。
-    const apiKey = ""; 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-    const promptText = `Translate the string values in the following JSON to ${targetLang === 'en' ? 'English' : 'Simplified Chinese'}. Keep the exact JSON structure. Do NOT change keys or IDs.\n\n${JSON.stringify({
-      weeklyTemplate: currentData.weeklyTemplate,
-      tasks: currentData.tasks.map(t => ({ id: t.id, text: t.text, target: t.target || null })),
-      customRewards: currentData.customRewards.map(r => ({ id: r.id, name: r.name }))
-    })}`;
-
-    const payload = {
-      contents: [{ parts: [{ text: promptText }] }],
-      generationConfig: { responseMimeType: "application/json" }
-    };
-
-    const delays = [1000, 2000, 4000, 8000, 16000];
-    for (let i = 0; i < 5; i++) {
-      try {
-        const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
-        const result = await res.json();
-        
-        if (!res.ok) {
-           console.error("API Error:", result);
-           throw new Error("API request failed");
-        }
-
-        if (result.candidates && result.candidates[0]) {
-           const text = result.candidates[0].content.parts[0].text;
-           const parsed = JSON.parse(text);
-           const newTasks = currentData.tasks.map(t => {
-              const translatedTask = parsed.tasks.find(pt => pt.id === t.id);
-              return { 
-                ...t, 
-                text: translatedTask ? translatedTask.text : t.text,
-                target: (translatedTask && translatedTask.target !== undefined) ? translatedTask.target : (t.target || null)
-              };
-           });
-           const newRewards = currentData.customRewards.map(r => {
-              const translatedReward = parsed.customRewards?.find(pr => pr.id === r.id);
-              return {
-                ...r,
-                name: translatedReward ? translatedReward.name : r.name
-              };
-           });
-           return { weeklyTemplate: parsed.weeklyTemplate, tasks: newTasks, customRewards: newRewards };
-        }
-      } catch (error) {
-        if (i === 4) return null;
-        await new Promise(r => setTimeout(r, delays[i]));
-      }
-    }
-    return null;
   };
 
   const handleImageUpload = (e) => {
@@ -1359,24 +1297,10 @@ export default function App() {
       setIsUnlocked(true);
     };
 
+    // 纯粹、无API请求、瞬间切换界面语言
     const toggleLanguage = async () => {
-      if (isTranslating) return;
       const targetLang = data.language === 'en' ? 'zh' : 'en';
-      setIsTranslating(true);
-      
-      const translated = await translateDynamicData(targetLang, data);
-      if (translated) {
-        await updateData({ 
-          language: targetLang,
-          weeklyTemplate: translated.weeklyTemplate,
-          tasks: translated.tasks,
-          customRewards: translated.customRewards
-        });
-      } else {
-        await updateData({ language: targetLang });
-        alert(targetLang === 'en' ? translations.en.translateFailed : translations.zh.translateFailed);
-      }
-      setIsTranslating(false);
+      await updateData({ language: targetLang });
     };
 
     const renderThemeSelector = () => (
@@ -1414,17 +1338,16 @@ export default function App() {
           <p className={`text-sm ${tc.textMuted} mt-1`}>{t.customizePlan}</p>
         </div>
 
-        {/* Language Option properly placed here at the top */}
+        {/* 语言选项置顶，纯静态切换 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
           <h3 className={`${tc.textHeading} font-bold flex items-center gap-2 shrink-0`}>
             <Globe size={18} /> {t.language}
           </h3>
           <button 
             onClick={toggleLanguage}
-            disabled={isTranslating}
-            className={`${tc.badgeBg} ${tc.textPrimary} px-4 py-2 rounded-lg font-bold text-sm hover:opacity-80 transition-colors disabled:opacity-50 flex items-center gap-2 shrink-0 whitespace-nowrap`}
+            className={`${tc.badgeBg} ${tc.textPrimary} px-4 py-2 rounded-lg font-bold text-sm hover:opacity-80 transition-colors flex items-center gap-2 shrink-0 whitespace-nowrap`}
           >
-            {isTranslating ? <><Loader2 size={16} className="animate-spin" /> {t.translating}</> : (data.language === 'en' ? '🇨🇳 中文' : '🇬🇧 English')}
+            {data.language === 'en' ? '🇨🇳 中文' : '🇬🇧 English'}
           </button>
         </div>
 
@@ -1677,7 +1600,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* 新的按钮反馈交互 */}
+            {/* 按钮反馈交互 */}
             <button 
               onClick={handleSaveSettings}
               disabled={saveSuccess}
