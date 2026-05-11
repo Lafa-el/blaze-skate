@@ -168,16 +168,16 @@ const TASK_LIBRARY = {
       category: '热身准备',
       tasks: [
         { text: '慢跑热身', target: '10-15分钟' },
-        { text: '动态拉伸 (全身)', target: '10分钟' },
-        { text: '踝/膝/髋关节激活', target: '各方向20次' },
-        { text: '跳绳 (低阻力)', target: '10分钟' }
+        { text: '动态拉伸', target: '10分钟' },
+        { text: '关节激活', target: '各方向20次' },
+        { text: '跳绳', target: '10分钟' }
       ]
     },
     {
-      category: '爆发力 (陆地)',
+      category: '爆发力',
       tasks: [
-        { text: '侧向滑步跳 (Skater Jumps)', target: '4组 x 16次' },
-        { text: '跳箱 (Box Jumps)', target: '4组 x 8次' },
+        { text: '侧向滑步跳', target: '4组 x 16次' },
+        { text: '跳箱', target: '4组 x 8次' },
         { text: '立定蛙跳', target: '4组 x 10次' },
         { text: '单腿纵跳', target: '3组 x 每侧8次' }
       ]
@@ -185,18 +185,18 @@ const TASK_LIBRARY = {
     {
       category: '核心与力量',
       tasks: [
-        { text: '杠铃深蹲 (Squats)', target: '4组 x 8-10次' },
+        { text: '杠铃深蹲', target: '4组 x 8-10次' },
         { text: '保加利亚分腿蹲', target: '3组 x 每侧10次' },
-        { text: '罗马尼亚硬拉 (RDL)', target: '4组 x 10次' },
+        { text: '罗马尼亚硬拉', target: '4组 x 10次' },
         { text: '平板支撑及变式', target: '3组 x 1分钟' },
-        { text: '俄罗斯转体 (负重)', target: '3组 x 20次' }
+        { text: '俄罗斯转体', target: '3组 x 20次' }
       ]
     },
     {
-      category: '专项体能 (耐力)',
+      category: '专项体能',
       tasks: [
-        { text: '靠墙静蹲 (Wall Sit)', target: '3组 x 1.5-2分钟' },
-        { text: '滑行板 (Slide Board)', target: '5组 x 1-2分钟' },
+        { text: '靠墙静蹲', target: '3组 x 1.5-2分钟' },
+        { text: '滑行板', target: '5组 x 1-2分钟' },
         { text: '动感单车间歇', target: '20s冲刺/40s慢骑 x 10' },
         { text: '折返跑冲刺', target: '5趟 x 4组' }
       ]
@@ -215,7 +215,7 @@ const TASK_LIBRARY = {
       tasks: [
         { text: '泡沫轴筋膜放松', target: '15分钟' },
         { text: '下肢静态拉伸', target: '10-15分钟' },
-        { text: '冰浴 / 冷水浴', target: '10分钟' },
+        { text: '冰浴或冷水浴', target: '10分钟' },
         { text: '瑜伽垫上冥想', target: '10分钟' }
       ]
     }
@@ -244,7 +244,7 @@ const TASK_LIBRARY = {
       tasks: [
         { text: 'Barbell Squats', target: '4 sets x 8-10 reps' },
         { text: 'Bulgarian Split Squats', target: '3 sets x 10 reps/leg' },
-        { text: 'Romanian Deadlifts (RDL)', target: '4 sets x 10 reps' },
+        { text: 'Romanian Deadlifts', target: '4 sets x 10 reps' },
         { text: 'Plank Variations', target: '3 sets x 1 min' },
         { text: 'Weighted Russian Twists', target: '3 sets x 20 reps' }
       ]
@@ -271,9 +271,9 @@ const TASK_LIBRARY = {
       category: 'Recovery',
       tasks: [
         { text: 'Foam Rolling', target: '15 mins' },
-        { text: 'Static Stretching (Legs)', target: '10-15 mins' },
+        { text: 'Static Stretching', target: '10-15 mins' },
         { text: 'Ice Bath / Cold Plunge', target: '10 mins' },
-        { text: 'Yoga / Meditation', target: '10 mins' }
+        { text: 'Meditation', target: '10 mins' }
       ]
     }
   ]
@@ -317,7 +317,7 @@ const translations = {
     loggedIn: '已登录 • 账号 ID:',
     nav: { dashboard: '概览', tasks: '任务', calendar: '日历', stats: '统计', shop: '商店', settings: '设置' },
     daysNames: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
-    language: '语言 (Language)',
+    language: '语言',
     optionalTarget: '目标/配速要求 (选填)',
     targetLabel: '目标',
     cancel: '取消',
@@ -337,7 +337,7 @@ const translations = {
     profileAvatar: '自定义头像',
     uploadAvatarDesc: '上传你的专属照片',
     brandSub: '冰焰速滑训练系统',
-    parentMode: '家长 / 教练模式',
+    parentMode: '家长模式',
     unlockPrompt: '请输入 4 位数字密码解锁编辑权限',
     setPinPrompt: '设置 4 位数字密码以锁定训练排课与成绩录入',
     pinPlaceholder: '4位数字',
@@ -392,7 +392,7 @@ const translations = {
     loggedIn: 'Logged in • User ID:',
     nav: { dashboard: 'Home', tasks: 'Tasks', calendar: 'Calendar', stats: 'Stats', shop: 'Shop', settings: 'Settings' },
     daysNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    language: 'Language (语言)',
+    language: 'Language',
     optionalTarget: 'Target/Pace (Optional)',
     targetLabel: 'Target',
     cancel: 'Cancel',
@@ -412,7 +412,7 @@ const translations = {
     profileAvatar: 'Custom Avatar',
     uploadAvatarDesc: 'Upload your profile photo',
     brandSub: 'TRAINING PLATFORM',
-    parentMode: 'Parent / Coach Mode',
+    parentMode: 'Parent Mode',
     unlockPrompt: 'Enter 4-digit PIN to unlock editing',
     setPinPrompt: 'Set a 4-digit PIN to lock planning & records',
     pinPlaceholder: '4-digit',
@@ -444,28 +444,28 @@ const defaultData = {
   dailyBonusPoints: 50,
   completedDays: [], 
   customRewards: [
-    { id: 1, name: 'Cheat Meal (放纵餐)', cost: 500, icon: '🍔' },
-    { id: 2, name: 'New Bearings (新轴承)', cost: 1200, icon: '⚙️' },
-    { id: 3, name: 'Skip Core Set (免做核心)', cost: 300, icon: '🛋️' },
-    { id: 4, name: 'New Gear Fund (新训练服)', cost: 3000, icon: '👕' },
+    { id: 1, name: 'Cheat Meal', cost: 500, icon: '🍔' },
+    { id: 2, name: 'New Bearings', cost: 1200, icon: '⚙️' },
+    { id: 3, name: 'Skip Core Set', cost: 300, icon: '🛋️' },
+    { id: 4, name: 'New Gear Fund', cost: 3000, icon: '👕' },
   ],
   rewardHistory: [],
   races: [
-    { id: 1, name: 'National Champ (全国锦标赛)', date: '2026-11-20' }
+    { id: 1, name: 'National Champ', date: '2026-11-20' }
   ],
   weeklyTemplate: {
-    0: 'Rest Day (休息日)',
-    1: 'Strength Day (力量日)',
-    2: 'Power/Sprint (爆发力)',
-    3: 'Conditioning (有氧耐力)',
-    4: 'Technique (技术模仿)',
-    5: 'Intervals (间歇体能)',
-    6: 'Endurance (专项耐力)',
+    0: 'Rest Day',
+    1: 'Strength Day',
+    2: 'Power/Sprint',
+    3: 'Conditioning',
+    4: 'Technique',
+    5: 'Intervals',
+    6: 'Endurance',
   },
   tasks: [
-    { id: 1, text: 'Jogging (慢跑热身)', target: '15 mins', completed: false, isTemplate: true },
-    { id: 2, text: 'Slide Board (滑行板)', target: '5 sets x 1 min', completed: false, isTemplate: true },
-    { id: 3, text: 'Wall Sit (靠墙静蹲)', target: '3 sets x 1.5 mins', completed: false, isTemplate: true },
+    { id: 1, text: 'Jogging', target: '15 mins', completed: false, isTemplate: true },
+    { id: 2, text: 'Slide Board', target: '5 sets x 1 min', completed: false, isTemplate: true },
+    { id: 3, text: 'Wall Sit', target: '3 sets x 1.5 mins', completed: false, isTemplate: true },
   ],
   records: [
     { date: '2026-05-01', time: 48.5 },
