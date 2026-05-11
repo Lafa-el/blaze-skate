@@ -165,6 +165,9 @@ const THEMES = {
   }
 };
 
+// 免费用户可用的主题
+const FREE_THEMES = ['purple', 'blue', 'white'];
+
 // --- 内容库配置 (Task Library) ---
 const TASK_LIBRARY = {
   zh: [
@@ -393,13 +396,18 @@ const translations = {
     proPrice: '¥98',
     proPeriod: '/ 年',
     proFeatures: [
-      '无限制的自定义成绩项目与进度分析',
-      '高阶起跑与单圈配速曲线智能对比',
+      '无限制的专属成绩项目定制与分析',
+      '解锁奖励商店与专属特权兑换',
+      '海量专业陆地训练动作库一键导入',
       '解锁全部 8 款专属沉浸式训练主题',
-      '完整的教练排课与家长多设备云同步'
+      '高阶家长端密码锁与全局积分控制'
     ],
     upgradeNow: '立即升级',
-    comingSoon: '支付系统即将上线，敬请期待！'
+    comingSoon: '正在为您解锁 PRO 权限...',
+    proActiveTitle: 'BLAZE PRO 尊贵会员',
+    proActiveSub: '已解锁全部高阶训练功能',
+    proTag: '已激活',
+    proUnlockedMsg: 'PRO 权限已解锁！'
   },
   en: {
     loading: 'Loading cloud data...',
@@ -510,12 +518,17 @@ const translations = {
     proPeriod: '/ year',
     proFeatures: [
       'Unlimited custom distances & analytics',
-      'Advanced start & lap pacing charts',
+      'Unlock Reward Shop & exclusive items',
+      'Import tasks from PRO Library',
       'Unlock all 8 premium app themes',
-      'Advanced coach & parent cloud sync'
+      'Parental PIN Lock & Points control'
     ],
     upgradeNow: 'Upgrade Now',
-    comingSoon: 'Payment system coming soon!'
+    comingSoon: 'Unlocking PRO access for you...',
+    proActiveTitle: 'BLAZE PRO Active',
+    proActiveSub: 'All premium features unlocked',
+    proTag: 'Active',
+    proUnlockedMsg: 'PRO Unlocked Successfully!'
   }
 };
 
@@ -526,14 +539,15 @@ const defaultData = {
   theme: 'purple',
   avatar: '', 
   parentPin: '',
-  pointsPerTask: 20,
-  dailyBonusPoints: 50,
+  isPro: false, // --- 新增：默认非会员状态 ---
+  pointsPerTask: 10,
+  dailyBonusPoints: 20,
   completedDays: [], 
   customRewards: [
-    { id: 1, name: 'Cheat Meal', cost: 500, icon: '🍔' },
-    { id: 2, name: 'New Bearings', cost: 1200, icon: '⚙️' },
-    { id: 3, name: 'Skip Core Set', cost: 300, icon: '🛋️' },
-    { id: 4, name: 'New Gear Fund', cost: 3000, icon: '👕' },
+    { id: 1, name: 'Snack of Choice', cost: 200, icon: '🍿' },
+    { id: 2, name: '2-Hour Weekend Gaming', cost: 500, icon: '🎮' },
+    { id: 3, name: 'Dream Toy Voucher', cost: 1000, icon: '🎁' },
+    { id: 4, name: 'New Skate Gear Fund', cost: 3000, icon: '⛸️' },
   ],
   customDistances: ['Start', 'Lap', '500m', '777m', '1000m', '1500m'],
   rewardHistory: [],
@@ -633,6 +647,7 @@ export default function App() {
 
   // PRO Modal State
   const [showProModal, setShowProModal] = useState(false);
+  const [isSimulatingPayment, setIsSimulatingPayment] = useState(false); // 模拟支付状态
 
   const statsScrollRef = useRef(null);
   const [statsCanScroll, setStatsCanScroll] = useState({ left: false, right: true });
@@ -739,7 +754,7 @@ export default function App() {
     setFormDistances(initialDistances);
   }, [data.races, data.raceDate, data.weeklyTemplate, data.pointsPerTask, data.dailyBonusPoints, data.customRewards, data.customDistances, data.language]);
 
-  const isParentMode = !data.parentPin || isUnlocked;
+  const isParentMode = (!data.isPro || !data.parentPin) || isUnlocked;
 
   const updateData = async (newData) => {
     if (!user) return;
@@ -901,66 +916,6 @@ export default function App() {
       setCelebration(reward);
       setTimeout(() => setCelebration(null), 3000);
     }
-  };
-
-  const translateDynamicData = async (targetLang, currentData) => {
-    // 👇 注意：在本地 Vercel 部署时，请把 API Key 填入下面双引号中！
-    const apiKey = ""; 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-    const promptText = `Translate the string values in the following JSON to ${targetLang === 'en' ? 'English' : 'Simplified Chinese'}. Keep the exact JSON structure. Do NOT change keys or IDs.\n\n${JSON.stringify({
-      weeklyTemplate: currentData.weeklyTemplate,
-      tasks: currentData.tasks.map(t => ({ id: t.id, text: t.text, target: t.target || null })),
-      customRewards: currentData.customRewards.map(r => ({ id: r.id, name: r.name })),
-      customDistances: currentData.customDistances || ['Start', 'Lap', '500m', '777m', '1000m', '1500m']
-    })}`;
-
-    const payload = {
-      contents: [{ parts: [{ text: promptText }] }],
-      generationConfig: { responseMimeType: "application/json" }
-    };
-
-    const delays = [1000, 2000, 4000, 8000, 16000];
-    for (let i = 0; i < 5; i++) {
-      try {
-        const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
-        const result = await res.json();
-        
-        if (!res.ok) {
-           console.error("API Error:", result);
-           throw new Error("API request failed");
-        }
-
-        if (result.candidates && result.candidates[0]) {
-           const text = result.candidates[0].content.parts[0].text;
-           const parsed = JSON.parse(text);
-           const newTasks = currentData.tasks.map(t => {
-              const translatedTask = parsed.tasks.find(pt => pt.id === t.id);
-              return { 
-                ...t, 
-                text: translatedTask ? translatedTask.text : t.text,
-                target: (translatedTask && translatedTask.target !== undefined) ? translatedTask.target : (t.target || null)
-              };
-           });
-           const newRewards = currentData.customRewards.map(r => {
-              const translatedReward = parsed.customRewards?.find(pr => pr.id === r.id);
-              return {
-                ...r,
-                name: translatedReward ? translatedReward.name : r.name
-              };
-           });
-           return { 
-             weeklyTemplate: parsed.weeklyTemplate, 
-             tasks: newTasks, 
-             customRewards: newRewards,
-             customDistances: parsed.customDistances || currentData.customDistances
-           };
-        }
-      } catch (error) {
-        if (i === 4) return null;
-        await new Promise(r => setTimeout(r, delays[i]));
-      }
-    }
-    return null;
   };
 
   const handleImageUpload = (e) => {
@@ -1360,12 +1315,14 @@ export default function App() {
 
       {isParentMode && (
         <div className={`flex flex-col gap-3 pt-4 border-t ${tc.borderLight}`}>
+          {/* PRO 限制：核心动作库 */}
           <button 
-            onClick={() => setShowLibrary(true)}
-            className={`w-full flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-dashed ${tc.borderLight} ${tc.badgeBg} ${tc.textPrimary} hover:opacity-80 transition-all font-bold text-base shadow-sm`}
+            onClick={() => data.isPro ? setShowLibrary(true) : setShowProModal(true)}
+            className={`w-full flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-dashed ${tc.borderLight} ${tc.badgeBg} ${tc.textPrimary} transition-all font-bold text-base shadow-sm ${!data.isPro ? 'opacity-90' : 'hover:opacity-80'}`}
           >
             <Dumbbell size={24} />
             {t.openLibrary}
+            {!data.isPro && <Crown size={18} className="text-yellow-500 ml-1" />}
           </button>
 
           <div className="flex flex-col gap-2">
@@ -1563,20 +1520,34 @@ export default function App() {
 
         <div className="grid grid-cols-2 gap-4">
           {currentRewards.map(reward => (
-            <div key={reward.id} className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex flex-col items-center text-center`}>
+            <div key={reward.id} className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex flex-col items-center text-center relative overflow-hidden`}>
+              {/* PRO 限制：奖励商店 */}
+              {!data.isPro && (
+                <div className="absolute top-0 right-0 w-12 h-12 overflow-hidden z-10">
+                   <div className="bg-yellow-500 text-white font-bold text-[8px] py-1 px-4 transform rotate-45 translate-x-3 translate-y-1 shadow-sm uppercase tracking-wider flex items-center justify-center gap-1">
+                     <Crown size={8}/> PRO
+                   </div>
+                </div>
+              )}
               <div className="text-4xl mb-3 drop-shadow-sm">{reward.icon}</div>
               <div className={`font-bold ${tc.appText} mb-1 text-sm leading-tight h-10 flex items-center`}>{reward.name}</div>
               <div className="text-yellow-500 font-black text-sm mb-4">{reward.cost} {t.points}</div>
               <button 
-                onClick={() => buyReward(reward)}
-                disabled={data.points < reward.cost}
+                onClick={() => data.isPro ? buyReward(reward) : setShowProModal(true)}
+                disabled={data.isPro && data.points < reward.cost}
                 className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all ${
-                  data.points >= reward.cost 
-                    ? tc.btnPrimary + ' shadow-md active:scale-95' 
-                    : (data.theme === 'black' ? 'bg-slate-700 text-slate-500' : 'bg-gray-100 text-gray-400') + ' cursor-not-allowed'
+                  !data.isPro 
+                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md active:scale-95'
+                    : (data.points >= reward.cost 
+                        ? tc.btnPrimary + ' shadow-md active:scale-95' 
+                        : (data.theme === 'black' ? 'bg-slate-700 text-slate-500' : 'bg-gray-100 text-gray-400') + ' cursor-not-allowed')
                 }`}
               >
-                {data.points >= reward.cost ? t.redeem : t.notEnough}
+                {!data.isPro ? (
+                  <span className="flex items-center justify-center gap-1.5"><Crown size={14}/> PRO {t.redeem}</span>
+                ) : (
+                  data.points >= reward.cost ? t.redeem : t.notEnough
+                )}
               </button>
             </div>
           ))}
@@ -1641,15 +1612,27 @@ export default function App() {
           {Object.keys(THEMES).map(key => {
             const theme = THEMES[key];
             const isActive = (data.theme || 'purple') === key;
+            const isFreeTheme = FREE_THEMES.includes(key);
+            const isLocked = !data.isPro && !isFreeTheme;
+
             return (
               <button
                 key={key}
-                onClick={() => updateData({ theme: key })}
-                className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all ${
+                onClick={() => {
+                  if (isLocked) setShowProModal(true);
+                  else updateData({ theme: key });
+                }}
+                className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all relative ${
                   isActive ? tc.badgeBg + ' ring-2 ' + tc.focusRing : 'hover:opacity-70 ' + tc.calEmpty.split(' ')[0]
                 }`}
               >
-                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${theme.gradientIcon} shadow-sm border border-white/20`}></div>
+                {/* PRO 限制：高阶主题 */}
+                {isLocked && (
+                  <div className="absolute -top-1 -right-1 bg-slate-800 rounded-full p-0.5 shadow-md z-10">
+                    <Crown size={12} className="text-yellow-400" />
+                  </div>
+                )}
+                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${theme.gradientIcon} shadow-sm border border-white/20 ${isLocked ? 'opacity-50 grayscale' : ''}`}></div>
                 <span className={`text-[10px] font-bold ${isActive ? tc.textPrimary : tc.textMuted}`}>
                   {data.language === 'en' ? theme.enName : theme.name}
                 </span>
@@ -1667,23 +1650,39 @@ export default function App() {
           <p className={`text-sm ${tc.textMuted} mt-1`}>{t.customizePlan}</p>
         </div>
 
-        {/* PRO 会员升级横幅 */}
-        <div 
-          onClick={() => setShowProModal(true)}
-          className={`relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-5 rounded-2xl shadow-lg flex justify-between items-center text-white cursor-pointer hover:opacity-95 transition-all transform hover:scale-[1.02]`}
-        >
-          <Sparkles className="absolute right-10 top-2 opacity-20" size={60} />
-          <div>
-            <h3 className="font-black text-lg flex items-center gap-1.5 tracking-tight">
-              <Crown size={22} className="text-yellow-200 fill-yellow-200/20" /> 
-              {t.proTitle}
-            </h3>
-            <p className="text-xs font-medium opacity-90 mt-0.5">{t.proSubtitle}</p>
+        {/* PRO 会员状态展示栏 */}
+        {data.isPro ? (
+          <div className={`relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-5 rounded-2xl shadow-lg flex justify-between items-center text-white`}>
+            <Sparkles className="absolute right-10 top-2 opacity-20" size={60} />
+            <div>
+              <h3 className="font-black text-lg flex items-center gap-1.5 tracking-tight">
+                <Crown size={22} className="text-yellow-200 fill-yellow-200/20" /> 
+                {t.proActiveTitle}
+              </h3>
+              <p className="text-xs font-medium opacity-90 mt-0.5">{t.proActiveSub}</p>
+            </div>
+            <div className="bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm text-xs font-bold shrink-0">
+              {t.proTag}
+            </div>
           </div>
-          <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm">
-            <ChevronRight size={20} className="text-white" />
+        ) : (
+          <div 
+            onClick={() => setShowProModal(true)}
+            className={`relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-5 rounded-2xl shadow-lg flex justify-between items-center text-white cursor-pointer hover:opacity-95 transition-all transform hover:scale-[1.02]`}
+          >
+            <Sparkles className="absolute right-10 top-2 opacity-20" size={60} />
+            <div>
+              <h3 className="font-black text-lg flex items-center gap-1.5 tracking-tight">
+                <Crown size={22} className="text-yellow-200 fill-yellow-200/20" /> 
+                {t.proTitle}
+              </h3>
+              <p className="text-xs font-medium opacity-90 mt-0.5">{t.proSubtitle}</p>
+            </div>
+            <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm shrink-0">
+              <ChevronRight size={20} className="text-white" />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 语言选项置顶，纯静态切换 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
@@ -1698,11 +1697,13 @@ export default function App() {
           </button>
         </div>
 
+        {/* PRO 限制：家长密码锁 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm border-2 ${data.parentPin && !isUnlocked ? 'border-orange-300 bg-orange-50/30' : tc.borderLight}`}>
           <div className="flex justify-between items-center mb-3">
             <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
               {data.parentPin && !isUnlocked ? <Lock size={18} className="text-orange-500" /> : <ShieldCheck size={18} className="text-green-500" />}
               {t.parentMode}
+              {!data.isPro && <Crown size={14} className="text-yellow-500" />}
             </h3>
             {data.parentPin && isUnlocked && (
               <button onClick={() => setIsUnlocked(false)} className={`text-xs font-bold ${tc.btnCancel} px-3 py-1.5 rounded-lg shrink-0 whitespace-nowrap`}>
@@ -1719,12 +1720,14 @@ export default function App() {
                   type="password" 
                   maxLength={4}
                   value={pinInput}
+                  disabled={!data.isPro}
+                  onClick={() => !data.isPro && setShowProModal(true)}
                   onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
                   placeholder={t.pinPlaceholder}
-                  className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold`}
+                  className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold disabled:opacity-50`}
                 />
-                <button onClick={handleSetPin} className={`${tc.btnPrimary} px-4 py-2 rounded-xl font-bold text-sm shadow-sm shrink-0 whitespace-nowrap`}>
-                  {t.setPin}
+                <button onClick={data.isPro ? handleSetPin : () => setShowProModal(true)} className={`${tc.btnPrimary} px-4 py-2 rounded-xl font-bold text-sm shadow-sm shrink-0 whitespace-nowrap ${!data.isPro ? 'opacity-90' : ''}`}>
+                  {data.isPro ? t.setPin : <><Crown size={14} className="inline mr-1 -mt-0.5"/>PRO</>}
                 </button>
               </div>
             </div>
@@ -1771,7 +1774,8 @@ export default function App() {
                   <User size={24} className={tc.textPrimary} />
                 </div>
               )}
-              <label className={`absolute bottom-0 right-0 ${tc.btnPrimary} p-1.5 rounded-full cursor-pointer shadow-md border-2 ${tc.borderLight} transition-all`}>
+              {/* 头像上传保持开放 */}
+              <label className={`absolute bottom-0 right-0 ${tc.btnPrimary} p-1.5 rounded-full cursor-pointer shadow-md border-2 ${tc.borderLight} transition-all flex items-center justify-center`}>
                 <Camera size={14} />
                 <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
               </label>
@@ -1787,25 +1791,28 @@ export default function App() {
 
         {isParentMode && (
           <>
-            {/* 新增：成绩项目距离管理 */}
+            {/* PRO 限制：成绩项目距离管理 */}
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <div className="flex justify-between items-center">
                 <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
                   <LineChart size={18} /> {t.distanceManagement}
+                  {!data.isPro && <Crown size={14} className="text-yellow-500" />}
                 </h3>
                 <button 
-                  onClick={() => setFormDistances([...formDistances, t.newDistance])}
+                  onClick={() => data.isPro ? setFormDistances([...formDistances, t.newDistance]) : setShowProModal(true)}
                   className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
                 >
-                  <Plus size={16} />
+                  {data.isPro ? <Plus size={16} /> : <Crown size={16} className="text-yellow-500" />}
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {formDistances.map((dist, index) => (
-                  <div key={index} className={`flex items-center gap-1 ${tc.inputBg} pl-3 pr-1 py-1.5 rounded-xl border border-transparent focus-within:${tc.borderLight}`}>
+                  <div key={index} className={`flex items-center gap-1 ${tc.inputBg} pl-3 pr-1 py-1.5 rounded-xl border border-transparent focus-within:${tc.borderLight} ${!data.isPro && 'opacity-60 grayscale'}`}>
                     <input 
                       type="text" 
                       value={dist}
+                      disabled={!data.isPro}
+                      onClick={() => !data.isPro && setShowProModal(true)}
                       onChange={(e) => {
                         const newDists = [...formDistances];
                         newDists[index] = e.target.value;
@@ -1814,7 +1821,7 @@ export default function App() {
                       className={`w-16 bg-transparent text-sm font-bold ${tc.appText} focus:outline-none`}
                     />
                     <button 
-                      onClick={() => setFormDistances(formDistances.filter((_, i) => i !== index))}
+                      onClick={() => data.isPro ? setFormDistances(formDistances.filter((_, i) => i !== index)) : setShowProModal(true)}
                       className={`p-1 ${tc.textMuted} hover:text-red-500 transition-colors rounded-lg`}
                     >
                       <X size={14} />
@@ -1824,24 +1831,26 @@ export default function App() {
               </div>
             </div>
 
+            {/* PRO 限制：商店商品管理 */}
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <div className="flex justify-between items-center">
                 <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
                   <ShoppingCart size={18} /> {t.shopManagement}
+                  {!data.isPro && <Crown size={14} className="text-yellow-500" />}
                 </h3>
                 <button 
-                  onClick={() => setFormRewards([...formRewards, { id: Date.now(), name: '', cost: 100, icon: '🎁' }])}
+                  onClick={() => data.isPro ? setFormRewards([...formRewards, { id: Date.now(), name: '', cost: 100, icon: '🎁' }]) : setShowProModal(true)}
                   className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
                 >
-                  <Plus size={16} />
+                  {data.isPro ? <Plus size={16} /> : <Crown size={16} className="text-yellow-500" />}
                 </button>
               </div>
               
               <div className="space-y-3">
                 {formRewards.map((reward, index) => (
-                  <div key={reward.id} className={`flex flex-col gap-2 p-3 ${tc.inputBg} rounded-xl relative pr-10`}>
+                  <div key={reward.id} className={`flex flex-col gap-2 p-3 ${tc.inputBg} rounded-xl relative pr-10 ${!data.isPro && 'opacity-60 grayscale'}`}>
                     <button 
-                      onClick={() => setFormRewards(formRewards.filter(r => r.id !== reward.id))}
+                      onClick={() => data.isPro ? setFormRewards(formRewards.filter(r => r.id !== reward.id)) : setShowProModal(true)}
                       className={`absolute top-1/2 -translate-y-1/2 right-3 ${tc.textMuted} hover:text-red-500 transition-colors`}
                     >
                       <Trash2 size={18} />
@@ -1851,6 +1860,8 @@ export default function App() {
                       <input 
                         type="text" 
                         value={reward.icon}
+                        disabled={!data.isPro}
+                        onClick={() => !data.isPro && setShowProModal(true)}
                         onChange={(e) => {
                           const newRewards = [...formRewards];
                           newRewards[index].icon = e.target.value;
@@ -1862,6 +1873,8 @@ export default function App() {
                       <input 
                         type="text" 
                         value={reward.name}
+                        disabled={!data.isPro}
+                        onClick={() => !data.isPro && setShowProModal(true)}
                         onChange={(e) => {
                           const newRewards = [...formRewards];
                           newRewards[index].name = e.target.value;
@@ -1876,6 +1889,8 @@ export default function App() {
                       <input 
                         type="number" 
                         value={reward.cost}
+                        disabled={!data.isPro}
+                        onClick={() => !data.isPro && setShowProModal(true)}
                         onChange={(e) => {
                           const newRewards = [...formRewards];
                           newRewards[index].cost = e.target.value;
@@ -1958,16 +1973,20 @@ export default function App() {
               </div>
             </div>
 
+            {/* PRO 限制：积分奖励设置 */}
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
                 <Award size={18} /> {t.pointsSettingTitle}
+                {!data.isPro && <Crown size={14} className="text-yellow-500" />}
               </h3>
-              <div className="space-y-3">
+              <div className={`space-y-3 ${!data.isPro && 'opacity-60 grayscale'}`}>
                 <div className={`flex items-center justify-between gap-3 ${tc.inputBg} p-3 rounded-xl`}>
                   <span className={`text-sm font-bold ${tc.appText} shrink-0`}>{t.pointsPerTask}</span>
                   <input 
                     type="number" 
                     value={formPointsPerTask}
+                    disabled={!data.isPro}
+                    onClick={() => !data.isPro && setShowProModal(true)}
                     onChange={(e) => setFormPointsPerTask(e.target.value)}
                     className={`w-24 shrink-0 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
                   />
@@ -1977,6 +1996,8 @@ export default function App() {
                   <input 
                     type="number" 
                     value={formDailyBonus}
+                    disabled={!data.isPro}
+                    onClick={() => !data.isPro && setShowProModal(true)}
                     onChange={(e) => setFormDailyBonus(e.target.value)}
                     className={`w-24 shrink-0 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
                   />
@@ -2184,10 +2205,27 @@ export default function App() {
         {/* 底部吸底按钮 */}
         <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-slate-900 via-slate-900 to-transparent pb-safe">
           <button 
-            onClick={() => alert(t.comingSoon)}
-            className="w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black text-lg py-4 rounded-2xl shadow-[0_8px_30px_rgba(245,158,11,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
+            onClick={() => {
+              if (data.isPro) {
+                setShowProModal(false);
+              } else {
+                setIsSimulatingPayment(true);
+                setTimeout(() => {
+                  updateData({ isPro: true });
+                  setIsSimulatingPayment(false);
+                  setShowProModal(false);
+                  setCelebration({ icon: '👑', name: t.proUnlockedMsg });
+                }, 1500);
+              }
+            }}
+            disabled={isSimulatingPayment}
+            className={`w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black text-lg py-4 rounded-2xl shadow-[0_8px_30px_rgba(245,158,11,0.3)] transition-transform ${isSimulatingPayment ? 'opacity-80 scale-95' : 'hover:scale-[1.02] active:scale-[0.98]'}`}
           >
-            {t.upgradeNow}
+            {isSimulatingPayment ? (
+              <><Loader2 size={24} className="animate-spin" /> {t.comingSoon}</>
+            ) : (
+              data.isPro ? (data.language === 'en' ? 'Close' : '关闭') : t.upgradeNow
+            )}
           </button>
         </div>
       </div>
@@ -2299,7 +2337,7 @@ export default function App() {
             <div className="text-7xl mb-6">{celebration.icon}</div>
             <h2 className="text-2xl font-black text-gray-800 mb-2">{t.redeemSuccess}</h2>
             <p className="text-gray-500 text-center font-medium max-w-[200px]">
-              {t.enjoyReward.replace('{reward}', celebration.name)}
+              {t.enjoyReward ? t.enjoyReward.replace('{reward}', celebration.name) : celebration.name}
             </p>
           </div>
         </div>
