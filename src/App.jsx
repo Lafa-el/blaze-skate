@@ -352,7 +352,11 @@ const translations = {
     emptyHistory: '还没有兑换过奖励哦~',
     redeemSuccess: '兑换成功！',
     enjoyReward: '快去享受你的【{reward}】吧！',
-    close: '关闭'
+    close: '关闭',
+    unlockedStatus: '权限已解锁',
+    emojiPlaceholder: '图标 (Emoji)',
+    itemNamePlaceholder: '商品名称',
+    pointsRequired: '所需积分:'
   },
   en: {
     loading: 'Loading cloud data...',
@@ -425,7 +429,11 @@ const translations = {
     emptyHistory: 'No redemption history yet.',
     redeemSuccess: 'Success!',
     enjoyReward: 'Go enjoy your [{reward}]!',
-    close: 'Close'
+    close: 'Close',
+    unlockedStatus: 'Unlocked',
+    emojiPlaceholder: 'Emoji',
+    itemNamePlaceholder: 'Item Name',
+    pointsRequired: 'Cost:'
   }
 };
 
@@ -1404,7 +1412,7 @@ export default function App() {
 
           {data.parentPin && isUnlocked && (
             <div className="flex justify-between items-center bg-green-50 p-3 rounded-xl border border-green-100">
-              <span className="text-sm font-bold text-green-700">权限已解锁</span>
+              <span className="text-sm font-bold text-green-700">{t.unlockedStatus}</span>
               <button onClick={handleRemovePin} className="text-xs font-bold text-red-500 hover:bg-red-50 px-2 py-1 rounded shrink-0 whitespace-nowrap">
                 {t.removePin}
               </button>
@@ -1472,7 +1480,7 @@ export default function App() {
                           newRewards[index].icon = e.target.value;
                           setFormRewards(newRewards);
                         }}
-                        placeholder="Emoji"
+                        placeholder={t.emojiPlaceholder}
                         className={`w-14 shrink-0 text-center ${tc.cardBg} rounded-lg px-2 py-2 text-xl focus:outline-none focus:ring-1 ${tc.focusRing}`}
                       />
                       <input 
@@ -1483,12 +1491,12 @@ export default function App() {
                           newRewards[index].name = e.target.value;
                           setFormRewards(newRewards);
                         }}
-                        placeholder="商品名称"
+                        placeholder={t.itemNamePlaceholder}
                         className={`flex-1 min-w-0 ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
                       />
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs font-bold ${tc.textMuted} shrink-0`}>所需积分:</span>
+                      <span className={`text-xs font-bold ${tc.textMuted} shrink-0`}>{t.pointsRequired}</span>
                       <input 
                         type="number" 
                         value={reward.cost}
@@ -1735,7 +1743,7 @@ export default function App() {
     return (
       <div className={`min-h-screen ${THEMES.purple.appBg} flex flex-col items-center justify-center ${THEMES.purple.textPrimary} font-sans max-w-md mx-auto shadow-2xl`}>
         <div className={`w-12 h-12 border-4 ${THEMES.purple.spinner} rounded-full animate-spin mb-4`}></div>
-        <p className="font-bold">Loading...</p>
+        <p className="font-bold">{t.loading}</p>
       </div>
     );
   }
