@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Home, 
   ListTodo, 
@@ -581,6 +581,29 @@ export default function App() {
 
   const [showHistory, setShowHistory] = useState(false);
   const [celebration, setCelebration] = useState(null);
+
+  // --- 新增：为统计页面的滑动选项卡添加状态和 Ref ---
+  const statsScrollRef = useRef(null);
+  const [statsCanScroll, setStatsCanScroll] = useState({ left: false, right: true });
+
+  const handleStatsScroll = () => {
+    if (statsScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = statsScrollRef.current;
+      setStatsCanScroll({
+        left: scrollLeft > 2,
+        right: Math.ceil(scrollLeft + clientWidth) < scrollWidth - 2
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'stats') {
+      handleStatsScroll();
+      const timer = setTimeout(handleStatsScroll, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, data.language, activeDistance]);
+
 
   const t = translations[data.language || 'zh'];
   const tc = THEMES[data.theme] || THEMES.purple;
@@ -1336,23 +1359,48 @@ export default function App() {
           <p className={`text-sm ${tc.textMuted} mt-1`}>{t.recordMilestones}</p>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {distNames.map(dist => {
-            const internalDist = dist === 'Start' ? '起跑' : dist === 'Lap' ? '单圈' : dist;
-            return (
-              <button
-                key={dist}
-                onClick={() => setActiveDistance(internalDist)}
-                className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                  (activeDistance === dist || activeDistance === internalDist)
-                    ? tc.btnPrimary + ' shadow-md' 
-                    : tc.cardBg + ' ' + tc.textPrimary + ' hover:opacity-80'
-                }`}
-              >
-                {dist}
-              </button>
-            )
-          })}
+        {/* 修复的横向滑动导航区域 */}
+        <div className="relative flex items-center -mx-1 px-1 py-1">
+          {statsCanScroll.left && (
+            <button
+              onClick={() => statsScrollRef.current?.scrollBy({ left: -150, behavior: 'smooth' })}
+              className={`absolute left-0 z-10 p-1.5 rounded-full shadow-md border ${tc.borderLight} ${tc.cardBg} ${tc.textPrimary} hover:opacity-80 transition-all`}
+            >
+              <ChevronLeft size={16} />
+            </button>
+          )}
+
+          <div 
+            ref={statsScrollRef}
+            onScroll={handleStatsScroll}
+            className="flex gap-2 overflow-x-auto py-1 no-scrollbar w-full scroll-smooth"
+          >
+            {distNames.map(dist => {
+              const internalDist = dist === 'Start' ? '起跑' : dist === 'Lap' ? '单圈' : dist;
+              return (
+                <button
+                  key={dist}
+                  onClick={() => setActiveDistance(internalDist)}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+                    (activeDistance === dist || activeDistance === internalDist)
+                      ? tc.btnPrimary + ' shadow-md' 
+                      : tc.cardBg + ' ' + tc.textPrimary + ' hover:opacity-80'
+                  }`}
+                >
+                  {dist}
+                </button>
+              )
+            })}
+          </div>
+
+          {statsCanScroll.right && (
+            <button
+              onClick={() => statsScrollRef.current?.scrollBy({ left: 150, behavior: 'smooth' })}
+              className={`absolute right-0 z-10 p-1.5 rounded-full shadow-md border ${tc.borderLight} ${tc.cardBg} ${tc.textPrimary} hover:opacity-80 animate-pulse transition-all`}
+            >
+              <ChevronRight size={16} />
+            </button>
+          )}
         </div>
 
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
@@ -1482,7 +1530,6 @@ export default function App() {
       setIsUnlocked(true);
     };
 
-    // 纯粹、无API请求、瞬间切换界面语言
     const toggleLanguage = async () => {
       const targetLang = data.language === 'en' ? 'zh' : 'en';
       await updateData({ language: targetLang });
@@ -1523,7 +1570,6 @@ export default function App() {
           <p className={`text-sm ${tc.textMuted} mt-1`}>{t.customizePlan}</p>
         </div>
 
-        {/* 语言选项置顶，纯静态切换 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
           <h3 className={`${tc.textHeading} font-bold flex items-center gap-2 shrink-0`}>
             <Globe size={18} /> {t.language}
@@ -1927,6 +1973,11 @@ export default function App() {
 
   return (
     <div className={`min-h-screen ${tc.appBg} ${tc.appText} font-sans max-w-md mx-auto shadow-2xl relative pb-24 transition-colors duration-300`}>
+      {/* 全局隐藏原生滚动条的样式 */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
       
       <header className={`flex justify-between items-center px-5 py-3 sticky top-0 ${tc.headerBg} backdrop-blur-md z-10 border-b ${tc.borderLight} shadow-sm transition-colors duration-300`}>
         <div className="flex items-center gap-2.5">
