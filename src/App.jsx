@@ -35,7 +35,8 @@ import {
   ShieldCheck,
   Clock,
   Quote,
-  Sparkles
+  Sparkles,
+  Info
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
@@ -316,7 +317,7 @@ const translations = {
     weeklyTemplate: '一周训练模板',
     saveSettings: '保存设置',
     savedSuccessfully: '保存成功！',
-    loggedIn: '已登录 • 账号 ID:',
+    loggedIn: '已登录:',
     nav: { dashboard: '概览', tasks: '任务', calendar: '日历', stats: '统计', shop: '商店', settings: '设置' },
     daysNames: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
     language: '语言',
@@ -367,6 +368,8 @@ const translations = {
     recentHighlight: '最新高光时刻',
     noRecentRecord: '暂无近期记录',
     keepItUp: '继续保持！',
+    version: '版本 v1.0.0',
+    copyright: '© 2026 BlazeSkate.com 保留所有权利。',
     greetings: [
       '夜深了，良好的睡眠也是训练的一部分 🌙',
       '清晨唤醒，准备好今天的训练了吗？ ☀️',
@@ -418,7 +421,7 @@ const translations = {
     weeklyTemplate: 'Weekly Template',
     saveSettings: 'Save Settings',
     savedSuccessfully: 'Saved!',
-    loggedIn: 'Logged in • User ID:',
+    loggedIn: 'Logged in:',
     nav: { dashboard: 'Home', tasks: 'Tasks', calendar: 'Calendar', stats: 'Stats', shop: 'Shop', settings: 'Settings' },
     daysNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     language: 'Language',
@@ -469,6 +472,8 @@ const translations = {
     recentHighlight: 'Recent Highlight',
     noRecentRecord: 'No recent records',
     keepItUp: 'Keep it up!',
+    version: 'Version v1.0.0',
+    copyright: '© 2026 BlazeSkate.com All rights reserved.',
     greetings: [
       'Late night. Rest is part of your training. 🌙',
       'Morning! Ready to crush today\'s training? ☀️',
@@ -1958,9 +1963,23 @@ export default function App() {
           </>
         )}
 
-        <div className={`text-center text-xs ${tc.textMuted} mt-4`}>
-          <User size={12} className="inline mr-1" />
-          {t.loggedIn} {user?.uid.slice(0,6)}...
+        {/* --- 软件关于与版权信息 --- */}
+        <div className="pt-8 pb-4 flex flex-col items-center justify-center opacity-80">
+          <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${tc.gradientIcon} flex items-center justify-center shadow-md mb-3`}>
+            <Flame size={24} className="text-white" />
+          </div>
+          <h3 className={`font-black text-lg ${tc.textHeading} tracking-tight`}>BLAZE SKATE</h3>
+          <p className={`text-[10px] font-bold ${tc.textPrimary} tracking-widest uppercase mt-0.5`}>
+            {t.brandSub}
+          </p>
+          
+          <div className={`mt-4 text-center space-y-1`}>
+            <p className={`text-xs font-medium ${tc.textMuted}`}>{t.version}</p>
+            <p className={`text-[10px] ${tc.textMuted}`}>{t.copyright}</p>
+            <p className={`text-[10px] ${tc.textMuted} flex items-center justify-center gap-1 mt-2`}>
+              <User size={10} /> {t.loggedIn} {user?.uid.slice(0,8)}...
+            </p>
+          </div>
         </div>
       </div>
     );
