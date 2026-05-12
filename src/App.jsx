@@ -182,16 +182,16 @@ const TASK_LIBRARY = {
       category: '热身准备',
       tasks: [
         { text: '慢跑热身', target: '10-15分钟' },
-        { text: '动态拉伸 (全身)', target: '10分钟' },
-        { text: '踝/膝/髋关节激活', target: '各方向20次' },
-        { text: '跳绳 (低阻力)', target: '10分钟' }
+        { text: '动态拉伸', target: '10分钟' },
+        { text: '关节激活', target: '各方向20次' },
+        { text: '跳绳', target: '10分钟' }
       ]
     },
     {
-      category: '爆发力 (陆地)',
+      category: '爆发力',
       tasks: [
-        { text: '侧向滑步跳 (Skater Jumps)', target: '4组 x 16次' },
-        { text: '跳箱 (Box Jumps)', target: '4组 x 8次' },
+        { text: '侧向滑步跳', target: '4组 x 16次' },
+        { text: '跳箱', target: '4组 x 8次' },
         { text: '立定蛙跳', target: '4组 x 10次' },
         { text: '单腿纵跳', target: '3组 x 每侧8次' }
       ]
@@ -199,18 +199,18 @@ const TASK_LIBRARY = {
     {
       category: '核心与力量',
       tasks: [
-        { text: '杠铃深蹲 (Squats)', target: '4组 x 8-10次' },
+        { text: '杠铃深蹲', target: '4组 x 8-10次' },
         { text: '保加利亚分腿蹲', target: '3组 x 每侧10次' },
-        { text: '罗马尼亚硬拉 (RDL)', target: '4组 x 10次' },
+        { text: '罗马尼亚硬拉', target: '4组 x 10次' },
         { text: '平板支撑及变式', target: '3组 x 1分钟' },
-        { text: '俄罗斯转体 (负重)', target: '3组 x 20次' }
+        { text: '俄罗斯转体', target: '3组 x 20次' }
       ]
     },
     {
-      category: '专项体能 (耐力)',
+      category: '专项体能',
       tasks: [
-        { text: '靠墙静蹲 (Wall Sit)', target: '3组 x 1.5-2分钟' },
-        { text: '滑行板 (Slide Board)', target: '5组 x 1-2分钟' },
+        { text: '靠墙静蹲', target: '3组 x 1.5-2分钟' },
+        { text: '滑行板', target: '5组 x 1-2分钟' },
         { text: '动感单车间歇', target: '20s冲刺/40s慢骑 x 10' },
         { text: '折返跑冲刺', target: '5趟 x 4组' }
       ]
@@ -229,7 +229,7 @@ const TASK_LIBRARY = {
       tasks: [
         { text: '泡沫轴筋膜放松', target: '15分钟' },
         { text: '下肢静态拉伸', target: '10-15分钟' },
-        { text: '冰浴 / 冷水浴', target: '10分钟' },
+        { text: '冰浴或冷水浴', target: '10分钟' },
         { text: '瑜伽垫上冥想', target: '10分钟' }
       ]
     }
@@ -258,7 +258,7 @@ const TASK_LIBRARY = {
       tasks: [
         { text: 'Barbell Squats', target: '4 sets x 8-10 reps' },
         { text: 'Bulgarian Split Squats', target: '3 sets x 10 reps/leg' },
-        { text: 'Romanian Deadlifts (RDL)', target: '4 sets x 10 reps' },
+        { text: 'Romanian Deadlifts', target: '4 sets x 10 reps' },
         { text: 'Plank Variations', target: '3 sets x 1 min' },
         { text: 'Weighted Russian Twists', target: '3 sets x 20 reps' }
       ]
@@ -285,9 +285,9 @@ const TASK_LIBRARY = {
       category: 'Recovery',
       tasks: [
         { text: 'Foam Rolling', target: '15 mins' },
-        { text: 'Static Stretching (Legs)', target: '10-15 mins' },
+        { text: 'Static Stretching', target: '10-15 mins' },
         { text: 'Ice Bath / Cold Plunge', target: '10 mins' },
-        { text: 'Yoga / Meditation', target: '10 mins' }
+        { text: 'Meditation', target: '10 mins' }
       ]
     }
   ]
@@ -351,7 +351,7 @@ const translations = {
     profileAvatar: '自定义头像',
     uploadAvatarDesc: '上传你的专属照片',
     brandSub: '冰焰速滑训练系统',
-    parentMode: '家长 / 教练模式',
+    parentMode: '家长模式',
     unlockPrompt: '请输入 4 位数字密码解锁编辑权限',
     setPinPrompt: '设置 4 位数字密码以锁定训练排课与成绩录入',
     pinPlaceholder: '4位数字',
@@ -369,28 +369,16 @@ const translations = {
     redeemSuccess: '兑换成功！',
     enjoyReward: '快去享受你的【{reward}】吧！',
     close: '关闭',
-    translating: '智能翻译中...',
-    translateFailed: '界面已切换，但自定义数据翻译失败。',
-    // 账号系统新增翻译
-    accountStatus: '账号安全与同步',
-    guestMode: '游客模式 (仅本地缓存)',
-    guestWarning: '清理微信或浏览器缓存会导致数据丢失，请尽快注册以开启云同步。',
-    bindAccountBtn: '注册并保存数据',
-    officialAccount: '正式账号 (云端同步中)',
-    manageAccountBtn: '账号管理',
-    authTitle: '注册正式账号',
-    authSub: '安全保存您的所有训练记录与会员特权',
-    email: '邮箱地址',
-    password: '密码 (至少6位)',
-    bindNow: '立即注册并同步',
-    binding: '处理中...',
-    accountManageTitle: '账号管理中心',
-    usernameLabel: '自定义用户名',
-    emailLabel: '绑定邮箱',
-    phoneLabel: '绑定手机号',
-    bound: '已绑定',
-    unbound: '未绑定',
-    logout: '退出登录',
+    unlockedStatus: '权限已解锁',
+    emojiPlaceholder: '图标 (Emoji)',
+    itemNamePlaceholder: '商品名称',
+    pointsRequired: '所需积分:',
+    dailyProgress: '今日任务进度',
+    completedTasks: '已完成 {completed}/{total}',
+    weeklyActivity: '本周活跃星图',
+    recentHighlight: '最新高光时刻',
+    noRecentRecord: '暂无近期记录',
+    keepItUp: '继续保持！',
     version: '版本 v1.0.0',
     copyright: '© 2026 BlazeSkate.com 保留所有权利。',
     greetings: [
@@ -426,7 +414,33 @@ const translations = {
     proActiveTitle: 'BLAZE PRO 尊贵会员',
     proActiveSub: '已解锁全部高阶训练功能',
     proTag: '已激活',
-    proUnlockedMsg: 'PRO 权限已解锁！'
+    proUnlockedMsg: 'PRO 权限已解锁！',
+    // 手动支付相关文案
+    paymentTitle: '获取 PRO 权限',
+    wechatContact: '客服微信：BlazeSkate_VIP',
+    copyUid: '复制我的账号 ID',
+    uidCopied: '已复制！',
+    paymentInstruction: '1. 点击上方按钮复制您的账号 ID。\n2. 添加客服微信，并发送您的 ID。\n3. 支付 ¥98 后，客服将为您手动永久解锁 PRO 权限。',
+    // 账号系统新增翻译
+    accountStatus: '账号安全与同步',
+    guestMode: '游客模式 (仅本地缓存)',
+    guestWarning: '清理微信或浏览器缓存会导致数据丢失，请尽快注册以开启云同步。',
+    bindAccountBtn: '注册并保存数据',
+    officialAccount: '正式账号 (云端同步中)',
+    manageAccountBtn: '账号管理',
+    authTitle: '注册正式账号',
+    authSub: '安全保存您的所有训练记录与会员特权',
+    email: '邮箱地址',
+    password: '密码 (至少6位)',
+    bindNow: '立即注册并同步',
+    binding: '处理中...',
+    accountManageTitle: '账号管理中心',
+    usernameLabel: '自定义用户名',
+    emailLabel: '绑定邮箱',
+    phoneLabel: '绑定手机号',
+    bound: '已绑定',
+    unbound: '未绑定',
+    logout: '退出登录'
   },
   en: {
     loading: 'Loading cloud data...',
@@ -484,7 +498,7 @@ const translations = {
     profileAvatar: 'Custom Avatar',
     uploadAvatarDesc: 'Upload your profile photo',
     brandSub: 'TRAINING PLATFORM',
-    parentMode: 'Parent / Coach Mode',
+    parentMode: 'Parent Mode',
     unlockPrompt: 'Enter 4-digit PIN to unlock editing',
     setPinPrompt: 'Set a 4-digit PIN to lock planning & records',
     pinPlaceholder: '4-digit',
@@ -502,28 +516,16 @@ const translations = {
     redeemSuccess: 'Success!',
     enjoyReward: 'Go enjoy your [{reward}]!',
     close: 'Close',
-    translating: 'Translating...',
-    translateFailed: 'UI switched, but custom data translation failed.',
-    // Account system
-    accountStatus: 'Account & Sync',
-    guestMode: 'Guest Mode (Local Only)',
-    guestWarning: 'Clearing your browser cache will erase your data. Register to enable cloud sync.',
-    bindAccountBtn: 'Register & Save Data',
-    officialAccount: 'Official Account (Synced)',
-    manageAccountBtn: 'Manage Account',
-    authTitle: 'Create Official Account',
-    authSub: 'Securely save your training records and PRO status',
-    email: 'Email Address',
-    password: 'Password (min 6 chars)',
-    bindNow: 'Register & Sync',
-    binding: 'Processing...',
-    accountManageTitle: 'Account Management',
-    usernameLabel: 'Custom Username',
-    emailLabel: 'Linked Email',
-    phoneLabel: 'Linked Phone',
-    bound: 'Linked',
-    unbound: 'Not Linked',
-    logout: 'Log Out',
+    unlockedStatus: 'Unlocked',
+    emojiPlaceholder: 'Emoji',
+    itemNamePlaceholder: 'Item Name',
+    pointsRequired: 'Cost:',
+    dailyProgress: 'Daily Progress',
+    completedTasks: 'Completed {completed}/{total}',
+    weeklyActivity: 'Weekly Activity',
+    recentHighlight: 'Recent Highlight',
+    noRecentRecord: 'No recent records',
+    keepItUp: 'Keep it up!',
     version: 'Version v1.0.0',
     copyright: '© 2026 BlazeSkate.com All rights reserved.',
     greetings: [
@@ -559,7 +561,33 @@ const translations = {
     proActiveTitle: 'BLAZE PRO Active',
     proActiveSub: 'All premium features unlocked',
     proTag: 'Active',
-    proUnlockedMsg: 'PRO Unlocked Successfully!'
+    proUnlockedMsg: 'PRO Unlocked Successfully!',
+    // 手动支付相关文案 (英文)
+    paymentTitle: 'Get PRO Access',
+    wechatContact: 'WeChat: BlazeSkate_VIP',
+    copyUid: 'Copy My Account ID',
+    uidCopied: 'Copied!',
+    paymentInstruction: '1. Copy your Account ID above.\n2. Add our WeChat and send your ID.\n3. After $14.99 payment, we will manually unlock your PRO access permanently.',
+    // Account system
+    accountStatus: 'Account & Sync',
+    guestMode: 'Guest Mode (Local Only)',
+    guestWarning: 'Clearing your browser cache will erase your data. Register to enable cloud sync.',
+    bindAccountBtn: 'Register & Save Data',
+    officialAccount: 'Official Account (Synced)',
+    manageAccountBtn: 'Manage Account',
+    authTitle: 'Create Official Account',
+    authSub: 'Securely save your training records and PRO status',
+    email: 'Email Address',
+    password: 'Password (min 6 chars)',
+    bindNow: 'Register & Sync',
+    binding: 'Processing...',
+    accountManageTitle: 'Account Management',
+    usernameLabel: 'Custom Username',
+    emailLabel: 'Linked Email',
+    phoneLabel: 'Linked Phone',
+    bound: 'Linked',
+    unbound: 'Not Linked',
+    logout: 'Log Out'
   }
 };
 
@@ -571,34 +599,34 @@ const defaultData = {
   avatar: '', 
   parentPin: '',
   isPro: false,
-  username: '', // 新增：自定义用户名
+  username: '',
   pointsPerTask: 20,
   dailyBonusPoints: 50,
   completedDays: [], 
   customRewards: [
-    { id: 1, name: 'Snack of Choice', cost: 200, icon: '🍿' },
-    { id: 2, name: '2-Hour Weekend Gaming', cost: 500, icon: '🎮' },
-    { id: 3, name: 'Dream Toy Voucher', cost: 1000, icon: '🎁' },
-    { id: 4, name: 'New Skate Gear Fund', cost: 3000, icon: '⛸️' },
+    { id: 1, name: 'Cheat Meal (放纵餐)', cost: 500, icon: '🍔' },
+    { id: 2, name: 'New Bearings (新轴承)', cost: 1200, icon: '⚙️' },
+    { id: 3, name: 'Skip Core Set (免做核心)', cost: 300, icon: '🛋️' },
+    { id: 4, name: 'New Gear Fund (新训练服)', cost: 3000, icon: '👕' },
   ],
   customDistances: ['Start', 'Lap', '500m', '777m', '1000m', '1500m'],
   rewardHistory: [],
   races: [
-    { id: 1, name: 'National Champ', date: '2026-11-20' }
+    { id: 1, name: 'National Champ (全国锦标赛)', date: '2026-11-20' }
   ],
   weeklyTemplate: {
-    0: 'Rest Day',
-    1: 'Strength Day',
-    2: 'Power/Sprint',
-    3: 'Conditioning',
-    4: 'Technique',
-    5: 'Intervals',
-    6: 'Endurance',
+    0: 'Rest Day (休息日)',
+    1: 'Strength Day (力量日)',
+    2: 'Power/Sprint (爆发力)',
+    3: 'Conditioning (有氧耐力)',
+    4: 'Technique (技术模仿)',
+    5: 'Intervals (间歇体能)',
+    6: 'Endurance (专项耐力)',
   },
   tasks: [
-    { id: 1, text: 'Light Jogging', target: '15 mins', completed: false, isTemplate: true },
-    { id: 2, text: 'Slide Board', target: '5 sets x 1 min', completed: false, isTemplate: true },
-    { id: 3, text: 'Wall Sit', target: '3 sets x 1.5 mins', completed: false, isTemplate: true },
+    { id: 1, text: 'Jogging (慢跑热身)', target: '15 mins', completed: false, isTemplate: true },
+    { id: 2, text: 'Slide Board (滑行板)', target: '5 sets x 1 min', completed: false, isTemplate: true },
+    { id: 3, text: 'Wall Sit (靠墙静蹲)', target: '3 sets x 1.5 mins', completed: false, isTemplate: true },
   ],
   records: [
     { date: '2026-05-01', time: 48.5 },
@@ -646,7 +674,7 @@ export default function App() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
-  const [activeDistance, setActiveDistance] = useState(currentDistNames[0] || '500m');
+  const [activeDistance, setActiveDistance] = useState(currentDistNames[0]);
   
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editTaskText, setEditTaskText] = useState('');
@@ -679,7 +707,8 @@ export default function App() {
 
   // PRO Modal State
   const [showProModal, setShowProModal] = useState(false);
-  const [isSimulatingPayment, setIsSimulatingPayment] = useState(false); // 模拟支付状态
+  const [showPaymentInfo, setShowPaymentInfo] = useState(false); // 控制是否显示支付二维码页
+  const [isCopied, setIsCopied] = useState(false); // 复制状态
   
   // 账号系统新增的状态
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -760,6 +789,7 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
+    const safeAppId = appId.replace(/\//g, '_');
     const userRef = doc(db, 'artifacts', safeAppId, 'users', user.uid, 'profile', 'main');
     const unsub = onSnapshot(userRef, (docSnap) => {
       if (docSnap.exists()) {
@@ -801,6 +831,7 @@ export default function App() {
     if (!user) return;
     const merged = { ...data, ...newData };
     setData(merged); 
+    const safeAppId = appId.replace(/\//g, '_');
     const userRef = doc(db, 'artifacts', safeAppId, 'users', user.uid, 'profile', 'main');
     const safeData = JSON.parse(JSON.stringify(merged));
     await setDoc(userRef, safeData, { merge: true });
@@ -1678,7 +1709,7 @@ export default function App() {
       setIsUnlocked(true);
     };
 
-    // 纯净、瞬间、零报错的本地语言切换
+    // 纯静默本地语言切换
     const toggleLanguage = async () => {
       const targetLang = data.language === 'en' ? 'zh' : 'en';
       await updateData({ language: targetLang });
@@ -1731,7 +1762,7 @@ export default function App() {
           <p className={`text-sm ${tc.textMuted} mt-1`}>{t.customizePlan}</p>
         </div>
 
-        {/* --- PRO 会员状态与账号同步模块 --- */}
+        {/* PRO 会员状态展示栏 */}
         {data.isPro ? (
           <div className={`relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-5 rounded-2xl shadow-lg flex justify-between items-center text-white`}>
             <Sparkles className="absolute right-10 top-2 opacity-20" size={60} />
@@ -1765,6 +1796,7 @@ export default function App() {
           </div>
         )}
 
+        {/* --- 账号与多设备云同步模块 --- */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm border-2 ${user?.isAnonymous ? 'border-orange-300' : tc.borderLight}`}>
           <div className="flex justify-between items-center mb-3">
             <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
@@ -1818,7 +1850,7 @@ export default function App() {
           </h3>
           <button 
             onClick={toggleLanguage}
-            className={`${tc.badgeBg} ${tc.textPrimary} px-4 py-2 rounded-lg font-bold text-sm hover:opacity-80 transition-colors flex items-center gap-2 shrink-0 whitespace-nowrap active:scale-95`}
+            className={`${tc.badgeBg} ${tc.textPrimary} px-4 py-2 rounded-lg font-bold text-sm hover:opacity-80 transition-colors flex items-center gap-2 shrink-0 whitespace-nowrap`}
           >
             {data.language === 'en' ? '🇨🇳 中文' : '🇬🇧 English'}
           </button>
@@ -1854,7 +1886,7 @@ export default function App() {
                   className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold disabled:opacity-50`}
                 />
                 <button onClick={data.isPro ? handleSetPin : () => setShowProModal(true)} className={`${tc.btnPrimary} px-4 py-2 rounded-xl font-bold text-sm shadow-sm shrink-0 whitespace-nowrap ${!data.isPro ? 'opacity-90' : ''}`}>
-                  {data.isPro ? String(t.setPin) : <span className="flex items-center"><Crown size={14} className="inline mr-1"/>PRO</span>}
+                  {data.isPro ? String(t.setPin) : <span className="flex items-center"><Crown size={14} className="inline mr-1 -mt-0.5"/>PRO</span>}
                 </button>
               </div>
             </div>
@@ -2415,10 +2447,26 @@ export default function App() {
   // --- 新增：PRO 会员全屏展示弹窗 ---
   const ProShowcaseModal = () => {
     if (!showProModal) return null;
+    
+    const handleCopyUid = () => {
+      if (user && user.uid) {
+        navigator.clipboard.writeText(user.uid);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      }
+    };
+
     return (
       <div className="fixed inset-0 z-[70] flex flex-col bg-slate-900 text-slate-100 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+        {/* 顶部导航 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 sticky top-0 bg-slate-900/90 backdrop-blur-md z-10">
-          <button onClick={() => setShowProModal(false)} className="p-2 -ml-2 text-slate-400 hover:text-white shrink-0 transition-colors">
+          <button 
+            onClick={() => {
+              setShowProModal(false);
+              setTimeout(() => setShowPaymentInfo(false), 300); // 关掉后重置状态
+            }} 
+            className="p-2 -ml-2 text-slate-400 hover:text-white shrink-0 transition-colors"
+          >
             <X size={24} />
           </button>
           <h2 className="text-lg font-black text-white tracking-widest uppercase opacity-80">Blaze Pro</h2>
@@ -2426,63 +2474,95 @@ export default function App() {
         </div>
 
         <div className="flex-1 px-6 pt-8 pb-32">
+          {/* 大图标与标题 */}
           <div className="flex flex-col items-center text-center mb-10">
             <div className="w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl flex items-center justify-center shadow-[0_10px_40px_rgba(245,158,11,0.3)] mb-6 relative">
               <Sparkles size={40} className="absolute -top-4 -right-4 text-yellow-300 animate-pulse" />
               <Crown size={48} className="text-white fill-white/20" />
             </div>
-            <h1 className="text-3xl font-black text-white mb-2">{t.proTitle}</h1>
-            <p className="text-slate-400 font-medium">{t.proSubtitle}</p>
+            <h1 className="text-3xl font-black text-white mb-2">{showPaymentInfo ? t.paymentTitle : t.proTitle}</h1>
+            <p className="text-slate-400 font-medium">{showPaymentInfo ? t.wechatContact : t.proSubtitle}</p>
           </div>
 
-          <div className="bg-slate-800/50 border border-slate-700 rounded-3xl p-6 mb-8 text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500"></div>
-            <div className="text-slate-400 text-sm font-bold line-through mb-1 opacity-60">
-              {data.language === 'en' ? '$29.99' : '¥198'}
-            </div>
-            <div className="flex items-baseline justify-center gap-1">
-              <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">
-                {t.proPrice}
-              </span>
-              <span className="text-slate-400 font-bold">{t.proPeriod}</span>
-            </div>
-          </div>
-
-          <div className="space-y-5">
-            {(t.proFeatures || []).map((feature, idx) => (
-              <div key={idx} className="flex items-start gap-4">
-                <div className="mt-0.5 bg-orange-500/20 p-1.5 rounded-full shrink-0">
-                  <Check size={16} className="text-orange-400" />
+          {!showPaymentInfo ? (
+            <>
+              {/* 价格区块 */}
+              <div className="bg-slate-800/50 border border-slate-700 rounded-3xl p-6 mb-8 text-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500"></div>
+                <div className="text-slate-400 text-sm font-bold line-through mb-1 opacity-60">
+                  {data.language === 'en' ? '$29.99' : '¥198'}
                 </div>
-                <span className="text-slate-200 font-medium leading-relaxed">{feature}</span>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">
+                    {t.proPrice}
+                  </span>
+                  <span className="text-slate-400 font-bold">{t.proPeriod}</span>
+                </div>
               </div>
-            ))}
-          </div>
+
+              {/* 特权列表 */}
+              <div className="space-y-5">
+                {(t.proFeatures || []).map((feature, idx) => (
+                  <div key={idx} className="flex items-start gap-4">
+                    <div className="mt-0.5 bg-orange-500/20 p-1.5 rounded-full shrink-0">
+                      <Check size={16} className="text-orange-400" />
+                    </div>
+                    <span className="text-slate-200 font-medium leading-relaxed">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            /* 付费引导区块 */
+            <div className="bg-slate-800/80 border border-amber-500/30 rounded-3xl p-6 space-y-6">
+              <div className="text-center space-y-2">
+                <div className="text-sm font-bold text-slate-400 uppercase tracking-widest">Account ID</div>
+                <div className="bg-slate-900 border border-slate-700 p-3 rounded-xl font-mono text-sm break-all text-amber-400 select-all">
+                  {user?.uid || 'Loading...'}
+                </div>
+                <button 
+                  onClick={handleCopyUid}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${isCopied ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                >
+                  {isCopied ? t.uidCopied : t.copyUid}
+                </button>
+              </div>
+
+              <div className="h-px bg-slate-700/50 w-full"></div>
+
+              <div className="text-sm text-slate-300 font-medium leading-loose whitespace-pre-line">
+                {t.paymentInstruction}
+              </div>
+              
+              {/* 这里未来你可以换成真实的微信收款码图片 */}
+              <div className="w-32 h-32 bg-white rounded-xl mx-auto flex items-center justify-center p-2">
+                <div className="w-full h-full border-4 border-dashed border-gray-300 flex items-center justify-center">
+                  <span className="text-gray-400 font-bold text-xs">QR Code</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* 底部吸底按钮 */}
         <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-slate-900 via-slate-900 to-transparent pb-safe">
           <button 
             onClick={() => {
               if (data.isPro) {
                 setShowProModal(false);
+                setShowPaymentInfo(false);
+              } else if (!showPaymentInfo) {
+                // 点击升级，显示付款页面
+                setShowPaymentInfo(true);
               } else {
-                setIsSimulatingPayment(true);
-                setTimeout(() => {
-                  updateData({ isPro: true });
-                  setIsSimulatingPayment(false);
-                  setShowProModal(false);
-                  setCelebration({ icon: '👑', name: t.proUnlockedMsg });
-                }, 1500);
+                // 已经在付款页，点击关闭
+                setShowProModal(false);
+                setTimeout(() => setShowPaymentInfo(false), 300);
               }
             }}
-            disabled={isSimulatingPayment}
-            className={`w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black text-lg py-4 rounded-2xl shadow-[0_8px_30px_rgba(245,158,11,0.3)] transition-transform ${isSimulatingPayment ? 'opacity-80 scale-95' : 'hover:scale-[1.02] active:scale-[0.98]'}`}
+            className={`w-full flex items-center justify-center gap-2 text-white font-black text-lg py-4 rounded-2xl shadow-[0_8px_30px_rgba(245,158,11,0.3)] transition-transform hover:scale-[1.02] active:scale-[0.98] ${showPaymentInfo ? 'bg-slate-700 shadow-none' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`}
           >
-            {isSimulatingPayment ? (
-              <><Loader2 size={24} className="animate-spin" /> {t.comingSoon}</>
-            ) : (
-              data.isPro ? (data.language === 'en' ? 'Close' : '关闭') : t.upgradeNow
-            )}
+            {data.isPro || showPaymentInfo ? t.close : t.upgradeNow}
           </button>
         </div>
       </div>
@@ -2493,13 +2573,14 @@ export default function App() {
     return (
       <div className={`min-h-screen ${THEMES.purple.appBg} flex flex-col items-center justify-center ${THEMES.purple.textPrimary} font-sans max-w-md mx-auto shadow-2xl`}>
         <div className={`w-12 h-12 border-4 ${THEMES.purple.spinner} rounded-full animate-spin mb-4`}></div>
-        <p className="font-bold">{t.loading || 'Loading...'}</p>
+        <p className="font-bold">{t.loading}</p>
       </div>
     );
   }
 
   return (
     <div className={`min-h-screen ${tc.appBg} ${tc.appText} font-sans max-w-md mx-auto shadow-2xl relative pb-24 transition-colors duration-300`}>
+      {/* 全局隐藏原生滚动条的样式 */}
       <style dangerouslySetInnerHTML={{__html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
