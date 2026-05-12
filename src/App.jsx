@@ -61,7 +61,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 唯一保留这一个变量！它将作为你云端数据库里最顶层的“大文件夹”名字
+// 固定的生产环境集合名称
 const safeAppId = 'blaze-skate-production';
 
 // --- 主题配置 (Theme Engine) ---
@@ -172,7 +172,6 @@ const THEMES = {
   }
 };
 
-// 免费用户可用的主题
 const FREE_THEMES = ['purple', 'blue', 'white'];
 
 // --- 内容库配置 (Task Library) ---
@@ -182,16 +181,16 @@ const TASK_LIBRARY = {
       category: '热身准备',
       tasks: [
         { text: '慢跑热身', target: '10-15分钟' },
-        { text: '动态拉伸', target: '10分钟' },
-        { text: '关节激活', target: '各方向20次' },
-        { text: '跳绳', target: '10分钟' }
+        { text: '动态拉伸 (全身)', target: '10分钟' },
+        { text: '踝/膝/髋关节激活', target: '各方向20次' },
+        { text: '跳绳 (低阻力)', target: '10分钟' }
       ]
     },
     {
-      category: '爆发力',
+      category: '爆发力 (陆地)',
       tasks: [
-        { text: '侧向滑步跳', target: '4组 x 16次' },
-        { text: '跳箱', target: '4组 x 8次' },
+        { text: '侧向滑步跳 (Skater Jumps)', target: '4组 x 16次' },
+        { text: '跳箱 (Box Jumps)', target: '4组 x 8次' },
         { text: '立定蛙跳', target: '4组 x 10次' },
         { text: '单腿纵跳', target: '3组 x 每侧8次' }
       ]
@@ -199,18 +198,18 @@ const TASK_LIBRARY = {
     {
       category: '核心与力量',
       tasks: [
-        { text: '杠铃深蹲', target: '4组 x 8-10次' },
+        { text: '杠铃深蹲 (Squats)', target: '4组 x 8-10次' },
         { text: '保加利亚分腿蹲', target: '3组 x 每侧10次' },
-        { text: '罗马尼亚硬拉', target: '4组 x 10次' },
+        { text: '罗马尼亚硬拉 (RDL)', target: '4组 x 10次' },
         { text: '平板支撑及变式', target: '3组 x 1分钟' },
-        { text: '俄罗斯转体', target: '3组 x 20次' }
+        { text: '俄罗斯转体 (负重)', target: '3组 x 20次' }
       ]
     },
     {
-      category: '专项体能',
+      category: '专项体能 (耐力)',
       tasks: [
-        { text: '靠墙静蹲', target: '3组 x 1.5-2分钟' },
-        { text: '滑行板', target: '5组 x 1-2分钟' },
+        { text: '靠墙静蹲 (Wall Sit)', target: '3组 x 1.5-2分钟' },
+        { text: '滑行板 (Slide Board)', target: '5组 x 1-2分钟' },
         { text: '动感单车间歇', target: '20s冲刺/40s慢骑 x 10' },
         { text: '折返跑冲刺', target: '5趟 x 4组' }
       ]
@@ -229,7 +228,7 @@ const TASK_LIBRARY = {
       tasks: [
         { text: '泡沫轴筋膜放松', target: '15分钟' },
         { text: '下肢静态拉伸', target: '10-15分钟' },
-        { text: '冰浴或冷水浴', target: '10分钟' },
+        { text: '冰浴 / 冷水浴', target: '10分钟' },
         { text: '瑜伽垫上冥想', target: '10分钟' }
       ]
     }
@@ -258,7 +257,7 @@ const TASK_LIBRARY = {
       tasks: [
         { text: 'Barbell Squats', target: '4 sets x 8-10 reps' },
         { text: 'Bulgarian Split Squats', target: '3 sets x 10 reps/leg' },
-        { text: 'Romanian Deadlifts', target: '4 sets x 10 reps' },
+        { text: 'Romanian Deadlifts (RDL)', target: '4 sets x 10 reps' },
         { text: 'Plank Variations', target: '3 sets x 1 min' },
         { text: 'Weighted Russian Twists', target: '3 sets x 20 reps' }
       ]
@@ -285,9 +284,9 @@ const TASK_LIBRARY = {
       category: 'Recovery',
       tasks: [
         { text: 'Foam Rolling', target: '15 mins' },
-        { text: 'Static Stretching', target: '10-15 mins' },
+        { text: 'Static Stretching (Legs)', target: '10-15 mins' },
         { text: 'Ice Bath / Cold Plunge', target: '10 mins' },
-        { text: 'Meditation', target: '10 mins' }
+        { text: 'Yoga / Meditation', target: '10 mins' }
       ]
     }
   ]
@@ -328,7 +327,7 @@ const translations = {
     weeklyTemplate: '一周训练模板',
     saveSettings: '保存设置',
     savedSuccessfully: '保存成功！',
-    loggedIn: '已登录 • 账号 ID:',
+    loggedIn: '已登录:',
     nav: { dashboard: '概览', tasks: '任务', calendar: '日历', stats: '统计', shop: '商店', settings: '设置' },
     daysNames: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
     language: '语言',
@@ -351,7 +350,7 @@ const translations = {
     profileAvatar: '自定义头像',
     uploadAvatarDesc: '上传你的专属照片',
     brandSub: '冰焰速滑训练系统',
-    parentMode: '家长模式',
+    parentMode: '家长 / 教练模式',
     unlockPrompt: '请输入 4 位数字密码解锁编辑权限',
     setPinPrompt: '设置 4 位数字密码以锁定训练排课与成绩录入',
     pinPlaceholder: '4位数字',
@@ -379,6 +378,26 @@ const translations = {
     recentHighlight: '最新高光时刻',
     noRecentRecord: '暂无近期记录',
     keepItUp: '继续保持！',
+    // 账号系统新增翻译
+    accountStatus: '账号安全与同步',
+    guestMode: '游客模式 (仅本地缓存)',
+    guestWarning: '清理微信或浏览器缓存会导致数据丢失，请尽快注册以开启云同步。',
+    bindAccountBtn: '注册并保存数据',
+    officialAccount: '正式账号 (云端同步中)',
+    manageAccountBtn: '账号管理',
+    authTitle: '注册正式账号',
+    authSub: '安全保存您的所有训练记录与会员特权',
+    email: '邮箱地址',
+    password: '密码 (至少6位)',
+    bindNow: '立即注册并同步',
+    binding: '处理中...',
+    accountManageTitle: '账号管理中心',
+    usernameLabel: '自定义用户名',
+    emailLabel: '绑定邮箱',
+    phoneLabel: '绑定手机号',
+    bound: '已绑定',
+    unbound: '未绑定',
+    logout: '退出登录',
     version: '版本 v1.0.0',
     copyright: '© 2026 BlazeSkate.com 保留所有权利。',
     greetings: [
@@ -409,38 +428,16 @@ const translations = {
       '解锁全部 8 款专属沉浸式训练主题',
       '高阶家长端密码锁与全局积分控制'
     ],
-    upgradeNow: '立即升级',
+    upgradeNow: '获取 PRO 权限',
     comingSoon: '正在为您解锁 PRO 权限...',
     proActiveTitle: 'BLAZE PRO 尊贵会员',
     proActiveSub: '已解锁全部高阶训练功能',
     proTag: '已激活',
     proUnlockedMsg: 'PRO 权限已解锁！',
-    // 手动支付相关文案
-    paymentTitle: '获取 PRO 权限',
     wechatContact: '客服微信：BlazeSkate_VIP',
     copyUid: '复制我的账号 ID',
     uidCopied: '已复制！',
-    paymentInstruction: '1. 点击上方按钮复制您的账号 ID。\n2. 添加客服微信，并发送您的 ID。\n3. 支付 ¥98 后，客服将为您手动永久解锁 PRO 权限。',
-    // 账号系统新增翻译
-    accountStatus: '账号安全与同步',
-    guestMode: '游客模式 (仅本地缓存)',
-    guestWarning: '清理微信或浏览器缓存会导致数据丢失，请尽快注册以开启云同步。',
-    bindAccountBtn: '注册并保存数据',
-    officialAccount: '正式账号 (云端同步中)',
-    manageAccountBtn: '账号管理',
-    authTitle: '注册正式账号',
-    authSub: '安全保存您的所有训练记录与会员特权',
-    email: '邮箱地址',
-    password: '密码 (至少6位)',
-    bindNow: '立即注册并同步',
-    binding: '处理中...',
-    accountManageTitle: '账号管理中心',
-    usernameLabel: '自定义用户名',
-    emailLabel: '绑定邮箱',
-    phoneLabel: '绑定手机号',
-    bound: '已绑定',
-    unbound: '未绑定',
-    logout: '退出登录'
+    paymentInstruction: '1. 点击上方按钮复制您的账号 ID。\n2. 添加客服微信，并发送您的 ID。\n3. 支付 ¥98 后，客服将为您手动永久解锁 PRO 权限。'
   },
   en: {
     loading: 'Loading cloud data...',
@@ -526,6 +523,26 @@ const translations = {
     recentHighlight: 'Recent Highlight',
     noRecentRecord: 'No recent records',
     keepItUp: 'Keep it up!',
+    // Account system
+    accountStatus: 'Account & Sync',
+    guestMode: 'Guest Mode (Local Only)',
+    guestWarning: 'Clearing your browser cache will erase your data. Register to enable cloud sync.',
+    bindAccountBtn: 'Register & Save Data',
+    officialAccount: 'Official Account (Synced)',
+    manageAccountBtn: 'Manage Account',
+    authTitle: 'Create Official Account',
+    authSub: 'Securely save your training records and PRO status',
+    email: 'Email Address',
+    password: 'Password (min 6 chars)',
+    bindNow: 'Register & Sync',
+    binding: 'Processing...',
+    accountManageTitle: 'Account Management',
+    usernameLabel: 'Custom Username',
+    emailLabel: 'Linked Email',
+    phoneLabel: 'Linked Phone',
+    bound: 'Linked',
+    unbound: 'Not Linked',
+    logout: 'Log Out',
     version: 'Version v1.0.0',
     copyright: '© 2026 BlazeSkate.com All rights reserved.',
     greetings: [
@@ -556,38 +573,16 @@ const translations = {
       'Unlock all 8 premium app themes',
       'Parental PIN Lock & Points control'
     ],
-    upgradeNow: 'Upgrade Now',
+    upgradeNow: 'Get PRO Access',
     comingSoon: 'Unlocking PRO access for you...',
     proActiveTitle: 'BLAZE PRO Active',
     proActiveSub: 'All premium features unlocked',
     proTag: 'Active',
     proUnlockedMsg: 'PRO Unlocked Successfully!',
-    // 手动支付相关文案 (英文)
-    paymentTitle: 'Get PRO Access',
     wechatContact: 'WeChat: BlazeSkate_VIP',
     copyUid: 'Copy My Account ID',
     uidCopied: 'Copied!',
-    paymentInstruction: '1. Copy your Account ID above.\n2. Add our WeChat and send your ID.\n3. After $14.99 payment, we will manually unlock your PRO access permanently.',
-    // Account system
-    accountStatus: 'Account & Sync',
-    guestMode: 'Guest Mode (Local Only)',
-    guestWarning: 'Clearing your browser cache will erase your data. Register to enable cloud sync.',
-    bindAccountBtn: 'Register & Save Data',
-    officialAccount: 'Official Account (Synced)',
-    manageAccountBtn: 'Manage Account',
-    authTitle: 'Create Official Account',
-    authSub: 'Securely save your training records and PRO status',
-    email: 'Email Address',
-    password: 'Password (min 6 chars)',
-    bindNow: 'Register & Sync',
-    binding: 'Processing...',
-    accountManageTitle: 'Account Management',
-    usernameLabel: 'Custom Username',
-    emailLabel: 'Linked Email',
-    phoneLabel: 'Linked Phone',
-    bound: 'Linked',
-    unbound: 'Not Linked',
-    logout: 'Log Out'
+    paymentInstruction: '1. Copy your Account ID above.\n2. Add our WeChat and send your ID.\n3. After $14.99 payment, we will manually unlock your PRO access permanently.'
   }
 };
 
@@ -600,33 +595,33 @@ const defaultData = {
   parentPin: '',
   isPro: false,
   username: '',
-  pointsPerTask: 20,
-  dailyBonusPoints: 50,
+  pointsPerTask: 10,
+  dailyBonusPoints: 20,
   completedDays: [], 
   customRewards: [
-    { id: 1, name: 'Cheat Meal (放纵餐)', cost: 500, icon: '🍔' },
-    { id: 2, name: 'New Bearings (新轴承)', cost: 1200, icon: '⚙️' },
-    { id: 3, name: 'Skip Core Set (免做核心)', cost: 300, icon: '🛋️' },
-    { id: 4, name: 'New Gear Fund (新训练服)', cost: 3000, icon: '👕' },
+    { id: 1, name: 'Snack of Choice', cost: 200, icon: '🍿' },
+    { id: 2, name: '2-Hour Weekend Gaming', cost: 500, icon: '🎮' },
+    { id: 3, name: 'Dream Toy Voucher', cost: 1000, icon: '🎁' },
+    { id: 4, name: 'New Skate Gear Fund', cost: 3000, icon: '⛸️' },
   ],
   customDistances: ['Start', 'Lap', '500m', '777m', '1000m', '1500m'],
   rewardHistory: [],
   races: [
-    { id: 1, name: 'National Champ (全国锦标赛)', date: '2026-11-20' }
+    { id: 1, name: 'National Champ', date: '2026-11-20' }
   ],
   weeklyTemplate: {
-    0: 'Rest Day (休息日)',
-    1: 'Strength Day (力量日)',
-    2: 'Power/Sprint (爆发力)',
-    3: 'Conditioning (有氧耐力)',
-    4: 'Technique (技术模仿)',
-    5: 'Intervals (间歇体能)',
-    6: 'Endurance (专项耐力)',
+    0: 'Rest Day',
+    1: 'Strength Day',
+    2: 'Power/Sprint',
+    3: 'Conditioning',
+    4: 'Technique',
+    5: 'Intervals',
+    6: 'Endurance',
   },
   tasks: [
-    { id: 1, text: 'Jogging (慢跑热身)', target: '15 mins', completed: false, isTemplate: true },
-    { id: 2, text: 'Slide Board (滑行板)', target: '5 sets x 1 min', completed: false, isTemplate: true },
-    { id: 3, text: 'Wall Sit (靠墙静蹲)', target: '3 sets x 1.5 mins', completed: false, isTemplate: true },
+    { id: 1, text: 'Jogging', target: '15 mins', completed: false, isTemplate: true },
+    { id: 2, text: 'Slide Board', target: '5 sets x 1 min', completed: false, isTemplate: true },
+    { id: 3, text: 'Wall Sit', target: '3 sets x 1.5 mins', completed: false, isTemplate: true },
   ],
   records: [
     { date: '2026-05-01', time: 48.5 },
@@ -655,7 +650,7 @@ const getRecordsKey = (dist) => {
   if (dist === '1500m') return 'records1500';
   if (dist === '起跑' || dist === 'Start') return 'recordsStart';
   if (dist === '单圈' || dist === 'Lap') return 'recordsLap';
-  return `records_${dist}`; // 对于全新的自定义名称（如 "111m"），生成新的专属key
+  return `records_${dist}`;
 };
 
 export default function App() {
@@ -707,8 +702,8 @@ export default function App() {
 
   // PRO Modal State
   const [showProModal, setShowProModal] = useState(false);
-  const [showPaymentInfo, setShowPaymentInfo] = useState(false); // 控制是否显示支付二维码页
-  const [isCopied, setIsCopied] = useState(false); // 复制状态
+  const [showPaymentInfo, setShowPaymentInfo] = useState(false); 
+  const [isCopied, setIsCopied] = useState(false); 
   
   // 账号系统新增的状态
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -739,7 +734,6 @@ export default function App() {
     }
   }, [activeTab, data.language, activeDistance, currentDistNames]);
 
-  // 当选项被删除或改变时，确保当前激活的距离始终有效
   useEffect(() => {
     if (currentDistNames.length > 0 && !currentDistNames.includes(activeDistance)) {
       setActiveDistance(currentDistNames[0]);
@@ -771,7 +765,7 @@ export default function App() {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        if (!auth.currentUser) {
+        if (auth && !auth.currentUser) {
           await signInAnonymously(auth);
         }
       } catch (error) {
@@ -780,16 +774,17 @@ export default function App() {
     };
     initAuth();
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      if (!currentUser) setLoading(false);
-    });
-    return () => unsubscribe();
+    if (auth) {
+      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+        if (!currentUser) setLoading(false);
+      });
+      return () => unsubscribe();
+    }
   }, []);
 
   useEffect(() => {
-    if (!user) return;
-    const safeAppId = appId.replace(/\//g, '_');
+    if (!user || !db) return;
     const userRef = doc(db, 'artifacts', safeAppId, 'users', user.uid, 'profile', 'main');
     const unsub = onSnapshot(userRef, (docSnap) => {
       if (docSnap.exists()) {
@@ -820,7 +815,6 @@ export default function App() {
     setFormDailyBonus(data.dailyBonusPoints ?? 50);
     setFormRewards(data.customRewards || defaultData.customRewards);
     
-    // 初始化设置表单中的距离列表
     const initialDistances = data.customDistances || (data.language === 'en' ? ['Start', 'Lap', '500m', '777m', '1000m', '1500m'] : ['起跑', '单圈', '500m', '777m', '1000m', '1500m']);
     setFormDistances(initialDistances);
   }, [data.races, data.raceDate, data.weeklyTemplate, data.pointsPerTask, data.dailyBonusPoints, data.customRewards, data.customDistances, data.language]);
@@ -828,10 +822,9 @@ export default function App() {
   const isParentMode = (!data.isPro || !data.parentPin) || isUnlocked;
 
   const updateData = async (newData) => {
-    if (!user) return;
+    if (!user || !db) return;
     const merged = { ...data, ...newData };
     setData(merged); 
-    const safeAppId = appId.replace(/\//g, '_');
     const userRef = doc(db, 'artifacts', safeAppId, 'users', user.uid, 'profile', 'main');
     const safeData = JSON.parse(JSON.stringify(merged));
     await setDoc(userRef, safeData, { merge: true });
@@ -839,7 +832,7 @@ export default function App() {
 
   const handleLinkAccount = async () => {
     if (!authEmail || !authPassword || authPassword.length < 6) {
-      setAuthError(t.pinLengthError); // 借用提示语
+      setAuthError(t.pinLengthError); 
       return;
     }
     setIsAuthLoading(true);
@@ -862,7 +855,7 @@ export default function App() {
     if (window.confirm("确定要退出当前正式账号吗？退出后将重新进入全新的游客模式。")) {
       await signOut(auth);
       setShowAccountModal(false);
-      window.location.reload(); // 强制刷新重新初始化匿名
+      window.location.reload(); 
     }
   };
 
@@ -1015,10 +1008,7 @@ export default function App() {
         rewardHistory: updatedHistory
       });
 
-      setCelebration({
-        icon: reward.icon,
-        name: reward.name
-      });
+      setCelebration(reward);
       setTimeout(() => setCelebration(null), 3000);
     }
   };
@@ -1072,12 +1062,10 @@ export default function App() {
     const nearestRace = activeRaces.length > 0 ? activeRaces[0] : null;
     const otherRaces = activeRaces.slice(1);
 
-    // 计算今日进度数据
     const totalTasks = data.tasks?.length || 0;
     const completedTasks = (data.tasks || []).filter(t => t.completed).length;
     const progressPercent = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
-    // 计算本周打卡星图数据
     const dayOfWeek = currentTime.getDay(); 
     const startOfWeek = new Date(currentTime);
     startOfWeek.setDate(currentTime.getDate() - dayOfWeek);
@@ -1104,7 +1092,6 @@ export default function App() {
       });
     }
 
-    // 计算最新高光时刻数据，遍历所有自定义项目
     const allRecords = currentDistNames.flatMap(dist => {
       const key = getRecordsKey(dist);
       return (data[key] || []).map(r => ({ ...r, distance: dist }));
@@ -1119,23 +1106,20 @@ export default function App() {
     });
     const latestRecord = allRecords.length > 0 ? allRecords[0] : null;
 
-    // 计算不同时间段的问候语
     const hour = currentTime.getHours();
     let greetingIndex = 0;
-    if (hour >= 5 && hour < 9) greetingIndex = 1; // 清晨
-    else if (hour >= 9 && hour < 12) greetingIndex = 2; // 上午
-    else if (hour >= 12 && hour < 18) greetingIndex = 3; // 下午
-    else if (hour >= 18 && hour < 23) greetingIndex = 4; // 晚间
-    else greetingIndex = 0; // 深夜
+    if (hour >= 5 && hour < 9) greetingIndex = 1; 
+    else if (hour >= 9 && hour < 12) greetingIndex = 2; 
+    else if (hour >= 12 && hour < 18) greetingIndex = 3; 
+    else if (hour >= 18 && hour < 23) greetingIndex = 4; 
+    else greetingIndex = 0; 
 
-    // 计算每日随机贴士
     const safeTips = t.tips || [];
     const dayOfYear = Math.floor((currentTime - new Date(currentTime.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
     const tipIndex = safeTips.length > 0 ? dayOfYear % safeTips.length : 0;
 
     return (
       <div className="space-y-4">
-        {/* 顶部标题与日期 */}
         <div className={`${tc.cardBg} p-6 rounded-2xl shadow-sm`}>
           <h2 className={`${tc.textPrimary} opacity-80 text-sm font-semibold flex items-center gap-2`}>
             <Calendar size={16} /> 
@@ -1144,7 +1128,6 @@ export default function App() {
           <h1 className={`text-2xl font-black ${tc.textHeading} mt-2 tracking-tight leading-snug`}>{t.greetings?.[greetingIndex] || ''}</h1>
         </div>
 
-        {/* 模块：每日速滑教练贴士 */}
         {safeTips.length > 0 && (
           <div className={`bg-gradient-to-br ${tc.navActive} border ${tc.borderLight} p-5 rounded-2xl shadow-sm relative overflow-hidden`}>
             <Quote size={80} className={`absolute -right-2 -bottom-2 opacity-5 ${tc.textPrimary} -rotate-12`} />
@@ -1158,7 +1141,6 @@ export default function App() {
           </div>
         )}
 
-        {/* 模块1：今日任务进度条 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <div className="flex justify-between items-end mb-3">
             <h3 className={`text-sm font-bold ${tc.textHeading} flex items-center gap-2`}><CheckCircle2 size={18} className={tc.textPrimary} /> {t.dailyProgress}</h3>
@@ -1172,7 +1154,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* 模块2：本周活跃星图 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <h3 className={`text-sm font-bold ${tc.textHeading} mb-4 flex items-center gap-2`}><Flame size={18} className="text-orange-500" /> {t.weeklyActivity}</h3>
           <div className="flex justify-between items-center px-1">
@@ -1192,7 +1173,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* 原有卡片：比赛倒计时与今日核心 */}
         <div className="grid grid-cols-2 gap-4">
           <div className={`bg-gradient-to-br ${tc.gradientCard} p-5 rounded-2xl shadow-md flex flex-col justify-between`}>
             <div className="flex items-center gap-2 mb-2 opacity-90">
@@ -1216,7 +1196,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* 模块3：最新高光时刻 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <div className={`flex items-center gap-2 mb-3 ${tc.textMuted}`}>
             <Award size={18} className="text-yellow-500" />
@@ -1237,7 +1216,6 @@ export default function App() {
           )}
         </div>
 
-        {/* 其他比赛 */}
         {otherRaces.length > 0 && (
           <div className="space-y-2 mt-4">
             <h3 className={`text-sm font-bold ${tc.textHeading} px-1 mb-2`}>{t.upcomingRaces}</h3>
@@ -1319,6 +1297,11 @@ export default function App() {
                 </div>
               );
             })}
+          </div>
+
+          <div className={`mt-6 flex items-center justify-center gap-2 text-xs font-bold ${tc.textMuted}`}>
+            <div className={`w-3 h-3 rounded-sm bg-gradient-to-br ${tc.gradientIcon}`}></div>
+            <span>{t.checkinLegend}</span>
           </div>
         </div>
       </div>
@@ -1709,7 +1692,7 @@ export default function App() {
       setIsUnlocked(true);
     };
 
-    // 纯静默本地语言切换
+    // 纯粹、无API请求、瞬间切换界面语言
     const toggleLanguage = async () => {
       const targetLang = data.language === 'en' ? 'zh' : 'en';
       await updateData({ language: targetLang });
@@ -1920,7 +1903,7 @@ export default function App() {
             </div>
           )}
 
-          {pinError && <div className={`text-xs text-red-500 font-bold mt-2 animate-pulse`}>{pinError}</div>}
+          {pinError && <div className={`text-xs ${pinError.includes('✅') ? 'text-green-600' : 'text-red-500'} font-bold mt-2 ${pinError.includes('✅') ? '' : 'animate-pulse'}`}>{pinError}</div>}
         </div>
 
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex items-center justify-between`}>
