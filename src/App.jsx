@@ -45,7 +45,8 @@ import {
   LogOut
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, EmailAuthProvider, linkWithCredential, signOut } from 'firebase/auth';
+// 引入了 signInWithEmailAndPassword 用于登录已有账号
+import { getAuth, signInAnonymously, onAuthStateChanged, EmailAuthProvider, linkWithCredential, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 // --- Firebase 初始化 ---
@@ -386,7 +387,7 @@ const translations = {
     bindAccountBtn: '注册并保存数据',
     officialAccount: '正式账号 (云端同步中)',
     manageAccountBtn: '账号管理',
-    authTitle: '注册正式账号',
+    authTitle: '注册 / 登录',
     authSub: '安全保存您的所有训练记录与会员特权',
     email: '邮箱地址',
     password: '密码 (至少6位)',
@@ -528,10 +529,10 @@ const translations = {
     accountStatus: 'Account & Sync',
     guestMode: 'Guest Mode (Local Only)',
     guestWarning: 'Clearing your browser cache will erase your data. Register to enable cloud sync.',
-    bindAccountBtn: 'Register & Save Data',
+    bindAccountBtn: 'Register / Login',
     officialAccount: 'Official Account (Synced)',
     manageAccountBtn: 'Manage Account',
-    authTitle: 'Create Official Account',
+    authTitle: 'Register / Login',
     authSub: 'Securely save your training records and PRO status',
     email: 'Email Address',
     password: 'Password (min 6 chars)',
@@ -763,25 +764,27 @@ export default function App() {
     return streak;
   })();
 
+  // 完美修复：先监听状态，确认没登录再匿名登录
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (auth && !auth.currentUser) {
-          await signInAnonymously(auth);
-        }
-      } catch (error) {
-        console.error("Auth error:", error);
-      }
-    };
-    initAuth();
-
-    if (auth) {
-      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    if (!auth) return;
+    
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        // 如果本地缓存里已经有正式账号或历史匿名账号，直接使用
         setUser(currentUser);
-        if (!currentUser) setLoading(false);
-      });
-      return () => unsubscribe();
-    }
+      } else {
+        // 只有在明确判断出“没有任何登录记录”时，才主动创建新的匿名账号
+        try {
+          await signInAnonymously(auth);
+          // 匿名登录成功后，onAuthStateChanged 会再次触发并带上新账号，所以这里不用手动 setUser
+        } catch (error) {
+          console.error("Auth error:", error);
+          setLoading(false); // 防止无限卡死在加载动画
+        }
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -791,7 +794,6 @@ export default function App() {
       if (docSnap.exists()) {
         setData({ ...defaultData, ...docSnap.data() });
       } else {
-        // 优化：发现没有数据时，仅在本地加载默认数据，不再主动向云端写入无用空壳文件
         setData(defaultData);
       }
       setLoading(false);
@@ -830,29 +832,57 @@ export default function App() {
     await setDoc(userRef, safeData, { merge: true });
   };
 
+  // 修复并增强账号注册/登录逻辑
   const handleLinkAccount = async () => {
     if (!authEmail || !authPassword || authPassword.length < 6) {
-      setAuthError(t.pinLengthError); 
+      setAuthError(data.language === 'en' ? 'Password must be at least 6 characters' : '密码长度至少为 6 位'); 
       return;
     }
     setIsAuthLoading(true);
     setAuthError('');
     try {
+      // 尝试绑定当前游客账号到这个邮箱（注册）
       const credential = EmailAuthProvider.credential(authEmail, authPassword);
       await linkWithCredential(auth.currentUser, credential);
       setShowAuthModal(false);
       setAuthEmail('');
       setAuthPassword('');
-      alert("绑定成功！您的数据已永久保存。");
+      alert(data.language === 'en' ? "Successfully linked! Your data is now saved." : "绑定成功！您的数据已永久保存。");
     } catch (error) {
       console.error(error);
-      setAuthError(error.message.includes('email-already-in-use') ? '该邮箱已被注册，请更换邮箱' : '绑定失败，请检查网络或格式');
+      // 如果发现这个邮箱已经被注册过了
+      if (error.code === 'auth/email-already-in-use' || error.code === 'auth/credential-already-in-use') {
+        const confirmMsg = data.language === 'en' 
+          ? "This email is already registered. Would you like to log in to this existing account instead?\n(Note: Current local guest data will be replaced by your cloud data.)"
+          : "该邮箱已注册过正式账号。是否直接登录该账号？\n(注意：登录后，当前未保存的游客数据将被云端已有数据覆盖)";
+          
+        if (window.confirm(confirmMsg)) {
+          try {
+            // 直接执行登录已有账号
+            await signInWithEmailAndPassword(auth, authEmail, authPassword);
+            setShowAuthModal(false);
+            setAuthEmail('');
+            setAuthPassword('');
+            alert(data.language === 'en' ? "Logged in successfully!" : "登录成功！");
+          } catch (loginErr) {
+            console.error(loginErr);
+            setAuthError(data.language === 'en' ? "Login failed: Incorrect password" : "登录失败：密码错误");
+          }
+        }
+      } else if (error.code === 'auth/invalid-email') {
+        setAuthError(data.language === 'en' ? "Invalid email format" : "邮箱格式不正确");
+      } else {
+        setAuthError(data.language === 'en' ? "Failed to connect to authentication server" : "请求失败，请检查网络");
+      }
     }
     setIsAuthLoading(false);
   };
 
   const handleLogout = async () => {
-    if (window.confirm("确定要退出当前正式账号吗？退出后将重新进入全新的游客模式。")) {
+    const confirmMsg = data.language === 'en' 
+      ? "Are you sure you want to log out? You will return to a clean Guest Mode."
+      : "确定要退出当前正式账号吗？退出后将重新进入全新的游客模式。";
+    if (window.confirm(confirmMsg)) {
       await signOut(auth);
       setShowAccountModal(false);
       window.location.reload(); 
@@ -1051,7 +1081,7 @@ export default function App() {
   };
 
   const DashboardView = () => {
-    const activeRaces = (data.races || (data.raceDate ? [{ id: 1, name: t.raceDate || '比赛目标日期', date: data.raceDate }] : []))
+    const activeRaces = (data.races || (data.raceDate ? [{ id: 1, name: t.raceDate, date: data.raceDate }] : []))
       .map(r => ({
         ...r,
         days: Math.ceil((new Date(r.date) - currentTime) / (1000 * 60 * 60 * 24))
@@ -1118,29 +1148,22 @@ export default function App() {
     const dayOfYear = Math.floor((currentTime - new Date(currentTime.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
     const tipIndex = safeTips.length > 0 ? dayOfYear % safeTips.length : 0;
 
-    // 默认文本兜底变量
-    const isEn = data.language === 'en';
-
     return (
       <div className="space-y-4">
-        {/* 日期与问候 */}
         <div className={`${tc.cardBg} p-6 rounded-2xl shadow-sm`}>
           <h2 className={`${tc.textPrimary} opacity-80 text-sm font-semibold flex items-center gap-2`}>
             <Calendar size={16} /> 
-            {currentTime.toLocaleDateString(isEn ? 'en-US' : 'zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })}
+            {currentTime.toLocaleDateString(data.language === 'en' ? 'en-US' : 'zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })}
           </h2>
-          <h1 className={`text-2xl font-black ${tc.textHeading} mt-2 tracking-tight leading-snug`}>
-            {t.greetings?.[greetingIndex] || (isEn ? 'Ready to train?' : '准备好今天的训练了吗？')}
-          </h1>
+          <h1 className={`text-2xl font-black ${tc.textHeading} mt-2 tracking-tight leading-snug`}>{t.greetings?.[greetingIndex] || ''}</h1>
         </div>
 
-        {/* 训练锦囊 */}
         {safeTips.length > 0 && (
           <div className={`bg-gradient-to-br ${tc.navActive} border ${tc.borderLight} p-5 rounded-2xl shadow-sm relative overflow-hidden`}>
             <Quote size={80} className={`absolute -right-2 -bottom-2 opacity-5 ${tc.textPrimary} -rotate-12`} />
             <div className={`flex items-center gap-2 mb-2 ${tc.textPrimary}`}>
               <Sparkles size={18} className="animate-pulse" />
-              <span className="text-sm font-bold">{t.coachTipTitle || (isEn ? 'Training Tip' : '训练锦囊')}</span>
+              <span className="text-sm font-bold">{t.coachTipTitle}</span>
             </div>
             <p className={`text-sm ${tc.textHeading} font-medium leading-relaxed relative z-10 pr-4`}>
               "{safeTips[tipIndex]}"
@@ -1148,16 +1171,10 @@ export default function App() {
           </div>
         )}
 
-        {/* 今日任务进度 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <div className="flex justify-between items-end mb-3">
-            <h3 className={`text-sm font-bold ${tc.textHeading} flex items-center gap-2`}>
-              <CheckCircle2 size={18} className={tc.textPrimary} /> 
-              {t.dailyProgress || (isEn ? 'Daily Progress' : '今日任务进度')}
-            </h3>
-            <span className={`text-xs font-bold ${tc.textMuted}`}>
-              {(t.completedTasks || (isEn ? 'Completed {completed}/{total}' : '已完成 {completed}/{total}')).replace('{completed}', completedTasks).replace('{total}', totalTasks)}
-            </span>
+            <h3 className={`text-sm font-bold ${tc.textHeading} flex items-center gap-2`}><CheckCircle2 size={18} className={tc.textPrimary} /> {t.dailyProgress}</h3>
+            <span className={`text-xs font-bold ${tc.textMuted}`}>{(t.completedTasks || '').replace('{completed}', completedTasks).replace('{total}', totalTasks)}</span>
           </div>
           <div className={`h-3 w-full ${tc.badgeBg} rounded-full overflow-hidden`}>
             <div 
@@ -1167,12 +1184,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* 本周活跃星图 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
-          <h3 className={`text-sm font-bold ${tc.textHeading} mb-4 flex items-center gap-2`}>
-            <Flame size={18} className="text-orange-500" /> 
-            {t.weeklyActivity || (isEn ? 'Weekly Activity' : '本周活跃星图')}
-          </h3>
+          <h3 className={`text-sm font-bold ${tc.textHeading} mb-4 flex items-center gap-2`}><Flame size={18} className="text-orange-500" /> {t.weeklyActivity}</h3>
           <div className="flex justify-between items-center px-1">
             {currentWeek.map((day, idx) => (
               <div key={idx} className="flex flex-col items-center gap-2">
@@ -1190,35 +1203,33 @@ export default function App() {
           </div>
         </div>
 
-        {/* 距离比赛 & 今日核心 */}
         <div className="grid grid-cols-2 gap-4">
           <div className={`bg-gradient-to-br ${tc.gradientCard} p-5 rounded-2xl shadow-md flex flex-col justify-between`}>
             <div className="flex items-center gap-2 mb-2 opacity-90">
               <Trophy size={18} className="shrink-0" />
               <span className="text-sm font-medium line-clamp-1 break-all">
-                {nearestRace ? nearestRace.name : (t.daysToRace || (isEn ? 'Days to Race' : '距离比赛'))}
+                {nearestRace ? nearestRace.name : t.daysToRace}
               </span>
             </div>
             <div className="text-3xl font-black mt-1">
-              {nearestRace ? Math.max(0, nearestRace.days) : '--'} <span className="text-lg font-normal opacity-80">{t.days || (isEn ? 'Days' : '天')}</span>
+              {nearestRace ? Math.max(0, nearestRace.days) : '--'} <span className="text-lg font-normal opacity-80">{t.days}</span>
             </div>
-            <div className="text-xs mt-1 opacity-80">{t.keepGoing || (isEn ? 'Keep it up, crush that PB' : '保持状态，冲刺 PB')}</div>
+            <div className="text-xs mt-1 opacity-80">{t.keepGoing}</div>
           </div>
           
           <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
             <div className={`flex items-center gap-2 mb-2 ${tc.textMuted}`}>
               <Zap size={18} className="text-orange-400" />
-              <span className="text-sm font-medium">{t.todayFocus || (isEn ? "Today's Focus" : '今日核心')}</span>
+              <span className="text-sm font-medium">{t.todayFocus}</span>
             </div>
             <div className={`text-xl font-bold ${tc.textPrimary} leading-tight`}>{todayTrainingType || 'Rest'}</div>
           </div>
         </div>
 
-        {/* 最新高光时刻 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <div className={`flex items-center gap-2 mb-3 ${tc.textMuted}`}>
             <Award size={18} className="text-yellow-500" />
-            <span className="text-sm font-bold">{t.recentHighlight || (isEn ? 'Recent Highlight' : '最新高光时刻')}</span>
+            <span className="text-sm font-bold">{t.recentHighlight}</span>
           </div>
           {latestRecord ? (
             <div className="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl">
@@ -1227,23 +1238,22 @@ export default function App() {
                 <div className={`text-xs ${tc.textMuted} mt-1 font-medium`}>{(latestRecord.date || '').replace(/-/g, '/')} • {latestRecord.distance}</div>
               </div>
               <div className={`px-3 py-1.5 ${tc.badgeYellow} rounded-lg text-xs font-bold shadow-sm`}>
-                {t.keepItUp || (isEn ? 'Keep it up!' : '继续保持！')}
+                {t.keepItUp}
               </div>
             </div>
           ) : (
-            <div className={`text-sm ${tc.textMuted} py-2`}>{t.noRecentRecord || (isEn ? 'No recent records' : '暂无近期记录')}</div>
+            <div className={`text-sm ${tc.textMuted} py-2`}>{t.noRecentRecord}</div>
           )}
         </div>
 
-        {/* 其他即将到来的比赛 */}
         {otherRaces.length > 0 && (
           <div className="space-y-2 mt-4">
-            <h3 className={`text-sm font-bold ${tc.textHeading} px-1 mb-2`}>{t.upcomingRaces || (isEn ? 'Other Upcoming Races' : '其他即将到来的比赛')}</h3>
+            <h3 className={`text-sm font-bold ${tc.textHeading} px-1 mb-2`}>{t.upcomingRaces}</h3>
             {otherRaces.map(r => (
               <div key={r.id} className={`${tc.cardBg} p-3 rounded-xl shadow-sm flex justify-between items-center`}>
                 <span className={`font-medium ${tc.appText} text-sm truncate pr-2`}>{r.name}</span>
                 <div className={`${tc.textPrimary} font-black text-sm whitespace-nowrap ${tc.badgeBg} px-2 py-1 rounded`}>
-                  {Math.max(0, r.days)} {t.days || (isEn ? 'Days' : '天')}
+                  {Math.max(0, r.days)} {t.days}
                 </div>
               </div>
             ))}
@@ -2337,7 +2347,7 @@ export default function App() {
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
               />
             </div>
-            {authError && <div className="text-xs font-bold text-red-400 animate-pulse ml-1">{authError}</div>}
+            {authError && <div className="text-xs font-bold text-red-400 animate-pulse ml-1 whitespace-pre-line leading-relaxed">{authError}</div>}
           </div>
         </div>
 
