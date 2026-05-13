@@ -1052,7 +1052,7 @@ export default function App() {
   };
 
   const DashboardView = () => {
-    const activeRaces = (data.races || (data.raceDate ? [{ id: 1, name: t.raceDate, date: data.raceDate }] : []))
+    const activeRaces = (data.races || (data.raceDate ? [{ id: 1, name: t.raceDate || '比赛目标日期', date: data.raceDate }] : []))
       .map(r => ({
         ...r,
         days: Math.ceil((new Date(r.date) - currentTime) / (1000 * 60 * 60 * 24))
@@ -1119,22 +1119,29 @@ export default function App() {
     const dayOfYear = Math.floor((currentTime - new Date(currentTime.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
     const tipIndex = safeTips.length > 0 ? dayOfYear % safeTips.length : 0;
 
+    // 默认文本兜底变量
+    const isEn = data.language === 'en';
+
     return (
       <div className="space-y-4">
+        {/* 日期与问候 */}
         <div className={`${tc.cardBg} p-6 rounded-2xl shadow-sm`}>
           <h2 className={`${tc.textPrimary} opacity-80 text-sm font-semibold flex items-center gap-2`}>
             <Calendar size={16} /> 
-            {currentTime.toLocaleDateString(data.language === 'en' ? 'en-US' : 'zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })}
+            {currentTime.toLocaleDateString(isEn ? 'en-US' : 'zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })}
           </h2>
-          <h1 className={`text-2xl font-black ${tc.textHeading} mt-2 tracking-tight leading-snug`}>{t.greetings?.[greetingIndex] || ''}</h1>
+          <h1 className={`text-2xl font-black ${tc.textHeading} mt-2 tracking-tight leading-snug`}>
+            {t.greetings?.[greetingIndex] || (isEn ? 'Ready to train?' : '准备好今天的训练了吗？')}
+          </h1>
         </div>
 
+        {/* 训练锦囊 */}
         {safeTips.length > 0 && (
           <div className={`bg-gradient-to-br ${tc.navActive} border ${tc.borderLight} p-5 rounded-2xl shadow-sm relative overflow-hidden`}>
             <Quote size={80} className={`absolute -right-2 -bottom-2 opacity-5 ${tc.textPrimary} -rotate-12`} />
             <div className={`flex items-center gap-2 mb-2 ${tc.textPrimary}`}>
               <Sparkles size={18} className="animate-pulse" />
-              <span className="text-sm font-bold">{t.coachTipTitle}</span>
+              <span className="text-sm font-bold">{t.coachTipTitle || (isEn ? 'Training Tip' : '训练锦囊')}</span>
             </div>
             <p className={`text-sm ${tc.textHeading} font-medium leading-relaxed relative z-10 pr-4`}>
               "{safeTips[tipIndex]}"
@@ -1142,10 +1149,16 @@ export default function App() {
           </div>
         )}
 
+        {/* 今日任务进度 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <div className="flex justify-between items-end mb-3">
-            <h3 className={`text-sm font-bold ${tc.textHeading} flex items-center gap-2`}><CheckCircle2 size={18} className={tc.textPrimary} /> {t.dailyProgress}</h3>
-            <span className={`text-xs font-bold ${tc.textMuted}`}>{(t.completedTasks || '').replace('{completed}', completedTasks).replace('{total}', totalTasks)}</span>
+            <h3 className={`text-sm font-bold ${tc.textHeading} flex items-center gap-2`}>
+              <CheckCircle2 size={18} className={tc.textPrimary} /> 
+              {t.dailyProgress || (isEn ? 'Daily Progress' : '今日任务进度')}
+            </h3>
+            <span className={`text-xs font-bold ${tc.textMuted}`}>
+              {(t.completedTasks || (isEn ? 'Completed {completed}/{total}' : '已完成 {completed}/{total}')).replace('{completed}', completedTasks).replace('{total}', totalTasks)}
+            </span>
           </div>
           <div className={`h-3 w-full ${tc.badgeBg} rounded-full overflow-hidden`}>
             <div 
@@ -1155,8 +1168,12 @@ export default function App() {
           </div>
         </div>
 
+        {/* 本周活跃星图 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
-          <h3 className={`text-sm font-bold ${tc.textHeading} mb-4 flex items-center gap-2`}><Flame size={18} className="text-orange-500" /> {t.weeklyActivity}</h3>
+          <h3 className={`text-sm font-bold ${tc.textHeading} mb-4 flex items-center gap-2`}>
+            <Flame size={18} className="text-orange-500" /> 
+            {t.weeklyActivity || (isEn ? 'Weekly Activity' : '本周活跃星图')}
+          </h3>
           <div className="flex justify-between items-center px-1">
             {currentWeek.map((day, idx) => (
               <div key={idx} className="flex flex-col items-center gap-2">
@@ -1174,33 +1191,35 @@ export default function App() {
           </div>
         </div>
 
+        {/* 距离比赛 & 今日核心 */}
         <div className="grid grid-cols-2 gap-4">
           <div className={`bg-gradient-to-br ${tc.gradientCard} p-5 rounded-2xl shadow-md flex flex-col justify-between`}>
             <div className="flex items-center gap-2 mb-2 opacity-90">
               <Trophy size={18} className="shrink-0" />
               <span className="text-sm font-medium line-clamp-1 break-all">
-                {nearestRace ? nearestRace.name : t.daysToRace}
+                {nearestRace ? nearestRace.name : (t.daysToRace || (isEn ? 'Days to Race' : '距离比赛'))}
               </span>
             </div>
             <div className="text-3xl font-black mt-1">
-              {nearestRace ? Math.max(0, nearestRace.days) : '--'} <span className="text-lg font-normal opacity-80">{t.days}</span>
+              {nearestRace ? Math.max(0, nearestRace.days) : '--'} <span className="text-lg font-normal opacity-80">{t.days || (isEn ? 'Days' : '天')}</span>
             </div>
-            <div className="text-xs mt-1 opacity-80">{t.keepGoing}</div>
+            <div className="text-xs mt-1 opacity-80">{t.keepGoing || (isEn ? 'Keep it up, crush that PB' : '保持状态，冲刺 PB')}</div>
           </div>
           
           <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
             <div className={`flex items-center gap-2 mb-2 ${tc.textMuted}`}>
               <Zap size={18} className="text-orange-400" />
-              <span className="text-sm font-medium">{t.todayFocus}</span>
+              <span className="text-sm font-medium">{t.todayFocus || (isEn ? "Today's Focus" : '今日核心')}</span>
             </div>
             <div className={`text-xl font-bold ${tc.textPrimary} leading-tight`}>{todayTrainingType || 'Rest'}</div>
           </div>
         </div>
 
+        {/* 最新高光时刻 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <div className={`flex items-center gap-2 mb-3 ${tc.textMuted}`}>
             <Award size={18} className="text-yellow-500" />
-            <span className="text-sm font-bold">{t.recentHighlight}</span>
+            <span className="text-sm font-bold">{t.recentHighlight || (isEn ? 'Recent Highlight' : '最新高光时刻')}</span>
           </div>
           {latestRecord ? (
             <div className="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl">
@@ -1209,22 +1228,23 @@ export default function App() {
                 <div className={`text-xs ${tc.textMuted} mt-1 font-medium`}>{(latestRecord.date || '').replace(/-/g, '/')} • {latestRecord.distance}</div>
               </div>
               <div className={`px-3 py-1.5 ${tc.badgeYellow} rounded-lg text-xs font-bold shadow-sm`}>
-                {t.keepItUp}
+                {t.keepItUp || (isEn ? 'Keep it up!' : '继续保持！')}
               </div>
             </div>
           ) : (
-            <div className={`text-sm ${tc.textMuted} py-2`}>{t.noRecentRecord}</div>
+            <div className={`text-sm ${tc.textMuted} py-2`}>{t.noRecentRecord || (isEn ? 'No recent records' : '暂无近期记录')}</div>
           )}
         </div>
 
+        {/* 其他即将到来的比赛 */}
         {otherRaces.length > 0 && (
           <div className="space-y-2 mt-4">
-            <h3 className={`text-sm font-bold ${tc.textHeading} px-1 mb-2`}>{t.upcomingRaces}</h3>
+            <h3 className={`text-sm font-bold ${tc.textHeading} px-1 mb-2`}>{t.upcomingRaces || (isEn ? 'Other Upcoming Races' : '其他即将到来的比赛')}</h3>
             {otherRaces.map(r => (
               <div key={r.id} className={`${tc.cardBg} p-3 rounded-xl shadow-sm flex justify-between items-center`}>
                 <span className={`font-medium ${tc.appText} text-sm truncate pr-2`}>{r.name}</span>
                 <div className={`${tc.textPrimary} font-black text-sm whitespace-nowrap ${tc.badgeBg} px-2 py-1 rounded`}>
-                  {Math.max(0, r.days)} {t.days}
+                  {Math.max(0, r.days)} {t.days || (isEn ? 'Days' : '天')}
                 </div>
               </div>
             ))}
