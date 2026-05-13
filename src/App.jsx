@@ -61,7 +61,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 固定的生产环境集合名称
+// 唯一保留这一个变量！它将作为你云端数据库里最顶层的“大文件夹”名字
 const safeAppId = 'blaze-skate-production';
 
 // --- 主题配置 (Theme Engine) ---
@@ -172,6 +172,7 @@ const THEMES = {
   }
 };
 
+// 免费用户可用的主题
 const FREE_THEMES = ['purple', 'blue', 'white'];
 
 // --- 内容库配置 (Task Library) ---
@@ -1507,7 +1508,6 @@ export default function App() {
           <p className={`text-sm ${tc.textMuted} mt-1`}>{t.recordMilestones}</p>
         </div>
 
-        {/* 修复的横向滑动导航区域 */}
         <div className="relative flex items-center -mx-1 px-1 py-1">
           {statsCanScroll.left && (
             <button
@@ -1615,7 +1615,6 @@ export default function App() {
         <div className="grid grid-cols-2 gap-4">
           {currentRewards.map(reward => (
             <div key={reward.id} className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex flex-col items-center text-center relative overflow-hidden`}>
-              {/* PRO 限制：奖励商店 */}
               {!data.isPro && (
                 <div className="absolute top-0 right-0 w-12 h-12 overflow-hidden z-10">
                    <div className="bg-yellow-500 text-white font-bold text-[8px] py-1 px-4 transform rotate-45 translate-x-3 translate-y-1 shadow-sm uppercase tracking-wider flex items-center justify-center gap-1">
@@ -1692,7 +1691,6 @@ export default function App() {
       setIsUnlocked(true);
     };
 
-    // 纯粹、无API请求、瞬间切换界面语言
     const toggleLanguage = async () => {
       const targetLang = data.language === 'en' ? 'zh' : 'en';
       await updateData({ language: targetLang });
@@ -1721,7 +1719,6 @@ export default function App() {
                   isActive ? tc.badgeBg + ' ring-2 ' + tc.focusRing : 'hover:opacity-70 ' + tc.calEmpty.split(' ')[0]
                 }`}
               >
-                {/* PRO 限制：高阶主题 */}
                 {isLocked && (
                   <div className="absolute -top-1 -right-1 bg-slate-800 rounded-full p-0.5 shadow-md z-10">
                     <Crown size={12} className="text-yellow-400" />
@@ -1745,7 +1742,6 @@ export default function App() {
           <p className={`text-sm ${tc.textMuted} mt-1`}>{t.customizePlan}</p>
         </div>
 
-        {/* PRO 会员状态展示栏 */}
         {data.isPro ? (
           <div className={`relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-5 rounded-2xl shadow-lg flex justify-between items-center text-white`}>
             <Sparkles className="absolute right-10 top-2 opacity-20" size={60} />
@@ -1779,7 +1775,6 @@ export default function App() {
           </div>
         )}
 
-        {/* --- 账号与多设备云同步模块 --- */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm border-2 ${user?.isAnonymous ? 'border-orange-300' : tc.borderLight}`}>
           <div className="flex justify-between items-center mb-3">
             <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
@@ -1826,7 +1821,6 @@ export default function App() {
           )}
         </div>
 
-        {/* 语言选项置顶，纯静态切换 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
           <h3 className={`${tc.textHeading} font-bold flex items-center gap-2 shrink-0`}>
             <Globe size={18} /> {t.language}
@@ -1839,7 +1833,6 @@ export default function App() {
           </button>
         </div>
 
-        {/* PRO 限制：家长密码锁 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm border-2 ${data.parentPin && !isUnlocked ? 'border-orange-300 bg-orange-50/30' : tc.borderLight}`}>
           <div className="flex justify-between items-center mb-3">
             <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
@@ -1916,7 +1909,6 @@ export default function App() {
                   <User size={24} className={tc.textPrimary} />
                 </div>
               )}
-              {/* 头像上传保持开放 */}
               <label className={`absolute bottom-0 right-0 ${tc.btnPrimary} p-1.5 rounded-full cursor-pointer shadow-md border-2 ${tc.borderLight} transition-all flex items-center justify-center`}>
                 <Camera size={14} />
                 <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
@@ -1933,7 +1925,6 @@ export default function App() {
 
         {isParentMode && (
           <>
-            {/* PRO 限制：成绩项目距离管理 */}
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <div className="flex justify-between items-center">
                 <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
@@ -1973,7 +1964,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* PRO 限制：商店商品管理 */}
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <div className="flex justify-between items-center">
                 <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
@@ -2115,7 +2105,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* PRO 限制：积分奖励设置 */}
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
                 <Award size={18} /> {t.pointsSettingTitle}
@@ -2147,7 +2136,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* 按钮反馈交互 */}
             <button 
               onClick={handleSaveSettings}
               disabled={saveSuccess}
@@ -2172,8 +2160,7 @@ export default function App() {
           </>
         )}
 
-        {/* --- 软件关于与版权信息 --- */}
-        <div className="pt-8 pb-4 flex flex-col items-center justify-center opacity-80">
+        <div className={`pt-8 pb-4 flex flex-col items-center justify-center opacity-80`}>
           <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${tc.gradientIcon} flex items-center justify-center shadow-md mb-3`}>
             <Flame size={24} className="text-white" />
           </div>
@@ -2289,7 +2276,6 @@ export default function App() {
     );
   };
 
-  // --- 新增：绑定账号的全屏弹窗 ---
   const AuthModal = () => {
     if (!showAuthModal) return null;
     return (
@@ -2349,7 +2335,6 @@ export default function App() {
     );
   };
 
-  // --- 新增：正式账号管理中心弹窗 ---
   const AccountManagementModal = () => {
     if (!showAccountModal) return null;
     return (
@@ -2363,7 +2348,6 @@ export default function App() {
         </div>
 
         <div className="flex-1 p-5 space-y-6">
-          {/* 用户名设置 */}
           <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-3`}>
             <label className={`text-sm font-bold flex items-center gap-2 ${tc.textHeading}`}>
               <UserCircle size={18} className={tc.textPrimary} />
@@ -2380,11 +2364,10 @@ export default function App() {
             </div>
           </div>
 
-          {/* 绑定状态列表 */}
           <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
             <div className={`flex items-center justify-between pb-4 border-b ${tc.borderLight}`}>
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary}`}>
+                <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary} shrink-0`}>
                   <Mail size={20} />
                 </div>
                 <div>
@@ -2394,12 +2377,12 @@ export default function App() {
                   </div>
                 </div>
               </div>
-              {user?.email && <span className="text-xs font-bold text-green-500 bg-green-50 px-2 py-1 rounded">{t.bound}</span>}
+              {user?.email && <span className="text-xs font-bold text-green-500 bg-green-50 px-2 py-1 rounded shrink-0">{t.bound}</span>}
             </div>
 
             <div className={`flex items-center justify-between`}>
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary}`}>
+                <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary} shrink-0`}>
                   <Smartphone size={20} />
                 </div>
                 <div>
@@ -2409,7 +2392,7 @@ export default function App() {
               </div>
               <button 
                 onClick={() => alert("手机号绑定需配合企业短信服务，当前为演示版本，暂未开通真实短信网关。")}
-                className={`text-xs font-bold ${tc.btnPrimary} px-3 py-1.5 rounded-lg shadow-sm`}
+                className={`text-xs font-bold ${tc.btnPrimary} px-3 py-1.5 rounded-lg shadow-sm shrink-0`}
               >
                 {t.bindAccountBtn}
               </button>
@@ -2427,29 +2410,12 @@ export default function App() {
     );
   };
 
-  // --- 新增：PRO 会员全屏展示弹窗 ---
   const ProShowcaseModal = () => {
     if (!showProModal) return null;
-    
-    const handleCopyUid = () => {
-      if (user && user.uid) {
-        navigator.clipboard.writeText(user.uid);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
-      }
-    };
-
     return (
       <div className="fixed inset-0 z-[70] flex flex-col bg-slate-900 text-slate-100 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-        {/* 顶部导航 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 sticky top-0 bg-slate-900/90 backdrop-blur-md z-10">
-          <button 
-            onClick={() => {
-              setShowProModal(false);
-              setTimeout(() => setShowPaymentInfo(false), 300); // 关掉后重置状态
-            }} 
-            className="p-2 -ml-2 text-slate-400 hover:text-white shrink-0 transition-colors"
-          >
+          <button onClick={() => setShowProModal(false)} className="p-2 -ml-2 text-slate-400 hover:text-white shrink-0 transition-colors">
             <X size={24} />
           </button>
           <h2 className="text-lg font-black text-white tracking-widest uppercase opacity-80">Blaze Pro</h2>
@@ -2457,95 +2423,81 @@ export default function App() {
         </div>
 
         <div className="flex-1 px-6 pt-8 pb-32">
-          {/* 大图标与标题 */}
           <div className="flex flex-col items-center text-center mb-10">
             <div className="w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl flex items-center justify-center shadow-[0_10px_40px_rgba(245,158,11,0.3)] mb-6 relative">
               <Sparkles size={40} className="absolute -top-4 -right-4 text-yellow-300 animate-pulse" />
               <Crown size={48} className="text-white fill-white/20" />
             </div>
-            <h1 className="text-3xl font-black text-white mb-2">{showPaymentInfo ? t.paymentTitle : t.proTitle}</h1>
-            <p className="text-slate-400 font-medium">{showPaymentInfo ? t.wechatContact : t.proSubtitle}</p>
+            <h1 className="text-3xl font-black text-white mb-2">{t.proTitle}</h1>
+            <p className="text-slate-400 font-medium">{t.proSubtitle}</p>
           </div>
 
-          {!showPaymentInfo ? (
-            <>
-              {/* 价格区块 */}
-              <div className="bg-slate-800/50 border border-slate-700 rounded-3xl p-6 mb-8 text-center relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500"></div>
-                <div className="text-slate-400 text-sm font-bold line-through mb-1 opacity-60">
-                  {data.language === 'en' ? '$29.99' : '¥198'}
-                </div>
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">
-                    {t.proPrice}
-                  </span>
-                  <span className="text-slate-400 font-bold">{t.proPeriod}</span>
-                </div>
-              </div>
+          <div className="bg-slate-800/50 border border-slate-700 rounded-3xl p-6 mb-8 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500"></div>
+            <div className="text-slate-400 text-sm font-bold line-through mb-1 opacity-60">
+              {data.language === 'en' ? '$29.99' : '¥198'}
+            </div>
+            <div className="flex items-baseline justify-center gap-1">
+              <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">
+                {t.proPrice}
+              </span>
+              <span className="text-slate-400 font-bold">{t.proPeriod}</span>
+            </div>
+          </div>
 
-              {/* 特权列表 */}
-              <div className="space-y-5">
-                {(t.proFeatures || []).map((feature, idx) => (
-                  <div key={idx} className="flex items-start gap-4">
-                    <div className="mt-0.5 bg-orange-500/20 p-1.5 rounded-full shrink-0">
-                      <Check size={16} className="text-orange-400" />
-                    </div>
-                    <span className="text-slate-200 font-medium leading-relaxed">{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            /* 付费引导区块 */
-            <div className="bg-slate-800/80 border border-amber-500/30 rounded-3xl p-6 space-y-6">
-              <div className="text-center space-y-2">
-                <div className="text-sm font-bold text-slate-400 uppercase tracking-widest">Account ID</div>
-                <div className="bg-slate-900 border border-slate-700 p-3 rounded-xl font-mono text-sm break-all text-amber-400 select-all">
-                  {user?.uid || 'Loading...'}
+          <div className="space-y-5">
+            {(t.proFeatures || []).map((feature, idx) => (
+              <div key={idx} className="flex items-start gap-4">
+                <div className="mt-0.5 bg-orange-500/20 p-1.5 rounded-full shrink-0">
+                  <Check size={16} className="text-orange-400" />
                 </div>
+                <span className="text-slate-200 font-medium leading-relaxed">{feature}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* 新增：手动转账付款指引区块 */}
+          {showPaymentInfo && (
+            <div className="mt-8 p-5 bg-slate-800 border border-orange-500/30 rounded-2xl animate-in fade-in slide-in-from-top-4">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-orange-400 font-bold text-sm">付款指引</h3>
+                <span className="text-xs text-slate-400 font-mono bg-slate-900 px-2 py-1 rounded">UID: {user?.uid.slice(0,8)}...</span>
+              </div>
+              <p className="text-xs text-slate-300 whitespace-pre-line leading-relaxed mb-4">
+                {t.paymentInstruction}
+              </p>
+              <div className="flex gap-2">
                 <button 
-                  onClick={handleCopyUid}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${isCopied ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                  onClick={() => {
+                    navigator.clipboard.writeText(user?.uid || '');
+                    setIsCopied(true);
+                    setTimeout(() => setIsCopied(false), 2000);
+                  }}
+                  className="flex-1 bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
+                  {isCopied ? <Check size={16} className="text-green-400" /> : <Info size={16} />}
                   {isCopied ? t.uidCopied : t.copyUid}
                 </button>
-              </div>
-
-              <div className="h-px bg-slate-700/50 w-full"></div>
-
-              <div className="text-sm text-slate-300 font-medium leading-loose whitespace-pre-line">
-                {t.paymentInstruction}
-              </div>
-              
-              {/* 这里未来你可以换成真实的微信收款码图片 */}
-              <div className="w-32 h-32 bg-white rounded-xl mx-auto flex items-center justify-center p-2">
-                <div className="w-full h-full border-4 border-dashed border-gray-300 flex items-center justify-center">
-                  <span className="text-gray-400 font-bold text-xs">QR Code</span>
+                <div className="flex-1 bg-green-600/20 border border-green-500/30 text-green-400 text-sm font-bold py-3 rounded-xl flex items-center justify-center gap-2">
+                  <User size={16} /> {t.wechatContact}
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* 底部吸底按钮 */}
         <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-slate-900 via-slate-900 to-transparent pb-safe">
           <button 
             onClick={() => {
               if (data.isPro) {
                 setShowProModal(false);
-                setShowPaymentInfo(false);
-              } else if (!showPaymentInfo) {
-                // 点击升级，显示付款页面
-                setShowPaymentInfo(true);
               } else {
-                // 已经在付款页，点击关闭
-                setShowProModal(false);
-                setTimeout(() => setShowPaymentInfo(false), 300);
+                setShowPaymentInfo(true);
               }
             }}
-            className={`w-full flex items-center justify-center gap-2 text-white font-black text-lg py-4 rounded-2xl shadow-[0_8px_30px_rgba(245,158,11,0.3)] transition-transform hover:scale-[1.02] active:scale-[0.98] ${showPaymentInfo ? 'bg-slate-700 shadow-none' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`}
+            className={`w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black text-lg py-4 rounded-2xl shadow-[0_8px_30px_rgba(245,158,11,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-transform`}
           >
-            {data.isPro || showPaymentInfo ? t.close : t.upgradeNow}
+            {data.isPro ? t.close : t.upgradeNow}
           </button>
         </div>
       </div>
@@ -2563,7 +2515,6 @@ export default function App() {
 
   return (
     <div className={`min-h-screen ${tc.appBg} ${tc.appText} font-sans max-w-md mx-auto shadow-2xl relative pb-24 transition-colors duration-300`}>
-      {/* 全局隐藏原生滚动条的样式 */}
       <style dangerouslySetInnerHTML={{__html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
