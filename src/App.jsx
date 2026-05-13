@@ -791,8 +791,7 @@ export default function App() {
       if (docSnap.exists()) {
         setData({ ...defaultData, ...docSnap.data() });
       } else {
-        const safeDefault = JSON.parse(JSON.stringify(defaultData));
-        setDoc(userRef, safeDefault);
+        // 优化：发现没有数据时，仅在本地加载默认数据，不再主动向云端写入无用空壳文件
         setData(defaultData);
       }
       setLoading(false);
