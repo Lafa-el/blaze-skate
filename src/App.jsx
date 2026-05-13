@@ -2540,7 +2540,7 @@ export default function App() {
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
       
-      <header className={`flex justify-between items-center px-5 py-3 sticky top-0 ${tc.headerBg} backdrop-blur-md z-10 border-b ${tc.borderLight} shadow-sm transition-colors duration-300`}>
+      <header className={`flex justify-between items-center px-5 py-3 sticky top-0 ${tc.headerBg} backdrop-blur-md z-40 border-b ${tc.borderLight} shadow-sm transition-colors duration-300`}>
         <div className="flex items-center gap-2.5">
           <div className="h-10 w-10 min-w-[40px] rounded-xl shadow-md border border-cyan-100/60 bg-gradient-to-br from-cyan-50 via-blue-100 to-blue-300 flex items-center justify-center relative overflow-hidden group shrink-0">
              <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/80 to-transparent"></div>
@@ -2590,7 +2590,7 @@ export default function App() {
         {activeTab === 'settings' && SettingsView()}
       </main>
 
-      <nav className={`fixed bottom-0 w-full max-w-md ${tc.navBg} border-t ${tc.borderLight} pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.02)] transition-colors duration-300`}>
+      <nav className={`fixed bottom-0 w-full max-w-md ${tc.navBg} border-t ${tc.borderLight} pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.02)] transition-colors duration-300 z-40`}>
         <div className="flex justify-between items-center p-2 px-2">
           {[
             { id: 'dashboard', icon: Home, label: t.nav?.dashboard },
