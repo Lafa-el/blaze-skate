@@ -772,7 +772,6 @@ export default function App() {
     return streak;
   })();
 
-  // 完美修复：先监听状态，确认没登录再匿名登录
   useEffect(() => {
     if (!auth) return;
     
@@ -1054,7 +1053,7 @@ export default function App() {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_SIZE = 250; // 头像大图所以扩大了尺寸限制
+        const MAX_SIZE = 250; 
         let width = img.width;
         let height = img.height;
 
@@ -2180,13 +2179,13 @@ export default function App() {
           <div className={`${tc.cardBg} p-5 rounded-3xl shadow-sm border-2 ${user?.isAnonymous ? 'border-orange-300' : tc.borderLight}`}>
             <div className="flex justify-between items-center mb-4">
               <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                <Cloud size={20} className={user?.isAnonymous ? 'text-orange-500' : 'text-blue-500'} />
+                <Cloud size={20} className={user?.isAnonymous ? 'text-orange-500' : tc.textPrimary} />
                 {t.accountStatus}
               </h3>
               {user?.isAnonymous ? (
                 <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">{t.guestMode}</span>
               ) : (
-                <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded">{t.officialAccount}</span>
+                <span className={`text-[10px] font-bold ${tc.textPrimary} ${tc.badgeBg} px-2 py-1 rounded`}>{t.officialAccount}</span>
               )}
             </div>
             
@@ -2204,18 +2203,18 @@ export default function App() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-center gap-3 bg-blue-50/50 p-3.5 rounded-xl border border-blue-100/50">
-                  <div className={`w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 shrink-0`}>
+                <div className={`flex items-center gap-3 ${tc.badgeBg} bg-opacity-30 p-3.5 rounded-xl border ${tc.borderLight}`}>
+                  <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary} shrink-0`}>
                     <UserCircle size={24} />
                   </div>
                   <div className="min-w-0">
-                    <div className="font-bold text-blue-900 truncate">{data.username || user?.email || '已绑定正式账号'}</div>
-                    <div className="text-xs text-blue-600 truncate">{user?.email || '手机号绑定用户'}</div>
+                    <div className={`font-bold ${tc.textHeading} truncate`}>{data.username || user?.email || '已绑定正式账号'}</div>
+                    <div className={`text-xs ${tc.textPrimary} truncate`}>{user?.email || '手机号绑定用户'}</div>
                   </div>
                 </div>
                 <button 
                   onClick={() => setShowAccountModal(true)}
-                  className={`w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95`}
+                  className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95`}
                 >
                   {t.manageAccountBtn}
                 </button>
@@ -2333,57 +2332,58 @@ export default function App() {
     );
   };
 
+  // 全新支持主题色的注册/登录弹窗
   const AuthModal = () => {
     if (!showAuthModal) return null;
     return (
-      <div className="fixed inset-0 z-[70] flex flex-col bg-slate-900 text-slate-100 overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800 sticky top-0 bg-slate-900/90 backdrop-blur-md z-10">
-          <button onClick={() => setShowAuthModal(false)} className="p-2 -ml-2 text-slate-400 hover:text-white shrink-0 transition-colors">
+      <div className={`fixed inset-0 z-[70] flex flex-col ${tc.appBg} overflow-y-auto animate-in fade-in zoom-in-95 duration-200`}>
+        <div className={`flex items-center justify-between px-5 py-4 border-b ${tc.borderLight} sticky top-0 ${tc.headerBg} backdrop-blur-md z-10`}>
+          <button onClick={() => setShowAuthModal(false)} className={`p-2 -ml-2 ${tc.textMuted} hover:${tc.textPrimary} shrink-0 transition-colors`}>
             <X size={24} />
           </button>
-          <h2 className="text-lg font-black text-white tracking-widest uppercase opacity-80">Account</h2>
+          <h2 className={`text-lg font-black ${tc.textHeading} tracking-widest uppercase opacity-80`}>Account</h2>
           <div className="w-8 shrink-0"></div>
         </div>
 
         <div className="flex-1 px-6 pt-10 pb-32">
           <div className="flex flex-col items-center text-center mb-10">
-            <div className="w-20 h-20 bg-blue-500/20 rounded-3xl flex items-center justify-center mb-6">
-              <Cloud size={40} className="text-blue-400" />
+            <div className={`w-20 h-20 ${tc.badgeBg} rounded-3xl flex items-center justify-center mb-6`}>
+              <Cloud size={40} className={tc.textPrimary} />
             </div>
-            <h1 className="text-2xl font-black text-white mb-2">{t.authTitle}</h1>
-            <p className="text-slate-400 font-medium text-sm">{t.authSub}</p>
+            <h1 className={`text-2xl font-black ${tc.textHeading} mb-2`}>{t.authTitle}</h1>
+            <p className={`font-medium text-sm ${tc.textMuted}`}>{t.authSub}</p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-slate-400 ml-1 mb-1 block">{t.email}</label>
+              <label className={`text-xs font-bold ${tc.textMuted} ml-1 mb-1 block`}>{t.email}</label>
               <input 
                 type="email" 
                 value={authEmail}
                 onChange={(e) => { setAuthEmail(e.target.value); setAuthError(''); }}
                 placeholder="example@email.com"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                className={`w-full ${tc.inputBg} border-2 ${tc.borderLight} rounded-xl px-4 py-3.5 ${tc.appText} focus:outline-none focus:border-transparent focus:ring-2 ${tc.focusRing} transition-all`}
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-400 ml-1 mb-1 block">{t.password}</label>
+              <label className={`text-xs font-bold ${tc.textMuted} ml-1 mb-1 block`}>{t.password}</label>
               <input 
                 type="password" 
                 value={authPassword}
                 onChange={(e) => { setAuthPassword(e.target.value); setAuthError(''); }}
                 placeholder="••••••"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                className={`w-full ${tc.inputBg} border-2 ${tc.borderLight} rounded-xl px-4 py-3.5 ${tc.appText} focus:outline-none focus:border-transparent focus:ring-2 ${tc.focusRing} transition-all`}
               />
             </div>
-            {authError && <div className="text-xs font-bold text-red-400 animate-pulse ml-1 whitespace-pre-line leading-relaxed">{authError}</div>}
+            {authError && <div className="text-xs font-bold text-red-500 animate-pulse ml-1 whitespace-pre-line leading-relaxed">{authError}</div>}
           </div>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-slate-900 via-slate-900 to-transparent pb-safe">
+        <div className={`fixed bottom-0 left-0 right-0 p-5 ${tc.appBg} border-t ${tc.borderLight} pb-safe`}>
           <button 
             onClick={handleLinkAccount}
             disabled={isAuthLoading}
-            className={`w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-black text-lg py-4 rounded-2xl shadow-lg transition-transform ${isAuthLoading ? 'opacity-80 scale-95' : 'hover:bg-blue-500 hover:scale-[1.02] active:scale-[0.98]'}`}
+            className={`w-full flex items-center justify-center gap-2 ${tc.btnPrimary} font-black text-lg py-4 rounded-2xl shadow-lg transition-transform ${isAuthLoading ? 'opacity-80 scale-95' : 'hover:scale-[1.02] active:scale-[0.98]'}`}
           >
             {isAuthLoading ? <><Loader2 size={24} className="animate-spin" /> {t.binding}</> : t.bindNow}
           </button>
