@@ -258,11 +258,13 @@ const BLAZE_ACADEMY = {
         }
       ],
       weeklyPlan: [
-        { day: '周一', title: '最大力量', duration: '90分钟', tasks: ['负重深蹲 5组x6次', '罗马尼亚硬拉 4组x8次', '引体向上 3组'] },
-        { day: '周二', title: '专项爆发', duration: '80分钟', tasks: ['跳箱训练 4组x6次', '侧向单腿跳 4组', '壶铃摇摆 4组'] },
-        { day: '周四', title: '专项耐力', duration: '100分钟', tasks: ['滑行板HIIT 8组', '动感单车冲刺 10组', '靠墙静蹲 3组'] },
-        { day: '周五', title: '综合力量', duration: '90分钟', tasks: ['阻力雪橇冲刺 6趟', '保加利亚分腿蹲 4组', '健腹轮 4组'] },
-        { day: '周六', title: '恢复放松', duration: '60分钟', tasks: ['泡沫轴筋膜放松 20分', '全面静态拉伸 15分'] }
+        { day: '周一', title: '最大力量储备', duration: '90分钟', tasks: ['负重深蹲 5组x6次', '北欧腘绳肌 4组', '罗马尼亚硬拉 4组', '引体向上 3组', '负重平板支撑 1分钟'] },
+        { day: '周二', title: '专项爆发与敏捷', duration: '80分钟', tasks: ['跳箱训练 4组x6次', '敏捷梯组合变向 5趟', '侧向单腿跳 4组', '壶铃摇摆 4组', '医药球抛掷 4组'] },
+        { day: '周三', title: '主动恢复与预防', duration: '45分钟', tasks: ['鸟狗式激活 3组', '踝关节平衡 3组', '沙发拉伸 每侧60秒', '泡沫轴全身放松 20分'] },
+        { day: '周四', title: '专项耐力与抗阻', duration: '100分钟', tasks: ['滑行板HIIT 10组', '动感单车冲刺 10组', 'TRX靠墙静蹲 3组', '抗旋转核心训练 4组'] },
+        { day: '周五', title: '综合力量与速度', duration: '90分钟', tasks: ['阻力雪橇冲刺 8趟', '保加利亚分腿蹲 4组', '深跳接连续跳 4组', '悬垂举腿 4组'] },
+        { day: '周六', title: '比赛模拟与高光', duration: '90分钟', tasks: ['800米田径场冲刺 4组', '杠铃臀推 4组x10次', '敏捷切入训练 6趟'] },
+        { day: '周日', title: '深度恢复日', duration: '60分钟', tasks: ['全面静态拉伸 15分', '沙发深层拉伸 2组', '冰浴/冷热交替 10分'] }
       ]
     }
   ],
@@ -439,11 +441,13 @@ const BLAZE_ACADEMY = {
         }
       ],
       weeklyPlan: [
-        { day: 'Mon', title: 'Max Strength', duration: '90 mins', tasks: ['Barbell Squats 5x6', 'RDL 4x8', 'Pull-ups 3 sets'] },
-        { day: 'Tue', title: 'Specific Plyos', duration: '80 mins', tasks: ['Box Jumps 4x6', 'Lateral Bounds 4 sets', 'KB Swings 4 sets'] },
-        { day: 'Thu', title: 'Endurance', duration: '100 mins', tasks: ['Slide Board HIIT 8 sets', 'Bike Sprints 10 sets', 'Wall-sit 3 sets'] },
-        { day: 'Fri', title: 'Combo Power', duration: '90 mins', tasks: ['Sled Pushes 6 laps', 'Bulgarian Squats 4 sets', 'Ab Wheel 4 sets'] },
-        { day: 'Sat', title: 'Active Recovery', duration: '60 mins', tasks: ['Foam Roll 20 mins', 'Static Stretch 15 mins'] }
+        { day: 'Mon', title: 'Max Strength', duration: '90 mins', tasks: ['Barbell Squats 5x6', 'Nordic Curls 4 sets', 'RDL 4x8', 'Pull-ups 3 sets', 'Weighted Plank 1 min'] },
+        { day: 'Tue', title: 'Explosive & Agility', duration: '80 mins', tasks: ['Box Jumps 4x6', 'Agility Cuts 5 laps', 'Lateral Bounds 4 sets', 'KB Swings 4 sets', 'Med Ball Throws 4 sets'] },
+        { day: 'Wed', title: 'Active Recovery', duration: '45 mins', tasks: ['Bird-Dog Activation 3 sets', 'Ankle Proprioception 3 sets', 'Couch Stretch 60s/side', 'Foam Rolling 20 mins'] },
+        { day: 'Thu', title: 'Specific Endurance', duration: '100 mins', tasks: ['Slide Board HIIT 10 sets', 'Bike Sprints 10 sets', 'TRX Wall-sit 3 sets', 'Pallof Press 4 sets'] },
+        { day: 'Fri', title: 'Combo Power', duration: '90 mins', tasks: ['Sled Pushes 8 laps', 'Bulgarian Squats 4 sets', 'Drop Jumps 4 sets', 'Hanging Leg Raises 4 sets'] },
+        { day: 'Sat', title: 'Race Simulation', duration: '90 mins', tasks: ['800m Track Sprints 4 sets', 'Barbell Hip Thrusts 4x10', 'Agility Cut Drills 6 laps'] },
+        { day: 'Sun', title: 'Deep Recovery', duration: '60 mins', tasks: ['Static Stretching 15 mins', 'Deep Couch Stretch 2 sets', 'Ice/Contrast Bath 10 mins'] }
       ]
     }
   ]
