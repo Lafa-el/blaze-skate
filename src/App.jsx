@@ -2416,8 +2416,8 @@ export default function App() {
           ))}
         </div>
 
-{/* 头部分支渲染逻辑 */}
-        {activeStage.id === 'age4_6' && data.language === 'zh' ? (
+{/* 头部分支渲染逻辑 (双语完美适配新版UI) */}
+        {activeStage.id === 'age4_6' ? (
           <div className="space-y-4">
             {/* 1. 顶部启蒙阶段卡片 */}
             <div className="bg-[#f8f8f5] p-5 rounded-xl border border-gray-200/50 flex items-start gap-4">
@@ -2425,9 +2425,9 @@ export default function App() {
                 <span className="text-2xl leading-none">🌱</span>
               </div>
               <div>
-                <h3 className="text-lg font-black text-gray-800 mb-1">启蒙阶段·4-6岁</h3>
+                <h3 className="text-lg font-black text-gray-800 mb-1">{activeStage.title} · {activeStage.age}</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  以游戏化训练为核心，建立运动兴趣与基础协调能力。每次训练30-45分钟，每周2-3次，重在参与感与动作习惯养成，绝不以竞技成绩为导向。
+                  {activeStage.target}
                 </p>
               </div>
             </div>
@@ -2435,29 +2435,32 @@ export default function App() {
             {/* 2. 中间四个参数指标卡片 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
-                <span className="text-[11px] text-gray-500 font-medium">训练目标</span>
-                <span className="text-[13px] font-bold text-gray-900">基础动作模式 & 平衡感</span>
+                <span className="text-[11px] text-gray-500 font-medium">{data.language === 'zh' ? '训练目标' : 'Target'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{data.language === 'zh' ? '基础动作模式 & 平衡感' : 'Basic Movements & Balance'}</span>
               </div>
               <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
-                <span className="text-[11px] text-gray-500 font-medium">单次时长</span>
-                <span className="text-[13px] font-bold text-gray-900">30-45 分钟</span>
+                <span className="text-[11px] text-gray-500 font-medium">{data.language === 'zh' ? '单次时长' : 'Duration'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{activeStage.duration}</span>
               </div>
               <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
-                <span className="text-[11px] text-gray-500 font-medium">频率</span>
-                <span className="text-[13px] font-bold text-gray-900">每周 2-3 次</span>
+                <span className="text-[11px] text-gray-500 font-medium">{data.language === 'zh' ? '频率' : 'Frequency'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{activeStage.frequency}</span>
               </div>
               <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
-                <span className="text-[11px] text-gray-500 font-medium">训练风格</span>
-                <span className="text-[13px] font-bold text-gray-900">游戏化、互动性</span>
+                <span className="text-[11px] text-gray-500 font-medium">{data.language === 'zh' ? '训练风格' : 'Style'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{data.language === 'zh' ? '游戏化、互动性' : 'Gamified & Interactive'}</span>
               </div>
             </div>
 
             {/* 3. 底部教练须知卡片 */}
             <div className="bg-[#f8f8f5] p-4 rounded-r-xl border-l-4 border-[#3b82f6] text-sm text-gray-600 leading-relaxed">
-              <span className="font-bold text-gray-900">教练须知：</span>该阶段儿童骨骼肌肉系统尚未发育成熟，严禁任何负重训练、高强度跳跃及对抗训练。以身体意识唤醒、感官协调和运动趣味为核心目标。
+              <span className="font-bold text-gray-900">{data.language === 'zh' ? '教练须知：' : 'Coach Note: '}</span>
+              {data.language === 'zh' 
+                ? '该阶段儿童骨骼肌肉系统尚未发育成熟，严禁任何负重训练、高强度跳跃及对抗训练。以身体意识唤醒、感官协调和运动趣味为核心目标。'
+                : 'Musculoskeletal systems are immature at this stage. Weight-bearing, heavy plyometrics, and contact training are strictly prohibited. Focus on body awareness, coordination, and fun.'}
             </div>
           </div>
-        ) : activeStage.id === 'age7_10' && data.language === 'zh' ? (
+        ) : activeStage.id === 'age7_10' ? (
           <div className="space-y-4">
             {/* 1. 顶部进阶阶段卡片 */}
             <div className="bg-[#f8f8f5] p-5 rounded-xl border border-gray-200/50 flex items-start gap-4">
@@ -2465,9 +2468,9 @@ export default function App() {
                 <span className="text-2xl leading-none">⚡</span>
               </div>
               <div>
-                <h3 className="text-lg font-black text-gray-800 mb-1">进阶阶段·7-10岁</h3>
+                <h3 className="text-lg font-black text-gray-800 mb-1">{activeStage.title} · {activeStage.age}</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  系统建立速滑专项陆地技术，引入基础力量与爆发力训练。每次60-75分钟，每周3-4次。开始区分短道/大道方向，技术动作规范化是核心。
+                  {activeStage.target}
                 </p>
               </div>
             </div>
@@ -2475,29 +2478,32 @@ export default function App() {
             {/* 2. 中间四个参数指标卡片 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
-                <span className="text-[11px] text-gray-500 font-medium">核心目标</span>
-                <span className="text-[13px] font-bold text-gray-900">专项技术规范化</span>
+                <span className="text-[11px] text-gray-500 font-medium">{data.language === 'zh' ? '核心目标' : 'Core Target'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{data.language === 'zh' ? '专项技术规范化' : 'Specific Tech Standardization'}</span>
               </div>
               <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
-                <span className="text-[11px] text-gray-500 font-medium">单次时长</span>
-                <span className="text-[13px] font-bold text-gray-900">60-75 分钟</span>
+                <span className="text-[11px] text-gray-500 font-medium">{data.language === 'zh' ? '单次时长' : 'Duration'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{activeStage.duration}</span>
               </div>
               <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
-                <span className="text-[11px] text-gray-500 font-medium">频率</span>
-                <span className="text-[13px] font-bold text-gray-900">每周 3-4 次</span>
+                <span className="text-[11px] text-gray-500 font-medium">{data.language === 'zh' ? '频率' : 'Frequency'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{activeStage.frequency}</span>
               </div>
               <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
-                <span className="text-[11px] text-gray-500 font-medium">负荷特点</span>
-                <span className="text-[13px] font-bold text-gray-900">中低强度 + 动作质量优先</span>
+                <span className="text-[11px] text-gray-500 font-medium">{data.language === 'zh' ? '负荷特点' : 'Load Profile'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{data.language === 'zh' ? '中低强度 + 动作质量优先' : 'Low-Med Intensity + Quality First'}</span>
               </div>
             </div>
 
             {/* 3. 底部教练须知卡片 */}
             <div className="bg-[#f8f8f5] p-4 rounded-r-xl border-l-4 border-[#3b82f6] text-sm text-gray-600 leading-relaxed">
-              <span className="font-bold text-gray-900">训练原则：</span>该阶段是“技术窗口期”，动作模式一旦错误将难以纠正。每个练习优先保证动作质量，宁可减量减速，不可降低动作标准。开始引入少量自重力量训练。
+              <span className="font-bold text-gray-900">{data.language === 'zh' ? '训练原则：' : 'Training Principle: '}</span>
+              {data.language === 'zh'
+                ? '该阶段是“技术窗口期”，动作模式一旦错误将难以纠正。每个练习优先保证动作质量，宁可减量减速，不可降低动作标准。开始引入少量自重力量训练。'
+                : 'This is the "technical window". Wrong movement patterns are hard to fix later. Prioritize form over speed/volume. Introduce light bodyweight training.'}
             </div>
           </div>
-        ) : activeStage.id === 'age11_16' && data.language === 'zh' ? (
+        ) : (
           <div className="space-y-4">
             {/* 1. 顶部青少年阶段卡片 */}
             <div className="bg-[#f8f8f5] p-5 rounded-xl border border-gray-200/50 flex items-start gap-4">
@@ -2505,9 +2511,9 @@ export default function App() {
                 <span className="text-2xl leading-none">🔥</span>
               </div>
               <div>
-                <h3 className="text-lg font-black text-gray-800 mb-1">青少年阶段·11-16岁</h3>
+                <h3 className="text-lg font-black text-gray-800 mb-1">{activeStage.title} · {activeStage.age}</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  系统化专项体能训练，引入周期化训练理念，最大力量、爆发力、专项耐力全面提升。每次90-120分钟，每周4-6次，以竞技成绩为导向，训练负荷系统化周期化安排。
+                  {activeStage.target}
                 </p>
               </div>
             </div>
@@ -2515,52 +2521,29 @@ export default function App() {
             {/* 2. 中间四个参数指标卡片 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
-                <span className="text-[11px] text-gray-500 font-medium">核心目标</span>
-                <span className="text-[13px] font-bold text-gray-900">最大力量 & 专项爆发力</span>
+                <span className="text-[11px] text-gray-500 font-medium">{data.language === 'zh' ? '核心目标' : 'Core Target'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{data.language === 'zh' ? '最大力量 & 专项爆发力' : 'Max Strength & Explosive Power'}</span>
               </div>
               <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
-                <span className="text-[11px] text-gray-500 font-medium">单次时长</span>
-                <span className="text-[13px] font-bold text-gray-900">90-120 分钟</span>
+                <span className="text-[11px] text-gray-500 font-medium">{data.language === 'zh' ? '单次时长' : 'Duration'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{activeStage.duration}</span>
               </div>
               <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
-                <span className="text-[11px] text-gray-500 font-medium">频率</span>
-                <span className="text-[13px] font-bold text-gray-900">每周 4-6 次</span>
+                <span className="text-[11px] text-gray-500 font-medium">{data.language === 'zh' ? '频率' : 'Frequency'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{activeStage.frequency}</span>
               </div>
               <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
-                <span className="text-[11px] text-gray-500 font-medium">训练特点</span>
-                <span className="text-[13px] font-bold text-gray-900">周期化·系统化·大负荷</span>
+                <span className="text-[11px] text-gray-500 font-medium">{data.language === 'zh' ? '训练特点' : 'Training Feature'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{data.language === 'zh' ? '周期化·系统化·大负荷' : 'Periodized · Systematic · Heavy Load'}</span>
               </div>
             </div>
 
             {/* 3. 底部教练须知卡片 */}
             <div className="bg-[#f8f8f5] p-4 rounded-r-xl border-l-4 border-[#3b82f6] text-sm text-gray-600 leading-relaxed">
-              <span className="font-bold text-gray-900">周期化原则：</span>赛前期（8-12周）以技术完善和速度耐力为主；准备期（12-16周）以最大力量和爆发力为主；赛季期维持力量，以冰上训练为主；过渡期（4周）以主动恢复为主。陆地训练强度随赛季调整。
-            </div>
-          </div>
-        ) : (
-          /* 原有的默认渲染逻辑 (目前仅作为 fallback 以及英文版生效) */
-          <div className={`relative p-5 rounded-2xl ${activeStage.color} shadow-sm border overflow-hidden`}>
-            <div className="absolute -right-6 -bottom-6 opacity-10">
-              <Dumbbell size={120} />
-            </div>
-            <div className="relative z-10">
-              <h3 className="text-xl font-black mb-1">{activeStage.title}</h3>
-              <p className="text-sm font-medium mb-4 opacity-90 leading-relaxed">{activeStage.target}</p>
-              
-              <div className="flex gap-2">
-                <div className="flex-1 bg-white/40 rounded-lg p-2 flex flex-col items-center justify-center">
-                  <span className="text-[10px] font-black uppercase opacity-70 mb-0.5">{data.language === 'en' ? 'Duration' : '单次时长'}</span>
-                  <span className="text-xs font-bold text-center leading-tight">{activeStage.duration}</span>
-                </div>
-                <div className="flex-1 bg-white/40 rounded-lg p-2 flex flex-col items-center justify-center">
-                  <span className="text-[10px] font-black uppercase opacity-70 mb-0.5">{data.language === 'en' ? 'Freq' : '训练频次'}</span>
-                  <span className="text-xs font-bold text-center leading-tight">{activeStage.frequency}</span>
-                </div>
-                <div className="flex-1 bg-white/40 rounded-lg p-2 flex flex-col items-center justify-center">
-                  <span className="text-[10px] font-black uppercase opacity-70 mb-0.5">{data.language === 'en' ? 'Core' : '核心重点'}</span>
-                  <span className="text-xs font-bold text-center leading-tight">{activeStage.core}</span>
-                </div>
-              </div>
+              <span className="font-bold text-gray-900">{data.language === 'zh' ? '周期化原则：' : 'Periodization: '}</span>
+              {data.language === 'zh'
+                ? '赛前期（8-12周）以技术完善和速度耐力为主；准备期（12-16周）以最大力量和爆发力为主；赛季期维持力量，以冰上训练为主；过渡期（4周）以主动恢复为主。陆地训练强度随赛季调整。'
+                : 'Pre-season (8-12w) focuses on tech & speed endurance; Prep (12-16w) on max strength & power; In-season maintains strength; Transition (4w) for active recovery.'}
             </div>
           </div>
         )}
