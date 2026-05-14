@@ -2497,8 +2497,48 @@ export default function App() {
               <span className="font-bold text-gray-900">训练原则：</span>该阶段是“技术窗口期”，动作模式一旦错误将难以纠正。每个练习优先保证动作质量，宁可减量减速，不可降低动作标准。开始引入少量自重力量训练。
             </div>
           </div>
+        ) : activeStage.id === 'age11_16' && data.language === 'zh' ? (
+          <div className="space-y-4">
+            {/* 1. 顶部青少年阶段卡片 */}
+            <div className="bg-[#f8f8f5] p-5 rounded-xl border border-gray-200/50 flex items-start gap-4">
+              <div className="w-12 h-12 bg-[#fecdd3] rounded-full flex items-center justify-center shrink-0">
+                <span className="text-2xl leading-none">🔥</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-gray-800 mb-1">青少年阶段·11-16岁</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  系统化专项体能训练，引入周期化训练理念，最大力量、爆发力、专项耐力全面提升。每次90-120分钟，每周4-6次，以竞技成绩为导向，训练负荷系统化周期化安排。
+                </p>
+              </div>
+            </div>
+
+            {/* 2. 中间四个参数指标卡片 */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
+                <span className="text-[11px] text-gray-500 font-medium">核心目标</span>
+                <span className="text-[13px] font-bold text-gray-900">最大力量 & 专项爆发力</span>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
+                <span className="text-[11px] text-gray-500 font-medium">单次时长</span>
+                <span className="text-[13px] font-bold text-gray-900">90-120 分钟</span>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
+                <span className="text-[11px] text-gray-500 font-medium">频率</span>
+                <span className="text-[13px] font-bold text-gray-900">每周 4-6 次</span>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
+                <span className="text-[11px] text-gray-500 font-medium">训练特点</span>
+                <span className="text-[13px] font-bold text-gray-900">周期化·系统化·大负荷</span>
+              </div>
+            </div>
+
+            {/* 3. 底部教练须知卡片 */}
+            <div className="bg-[#f8f8f5] p-4 rounded-r-xl border-l-4 border-[#3b82f6] text-sm text-gray-600 leading-relaxed">
+              <span className="font-bold text-gray-900">周期化原则：</span>赛前期（8-12周）以技术完善和速度耐力为主；准备期（12-16周）以最大力量和爆发力为主；赛季期维持力量，以冰上训练为主；过渡期（4周）以主动恢复为主。陆地训练强度随赛季调整。
+            </div>
+          </div>
         ) : (
-          /* 原有的默认渲染逻辑 (11-16岁以及英文版生效) */
+          /* 原有的默认渲染逻辑 (目前仅作为 fallback 以及英文版生效) */
           <div className={`relative p-5 rounded-2xl ${activeStage.color} shadow-sm border overflow-hidden`}>
             <div className="absolute -right-6 -bottom-6 opacity-10">
               <Dumbbell size={120} />
