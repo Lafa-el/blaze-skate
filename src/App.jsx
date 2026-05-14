@@ -211,6 +211,7 @@ const BLAZE_ACADEMY = {
             { name: '负重深蹲 (杠铃/哑铃)', target: '4-5组 x 6-8次', tag: '最大力量', desc: '使用杠铃进行最大力量储备，注意下蹲深度和核心始终收紧，避免骨盆翻转。' },
             { name: '保加利亚分腿蹲', target: '4组 x 每侧8次', tag: '单腿力量', desc: '极大提升单腿支撑时的稳定性和力量，消除双腿力量不平衡。' },
             { name: '罗马尼亚硬拉 (RDL)', target: '4组 x 8-10次', tag: '后侧链', desc: '强化腘绳肌和臀大肌，提升伸髋爆发力。' },
+            { name: '北欧腘绳肌 (Nordic Curl)', target: '3-4组 x 5-8次', tag: '腘绳肌 离心控制', desc: '双人搭档配合，极度控制身体前倾下放，刺激腘绳肌离心力量。这是预防大腿后侧拉伤的最高效动作之一。' },
             { name: '臀推 (杠铃/弹力带)', target: '4组 x 10次', tag: '伸髋爆发', desc: '冰上推进力的核心来源，强调顶峰收缩1-2秒。' },
             { name: '上肢拉力训练 (引体向上/划船)', target: '3组 x 8-10次', tag: '上肢力量', desc: '速滑起跑和冲刺阶段需要强有力的上肢摆臂协同。' }
           ]
@@ -222,7 +223,8 @@ const BLAZE_ACADEMY = {
             { name: '深跳 (Drop Jump) + 连续跳', target: '4组 x 6次', tag: '反应时间', desc: '从箱上落下，触地瞬间迅速起跳，训练离心到向心的转化速度。' },
             { name: '壶铃摇摆 (Kettlebell Swing)', target: '4组 x 15次', tag: '核心连贯', desc: '利用伸髋爆发力将壶铃荡起，非手臂发力。' },
             { name: '侧向跳跃 (连贯性单腿)', target: '4组 x 每侧10次', tag: '侧向爆发', desc: '连续的侧向推蹬跳跃，完美模拟冰上连续加速。' },
-            { name: '医药球侧向抛掷', target: '4组 x 每侧10次', tag: '核心爆发', desc: '利用核心躯干的旋转爆发力掷出实心球，提升整体发力连贯性。' }
+            { name: '医药球侧向抛掷', target: '4组 x 每侧10次', tag: '核心爆发', desc: '利用核心躯干的旋转爆发力掷出实心球，提升整体发力连贯性。' },
+            { name: '敏捷梯/锥桶组合变向 (In-Out-Cut)', target: '4-6组', tag: '变向 敏捷', desc: '结合冰上起跑步法，进行快速的切入与折返跑，强调重心转换、步频和双脚协同。' }
           ]
         },
         {
@@ -238,8 +240,9 @@ const BLAZE_ACADEMY = {
           name: '四、 高级核心与静力抗疲劳',
           items: [
             { name: '负重平板支撑 / 健腹轮抗伸展', target: '4组 x 1分钟/10次', tag: '抗伸展', desc: '背部放杠铃片，或使用健腹轮，极致的前侧核心考验。' },
+            { name: '抗旋转核心训练 (Pallof Press)', target: '4组 x 12次/侧', tag: '抗旋转 核心', desc: '使用弹力带或龙门架，侧向站立抗拒侧向拉力，保持躯干稳定不扭转。极大地提升弯道抗离心力能力。' },
             { name: '悬垂举腿 / 俄罗斯转体', target: '4组 x 15次', tag: '核心控制', desc: '强化下腹屈髋能力与核心抗旋转能力。' },
-            { name: '靠墙静蹲 (负重/单腿)', target: '3组 x 1.5-2分钟', tag: '专项耐力', desc: '提升速滑低姿态下的肌肉静力耐力和抗乳酸能力。' }
+            { name: '靠墙静蹲 (负重/单腿/TRX)', target: '3组 x 1.5-2分钟', tag: '专项耐力', desc: '提升速滑低姿态下的肌肉静力耐力和抗乳酸能力。' }
           ]
         },
         {
@@ -247,6 +250,9 @@ const BLAZE_ACADEMY = {
           items: [
             { name: '筋膜枪与泡沫轴 (深层组织松解)', target: '15-20分钟', tag: '促进循环', desc: '针对股四头肌、腘绳肌、臀大肌进行深层放松。' },
             { name: '静态拉伸 (全面柔韧性)', target: '10-15分钟', tag: '肌肉延展', desc: '保持肌肉弹性，预防关节活动度受限导致的拉伤。' },
+            { name: '髋部屈肌深层拉伸 (Couch Stretch)', target: '每侧 45-60秒', tag: '髋关节 柔韧', desc: '针对长期处于低姿态导致的髋部屈肌紧张，进行深度沙发拉伸，极大地缓解下背部压力。' },
+            { name: '核心-骨盆控制与激活 (Bird-Dog)', target: '3组 x 每侧10次', tag: '骨盆中立 稳定', desc: '鸟狗式伸展，专注于保持骨盆的中立位和核心深层肌群的激活，防止滑行中塌腰代偿。' },
+            { name: '踝关节强化与本体感觉进阶', target: '3组 x 15次', tag: '踝关节 预防崴脚', desc: '单脚站立于平衡垫上进行抛接球或闭眼保持，极大增强踝关节周围微小肌群的力量与稳定性。' },
             { name: '冰浴与冷热交替浴', target: '10分钟', tag: '消除炎症', desc: '大强度训练后加速乳酸代谢和微小炎症恢复。' }
           ]
         }
@@ -383,9 +389,10 @@ const BLAZE_ACADEMY = {
         {
           name: '1. Max Strength & Absolute Power',
           items: [
-            { name: 'Barbell Back Squats', target: '4-5 sets x 6-8 reps', tag: 'Absolute', desc: 'Heavy load, deep squat, tight core. Avoid pelvic tilt.' },
+            { name: 'Barbell Back Squats', target: '4-5 sets x 6-8 reps', tag: 'Absolute', desc: 'Heavy load max strength reserve, deep squat, tight core. Avoid pelvic tilt.' },
             { name: 'Bulgarian Split Squats', target: '4 sets x 8 reps/leg', tag: 'Single Max', desc: 'Ultimate single-leg stability to fix power imbalances.' },
             { name: 'Romanian Deadlift (RDL)', target: '4 sets x 8-10 reps', tag: 'Posterior', desc: 'Hamstrings and glutes focus for hip extension.' },
+            { name: 'Nordic Hamstring Curls', target: '3-4 sets x 5-8 reps', tag: 'Eccentric', desc: 'Partner-assisted eccentric hamstring control. One of the most effective exercises for preventing hamstring strains.' },
             { name: 'Barbell Hip Thrusts', target: '4 sets x 10 reps', tag: 'Hip Power', desc: 'The source of on-ice propulsion. 1-2s pause at the top.' },
             { name: 'Pull-ups / Rows', target: '3 sets x 8-10 reps', tag: 'Upper Body', desc: 'Upper body synergy required for starts and sprints.' }
           ]
@@ -397,7 +404,8 @@ const BLAZE_ACADEMY = {
             { name: 'Drop Jump to Bound', target: '4 sets x 6 reps', tag: 'Reaction', desc: 'Drop from box, immediate takeoff. Trains eccentric-concentric transition.' },
             { name: 'Kettlebell Swings', target: '4 sets x 15 reps', tag: 'Hip Snap', desc: 'Power comes from hips, not arms.' },
             { name: 'Continuous Lateral Bounds', target: '4 sets x 10 reps/side', tag: 'Specific', desc: 'Mimics continuous on-ice lateral pushes.' },
-            { name: 'Med Ball Rotational Throws', target: '4 sets x 10 reps/side', tag: 'Core Power', desc: 'Rotational power transfer through the core.' }
+            { name: 'Med Ball Rotational Throws', target: '4 sets x 10 reps/side', tag: 'Core Power', desc: 'Rotational power transfer through the core.' },
+            { name: 'Agility Cuts (In-Out-Cut)', target: '4-6 sets', tag: 'Agility', desc: 'Combined with start footwork. Rapid cuts emphasizing weight shift, cadence, and bilateral coordination.' }
           ]
         },
         {
@@ -410,11 +418,12 @@ const BLAZE_ACADEMY = {
           ]
         },
         {
-          name: '4. Advanced Core & Static Fatigue',
+          name: '4. Advanced Core & Anti-Fatigue',
           items: [
             { name: 'Weighted Plank / Ab Wheel', target: '4 sets x 1 min / 10 reps', tag: 'Anti-extension', desc: 'Extreme anterior core test.' },
+            { name: 'Pallof Press (Anti-Rotation)', target: '4 sets x 12 reps/side', tag: 'Anti-Rotation', desc: 'Resist lateral pull to keep the torso stable. Greatly enhances anti-centrifugal force capability in corners.' },
             { name: 'Hanging Leg Raises / Russian Twists', target: '4 sets x 15 reps', tag: 'Core Control', desc: 'Lower ab flexion and anti-rotation.' },
-            { name: 'Wall-sit (Weighted/Single-leg)', target: '3 sets x 1.5-2 mins', tag: 'Static Endure', desc: 'Isometric endurance for low skating posture.' }
+            { name: 'Wall-sit (Weighted/Single-leg/TRX)', target: '3 sets x 1.5-2 mins', tag: 'Static Endure', desc: 'Isometric endurance for low skating posture.' }
           ]
         },
         {
@@ -422,6 +431,9 @@ const BLAZE_ACADEMY = {
           items: [
             { name: 'Massage Gun & Foam Rolling', target: '15-20 mins', tag: 'Circulation', desc: 'Deep tissue release for quads, hamstrings, and glutes.' },
             { name: 'Static Stretching', target: '10-15 mins', tag: 'Flexibility', desc: 'Maintain muscle elasticity and joint ROM.' },
+            { name: 'Couch Stretch (Deep Hip Flexors)', target: '45-60s / side', tag: 'Hip Mobility', desc: 'Target tight hip flexors caused by prolonged low posture. Deep stretch to relieve lower back pressure.' },
+            { name: 'Core-Pelvic Activation (Bird-Dog)', target: '3 sets x 10 reps/side', tag: 'Stability', desc: 'Maintain neutral pelvis and activate deep core to prevent lumbar compensation during skating.' },
+            { name: 'Advanced Ankle Proprioception', target: '3 sets x 15 reps', tag: 'Ankle Prev', desc: 'Single-leg stand on balance pad with eyes closed or catching a ball. Strengthens micro-muscles to prevent sprains.' },
             { name: 'Ice / Contrast Baths', target: '10 mins', tag: 'Recovery', desc: 'Accelerate lactic acid metabolism after high-intensity days.' }
           ]
         }
