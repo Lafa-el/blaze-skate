@@ -100,43 +100,44 @@ const BLAZE_ACADEMY = {
         {
           name: '一、 基础平衡与体态感知训练',
           items: [
-            { name: '单脚站立游戏', target: '左右脚各10秒', tag: '平衡 协调', desc: '以“金鸡独立”形式激发兴趣。要求站立腿微屈（约15°），上身直立，双臂自然展开维持平衡。' },
-            { name: '平衡垫/泡沫轴站立', target: '3组 x 15秒', tag: '本体感觉 踝关节', desc: '在不稳定平面上站立，刺激踝关节本体感觉。可从双脚开始，过渡到单脚。最后加入手臂动作（如拍球、接球）增加干扰难度。' },
-            { name: '走平衡木 / 陆地模拟滑行走', target: '2-3趟', tag: '平衡 动态控制', desc: '设置线、地垫、平衡木进行行走。双臂平展，低姿势走，头顶放沙袋走。培养身体中线意识与腰背控制能力。' },
-            { name: '俯卧撑位平板支撑 (改良版)', target: '3组 x 10-15秒', tag: '核心', desc: '以膝盖着地的改良平板支撑为主，保持头-背-臀成一直线。目的在于激活核心肌群意识，而非追求时长。' }
+            { name: '单脚站立游戏', target: '左右脚各10秒', tag: '平衡 协调', desc: '闭眼/睁眼单脚站立，从3秒逐步延长至10秒。可用“金鸡独立比赛”形式激发兴趣。要求站立腿微屈（约15°），上身直立，双臂自然展开维持平衡。' },
+            { name: '平衡垫/泡沫垫站立', target: '3组 x 15秒', tag: '本体感觉 踝关节', desc: '在不稳定平面上站立，激活踝关节本体感觉。可从双脚开始，过渡到单脚，最后加入手臂动作（如拍球、接球）增加干扰难度。' },
+            { name: '走平衡木 / 地板胶带线行走', target: '2-3趟', tag: '平衡 姿态控制', desc: '沿直线、曲线、之字形路线行走，双臂平展。进阶：倒退走、横向走、头顶放沙袋走。培养身体中线意识与腰背控制能力。' },
+            { name: '俯卧撑位平板支撑 (改良版)', target: '2-3组 x 10-15秒', tag: '核心', desc: '以膝盖着地的改良平板支撑为主，保持头-脊-臀成一直线，维持10-15秒。目的在于激活核心肌群意识，而非追求时长。' }
           ]
         },
         {
-          name: '二、 速度滑冰基础体位模仿训练',
+          name: '二、 速滑基础体位模仿训练',
           items: [
-            { name: '“鸭子步”低姿走', target: '10-15米 x 3趟', tag: '滑冰体位 冰感感知', desc: '双脚外八字，膝盖弯曲约90°，上身前倾约45°，双手背抬或扶膝。要求重心稳定不起伏。这是速滑陆地训练最核心的基础动作。' },
-            { name: '原地连贯提臀练习', target: '3组 x 10次', tag: '冰感 协调', desc: '站立位，单腿或双脚交替体验冰面收腿动作（或大腿后摆），要求打关节收紧，手臂配合节奏。理解“力从蹬地传导至腿部”的发力链概念。' },
-            { name: '侧推步基础 (横向移动)', target: '每侧5-8步', tag: '推刃技术', desc: '双脚与肩同宽，低姿（膝角约60°），向侧面推出体验蹬冰发力。重心保持在两侧移动。' },
-            { name: '静位保持 (静态速度滑冰)', target: '2-3组 x 20秒', tag: '静态控制 肌肉记忆', desc: '陆地深蹲，大腿平行地面，膝盖不超过脚尖，躯干前倾。初阶段20秒，逐渐增加到30秒。配合教师口令，帮助儿童建立速滑低姿态的肌肉记忆。' }
+            { name: '“鸭子步”低姿走', target: '10-15米 x 3趟', tag: '技术模仿 体位感知', desc: '双脚外八字，膝盖弯曲约90°，上身前倾约45°，双手背后或扶膝，模拟速滑预备体位。要求重心稳定不起伏，距离10-15米往返。这是速滑陆地训练最核心的基础动作。' },
+            { name: '原地速滑摆臂练习', target: '3组 x 10次', tag: '摆臂 协调', desc: '站立位，模仿速滑摆臂动作：单臂前后钟摆摆动（短道速滑）或双臂后摆动作（大道速滑）。要求肘关节微屈，摆臂幅度配合节奏，理解“力从摆臂传导至腿部”的发力链概念。' },
+            { name: '原地连贯提臀练习', target: '3组 x 10次', tag: '冰感 协调', desc: '站立位，单腿或双脚交替体验冰面收腿动作（或大腿后摆），要求髋关节收紧，手臂配合节奏。理解“力从蹬地传导至腿部”的发力链概念。' },
+            { name: '侧滑步基础 (横向移动)', target: '每侧5-8步', tag: '蹬地方向 技术模仿', desc: '双脚与肩同宽，低姿（膝屈约60°），以侧向蹬地步伐横向移动，模拟速滑弯道内侧蹬冰动作。每次5-8步换方向。强调蹬腿方向（侧向而后方）和重心转移。' },
+            { name: '蹲位保持 (静态速滑位)', target: '2-3组 x 20-30秒', tag: '静态力量 速滑体位', desc: '贴墙静蹲，大腿平行地面，膝盖不超过脚尖，躯干前倾。初始目标10-20秒，逐渐增加到30秒。配合教练口令，帮助儿童建立速滑低姿位的肌肉记忆。' }
           ]
         },
         {
-          name: '三、 全身协调与灵敏度游戏',
+          name: '三、 全身协调与灵敏游戏',
           items: [
-            { name: '跨越游戏 (速度梯)', target: '3-4趟', tag: '敏捷 步频', desc: '使用敏捷梯，进行双脚跳入跳出、单脚交替、侧向进出等基础步伐练习。强调脚步轻盈不拖拉，节奏感要稳心。' },
-            { name: '追逐反应游戏', target: '5-8次', tag: '反应 变向', desc: '教练或家长手持不同颜色卡片，儿童根据颜色指令定向跑动（如红色=向右、蓝色=向左）。训练视觉反应、方向变换与加速能力。' },
-            { name: '跳房子 (多样化跳)', target: '3-5分钟', tag: '跳跃 协调', desc: '传统跳房子游戏变形：加入单脚跳接、双脚开合、转身跳等元素。发展下肢爆发力基础，增强空中定位和空间感知能力。' },
-            { name: '动物爬行模仿', target: '3-5趟', tag: '核心稳定 全身协调', desc: '熊爬（四肢着地前行）、螃蟹爬（侧向横移前行）、毛毛虫横移（倒撑前行）等。建立上下肢交替控制能力和躯干稳定性。' }
+            { name: '梯格游戏 (速度梯)', target: '3-4趟', tag: '敏捷 步频', desc: '使用敏捷梯，进行双脚跳入跳出、单脚交替、侧向进出等基础步伐练习。强调脚步轻盈不拖拉，节奏感是核心。从慢到快，不计时间求动作干净。' },
+            { name: '追逐反应游戏', target: '5-8次', tag: '反应 变向', desc: '教练或家长手持不同颜色卡片，儿童根据颜色指令定向跑动（如红色=向右，蓝色=向左）。训练视觉反应、方向变换与加速能力。全程保持低姿位有奖励加分。' },
+            { name: '跳房子 (多样化版)', target: '3-5分钟', tag: '跳跃 协调', desc: '传统跳房子游戏变体：加入单脚跳接、双脚并跳、转身跳等元素。发展下肢爆发力基础、落地缓冲意识和空间感知能力。' },
+            { name: '动物爬行模仿', target: '3-5趟', tag: '核心稳定 全身协调', desc: '熊爬（四肢同侧交替）、螃蟹爬（侧向横移移动）、毛毛虫蠕动（俯撑前行）等，建立上下肢分离控制能力和躯干稳定性，趣味性强且极为有效。' }
           ]
         },
         {
           name: '四、 柔韧性与关节灵活性训练',
           items: [
-            { name: '髋关节环绕与蝴蝶图画', target: '20-30秒', tag: '柔韧 放松', desc: '坐位蝴蝶式，双脚底相对，双手握住脚踝轻柔向下压。让髋关节环绕（顺、逆时针）。提高髋部灵活性极为关键，关乎蹬冰效果。' },
-            { name: '踝关节灵活性练习', target: '2-3组', tag: '踝关节 灵活性', desc: '坐位踝关节抽动（脚尖画大圆）、站位踝关节提踵拉伸（脚尖顶墙拉伸）。深蹲踝关节活动度极差，踝关节是速滑发力的末端。' },
-            { name: '儿童瑜伽体式 (游戏化)', target: '15-20秒', tag: '全身拉伸 放松', desc: '以“猫牛式”（脊柱灵活性）、“下犬式”（后链拉伸）、“勇士一式”（腿部肌群）等为主。配合动物名称讲解，增加参与兴趣。' }
+            { name: '髋关节环绕与蝴蝶展翅', target: '20-30秒', tag: '髋部 柔韧', desc: '坐位蝴蝶式，双脚底相对，双手按压膝盖轻柔向下，维持20-30秒。站位髋关节环绕（顺、逆各10圈）。速滑髋部灵活性极为关键，越早培养越好。' },
+            { name: '踝关节灵活性练习', target: '2-3组', tag: '踝关节 灵活性', desc: '坐位踝关节绕环（顺逆各10次），站位踝关节背屈拉伸（脚尖顶墙弓步），深蹲踝关节活动度感知。踝关节是速滑蹬冰的末端发力点，需特别重视。' },
+            { name: '儿童瑜伽体式 (游戏化)', target: '每个10-15秒', tag: '全身拉伸 脊柱', desc: '以“猫牛式”（脊柱灵活）、“下犬式”（后链拉伸）、“勇士一式”（髋屈肌拉伸）等为主。配合动物名称讲解，提高参与兴趣。每个体式维持10-15秒。' }
           ]
         }
       ],
       weeklyPlan: [
-        { day: '周二', title: '体位 & 平衡', duration: '35分钟', tasks: ['鸭子步低姿走 3趟', '单脚站立游戏 各10秒', '儿童瑜伽体式 2组'] },
-        { day: '周四', title: '协调 & 灵敏', duration: '40分钟', tasks: ['追逐反应游戏 5次', '动物爬行模仿 3趟', '速度梯跨越 4趟'] },
-        { day: '周六', title: '综合趣味', duration: '45分钟', tasks: ['走平衡木 3趟', '侧推步基础 每侧8步', '俯卧撑位平板 3组'] }
+        { day: '周二', title: '体态与冰感基础', duration: '35分钟', tasks: ['单脚站立游戏 3组', '“鸭子步”低姿走 3趟', '梯格游戏 (速度梯)', '髋关节环绕与蝴蝶展翅'] },
+        { day: '周四', title: '动态平衡与反应', duration: '40分钟', tasks: ['平衡垫站立 3组', '侧滑步基础 每侧5步', '追逐反应游戏 6次', '儿童瑜伽体式'] },
+        { day: '周六', title: '综合协调与力量', duration: '45分钟', tasks: ['走胶带线/平衡木', '蹲位保持 (静态速滑)', '动物爬行模仿', '俯卧撑位平板支撑'] }
       ]
     },
     {
@@ -297,43 +298,44 @@ const BLAZE_ACADEMY = {
         {
           name: '1. Balance & Posture Awareness',
           items: [
-            { name: 'Single-leg Stance Game', target: '10s each leg', tag: 'Balance', desc: 'Flamingo stance. Keep the standing leg slightly bent (15°), upper body straight, arms naturally extended.' },
-            { name: 'Foam Roller Stance', target: '3 sets x 15s', tag: 'Proprioception', desc: 'Stand on unstable surface. Start with two feet, transition to one. Add catching/bouncing ball for difficulty.' },
-            { name: 'Balance Beam / Dryland Walk', target: '2-3 laps', tag: 'Dynamic Control', desc: 'Walk on lines, mats, or beams. Low posture, arms extended. Develop midline awareness and core control.' },
-            { name: 'Modified Plank (Kneeling)', target: '3 sets x 10-15s', tag: 'Core', desc: 'Knees on the floor. Keep head, back, and hips aligned. Focus on muscle activation, not holding time.' }
+            { name: 'Single-leg Stance Game', target: '10s each leg', tag: 'Balance Coord', desc: 'Eyes closed/open, extend from 3s to 10s. Use "Flamingo Contest" for fun. Standing leg slightly bent (~15°), torso straight, arms extended.' },
+            { name: 'Balance Pad/Foam Stance', target: '3 sets x 15s', tag: 'Proprioception Ankle', desc: 'Stand on unstable surface to activate ankle proprioception. Double to single leg, add arm movements (catching/bouncing) to increase difficulty.' },
+            { name: 'Balance Beam / Tape Walk', target: '2-3 laps', tag: 'Balance Posture', desc: 'Walk on straight, curved, zig-zag lines with arms extended. Advance: backwards, sideways, sandbag on head. Develop midline awareness.' },
+            { name: 'Modified Plank (Kneeling)', target: '2-3 sets x 10-15s', tag: 'Core', desc: 'Knees on the floor. Keep head, back, and hips aligned. Focus on core muscle activation, not holding time.' }
           ]
         },
         {
           name: '2. Basic Skating Posture Mimicking',
           items: [
-            { name: 'Duck Walk', target: '10-15m x 3 laps', tag: 'Posture', desc: 'Feet apart, knees bent at 90°, chest leaned at 45°. Keep center of gravity stable. The most essential dryland basic.' },
+            { name: 'Duck Walk', target: '10-15m x 3 laps', tag: 'Tech Mimic Posture', desc: 'Feet turned out, knees at 90°, chest at 45°. Hands behind back or on knees. Mimic ready position. Stable CoG, 10-15m back and forth.' },
+            { name: 'Arm Swing Practice', target: '3 sets x 10 reps', tag: 'Arm Swing Coord', desc: 'Standing mimic of short track (one arm pendulum) or long track (double back). Slight elbow bend, coordinate rhythm.' },
             { name: 'Stationary Heel Kicks', target: '3 sets x 10 reps', tag: 'Ice Feel', desc: 'Mimic the ice recovery phase. Lock joints, swing arms in rhythm. Understand power transfer from push to leg.' },
-            { name: 'Basic Lateral Push', target: '5-8 reps/side', tag: 'Push Tech', desc: 'Low posture (knee at 60°), push sideways. Keep weight shift controlled between both sides.' },
-            { name: 'Static Hold (Skating Position)', target: '2-3 sets x 20s', tag: 'Muscle Memory', desc: 'Dryland squat, thigh parallel to ground. Start with 20s, increase to 30s. Build muscle memory for low posture.' }
+            { name: 'Lateral Push (Moving)', target: '5-8 reps/side', tag: 'Push Direction', desc: 'Shoulder-width, low posture (60° knee bend), move laterally to mimic corner pushes. Focus on push direction and weight shift.' },
+            { name: 'Squat Hold (Static Skating)', target: '2-3 sets x 20-30s', tag: 'Static Power', desc: 'Wall-sit, thigh parallel, knees behind toes, trunk forward. Start 10-20s, up to 30s. Build muscle memory for low posture.' }
           ]
         },
         {
           name: '3. Full-Body Coordination & Agility',
           items: [
-            { name: 'Agility Ladder Drills', target: '3-4 laps', tag: 'Agility', desc: 'In-and-out jumps, single-leg hops. Emphasize light, quick feet and stable rhythm.' },
-            { name: 'Reaction Chase Game', target: '5-8 reps', tag: 'Reaction', desc: 'React to colored cards (e.g., Red = Right). Train visual reaction, direction change, and acceleration.' },
-            { name: 'Hopscotch Variations', target: '3-5 mins', tag: 'Jumping', desc: 'Add one-leg landings, jumping jacks, turns. Develop leg explosiveness and aerial spatial awareness.' },
-            { name: 'Animal Crawls', target: '3-5 laps', tag: 'Core Stability', desc: 'Bear crawls, crab walks, caterpillar. Build alternating limb control and trunk stability.' }
+            { name: 'Agility Ladder Drills', target: '3-4 laps', tag: 'Agility Cadence', desc: 'In-and-out jumps, single-leg hops. Emphasize light feet, rhythm is core. Slow to fast, clean form over speed.' },
+            { name: 'Reaction Chase Game', target: '5-8 reps', tag: 'Reaction Agility', desc: 'React to colored cards (Red=Right). Train visual reaction, direction change. Bonus points for maintaining low posture.' },
+            { name: 'Hopscotch (Variations)', target: '3-5 mins', tag: 'Jumping Coord', desc: 'Add one-leg landings, double jumps, turn jumps. Develop leg explosive base, landing absorption, and spatial awareness.' },
+            { name: 'Animal Crawls', target: '3-5 laps', tag: 'Core Stability', desc: 'Bear crawls, crab walks, caterpillar. Build alternating limb control and trunk stability. Fun and effective.' }
           ]
         },
         {
           name: '4. Flexibility & Joint Mobility',
           items: [
-            { name: 'Butterfly Pose & Hip Rotations', target: '20-30s', tag: 'Flexibility', desc: 'Seated butterfly, gently press knees down. Crucial for hip mobility and push-off effectiveness.' },
-            { name: 'Ankle Mobility Exercises', target: '2-3 sets', tag: 'Ankle', desc: 'Ankle circles, wall calf stretches. Ankles are the terminal point of power generation in skating.' },
-            { name: 'Kids Yoga (Gamified)', target: '15-20s', tag: 'Full Stretch', desc: 'Cat-Cow, Downward Dog. Use animal names to keep them engaged while stretching posterior chain.' }
+            { name: 'Butterfly & Hip Circles', target: '20-30s', tag: 'Hips Flex', desc: 'Seated butterfly, press knees down gently 20-30s. Standing hip circles (10x each way). Hip mobility is crucial for push-off.' },
+            { name: 'Ankle Mobility Exercises', target: '2-3 sets', tag: 'Ankle Mobility', desc: 'Seated ankle circles (10x), standing calf stretch. Squat ankle mobility check. Ankles are the terminal push point.' },
+            { name: 'Kids Yoga (Gamified)', target: '10-15s / pose', tag: 'Full Stretch Spine', desc: 'Cat-Cow (spine), Downward Dog (posterior), Warrior I (hip flexors). Use animal names to engage. Hold 10-15s each.' }
           ]
         }
       ],
       weeklyPlan: [
-        { day: 'Tue', title: 'Posture & Balance', duration: '35 mins', tasks: ['Duck Walk 3 laps', 'Single-leg Stance 10s', 'Kids Yoga 2 sets'] },
-        { day: 'Thu', title: 'Agility & Coord.', duration: '40 mins', tasks: ['Reaction Chase 5 reps', 'Animal Crawls 3 laps', 'Agility Ladder 4 laps'] },
-        { day: 'Sat', title: 'Comprehensive Fun', duration: '45 mins', tasks: ['Balance Beam 3 laps', 'Lateral Push 8 reps/side', 'Modified Plank 3 sets'] }
+        { day: 'Tue', title: 'Posture & Ice Feel', duration: '35 mins', tasks: ['Single-leg Stance 3 sets', 'Duck Walk 3 laps', 'Agility Ladder Drills', 'Butterfly & Hip Circles'] },
+        { day: 'Thu', title: 'Dynamic Balance', duration: '40 mins', tasks: ['Balance Pad Stance', 'Lateral Push 5 reps/side', 'Reaction Chase Game', 'Kids Yoga (Gamified)'] },
+        { day: 'Sat', title: 'Full Coordination', duration: '45 mins', tasks: ['Tape Walk/Beam', 'Squat Hold (Static)', 'Animal Crawls', 'Modified Plank'] }
       ]
     },
     {
