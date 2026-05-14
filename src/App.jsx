@@ -2416,30 +2416,74 @@ export default function App() {
           ))}
         </div>
 
-        <div className={`relative p-5 rounded-2xl ${activeStage.color} shadow-sm border overflow-hidden`}>
-          <div className="absolute -right-6 -bottom-6 opacity-10">
-            <Dumbbell size={120} />
+{/* 新增的头部判断逻辑：针对 4-6岁(zh) 启用截图专属设计，其他阶段保留默认 */}
+        {activeStage.id === 'age4_6' && data.language === 'zh' ? (
+          <div className="space-y-4">
+            {/* 1. 顶部启蒙阶段卡片 */}
+            <div className="bg-[#f8f8f5] p-5 rounded-xl border border-gray-200/50 flex items-start gap-4">
+              <div className="w-12 h-12 bg-[#fdf5e6] rounded-full flex items-center justify-center shrink-0">
+                <span className="text-2xl leading-none">🌱</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-gray-800 mb-1">启蒙阶段·4-6岁</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  以游戏化训练为核心，建立运动兴趣与基础协调能力。每次训练30-45分钟，每周2-3次，重在参与感与动作习惯养成，绝不以竞技成绩为导向。
+                </p>
+              </div>
+            </div>
+
+            {/* 2. 中间四个参数指标卡片 */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
+                <span className="text-[11px] text-gray-500 font-medium">训练目标</span>
+                <span className="text-[13px] font-bold text-gray-900">基础动作模式 & 平衡感</span>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
+                <span className="text-[11px] text-gray-500 font-medium">单次时长</span>
+                <span className="text-[13px] font-bold text-gray-900">30-45 分钟</span>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
+                <span className="text-[11px] text-gray-500 font-medium">频率</span>
+                <span className="text-[13px] font-bold text-gray-900">每周 2-3 次</span>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
+                <span className="text-[11px] text-gray-500 font-medium">训练风格</span>
+                <span className="text-[13px] font-bold text-gray-900">游戏化、互动性</span>
+              </div>
+            </div>
+
+            {/* 3. 底部教练须知卡片 */}
+            <div className="bg-[#f8f8f5] p-4 rounded-r-xl border-l-4 border-[#3b82f6] text-sm text-gray-600 leading-relaxed">
+              <span className="font-bold text-gray-900">教练须知：</span>该阶段儿童骨骼肌肉系统尚未发育成熟，严禁任何负重训练、高强度跳跃及对抗训练。以身体意识唤醒、感官协调和运动趣味为核心目标。
+            </div>
           </div>
-          <div className="relative z-10">
-            <h3 className="text-xl font-black mb-1">{activeStage.title}</h3>
-            <p className="text-sm font-medium mb-4 opacity-90 leading-relaxed">{activeStage.target}</p>
-            
-            <div className="flex gap-2">
-              <div className="flex-1 bg-white/40 rounded-lg p-2 flex flex-col items-center justify-center">
-                <span className="text-[10px] font-black uppercase opacity-70 mb-0.5">{data.language === 'en' ? 'Duration' : '单次时长'}</span>
-                <span className="text-xs font-bold text-center leading-tight">{activeStage.duration}</span>
-              </div>
-              <div className="flex-1 bg-white/40 rounded-lg p-2 flex flex-col items-center justify-center">
-                <span className="text-[10px] font-black uppercase opacity-70 mb-0.5">{data.language === 'en' ? 'Freq' : '训练频次'}</span>
-                <span className="text-xs font-bold text-center leading-tight">{activeStage.frequency}</span>
-              </div>
-              <div className="flex-1 bg-white/40 rounded-lg p-2 flex flex-col items-center justify-center">
-                <span className="text-[10px] font-black uppercase opacity-70 mb-0.5">{data.language === 'en' ? 'Core' : '核心重点'}</span>
-                <span className="text-xs font-bold text-center leading-tight">{activeStage.core}</span>
+        ) : (
+          /* 原有的默认渲染逻辑 (7-10岁, 11-16岁以及英文版生效) */
+          <div className={`relative p-5 rounded-2xl ${activeStage.color} shadow-sm border overflow-hidden`}>
+            <div className="absolute -right-6 -bottom-6 opacity-10">
+              <Dumbbell size={120} />
+            </div>
+            <div className="relative z-10">
+              <h3 className="text-xl font-black mb-1">{activeStage.title}</h3>
+              <p className="text-sm font-medium mb-4 opacity-90 leading-relaxed">{activeStage.target}</p>
+              
+              <div className="flex gap-2">
+                <div className="flex-1 bg-white/40 rounded-lg p-2 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-black uppercase opacity-70 mb-0.5">{data.language === 'en' ? 'Duration' : '单次时长'}</span>
+                  <span className="text-xs font-bold text-center leading-tight">{activeStage.duration}</span>
+                </div>
+                <div className="flex-1 bg-white/40 rounded-lg p-2 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-black uppercase opacity-70 mb-0.5">{data.language === 'en' ? 'Freq' : '训练频次'}</span>
+                  <span className="text-xs font-bold text-center leading-tight">{activeStage.frequency}</span>
+                </div>
+                <div className="flex-1 bg-white/40 rounded-lg p-2 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-black uppercase opacity-70 mb-0.5">{data.language === 'en' ? 'Core' : '核心重点'}</span>
+                  <span className="text-xs font-bold text-center leading-tight">{activeStage.core}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="space-y-3">
           {activeStage.modules.map((module, mIdx) => {
