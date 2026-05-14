@@ -143,19 +143,21 @@ const BLAZE_ACADEMY = {
       id: 'age7_10',
       title: '进阶阶段',
       age: '7-10岁',
-      target: '系统建立速滑专项陆地技术，引入基础力量与爆发力训练。每次60-75分钟，每周3-4次。开始区分轻重大重方向，技术动作规范化是核心。',
+      target: '系统建立速滑专项陆地技术，引入基础力量与爆发力训练。每次60-75分钟，每周3-4次。开始区分短道/大道方向，技术动作规范化是核心。',
       duration: '60-75 分钟',
       frequency: '每周 3-4 次',
-      core: '中等强度，动作质量优先',
+      core: '中低强度 + 动作质量优先',
       color: 'bg-blue-100 text-blue-800 border-blue-200',
       iconColor: 'text-blue-500',
       modules: [
         {
           name: '一、 速滑专项技术规范化训练',
           items: [
+            { name: '速滑基本站位与重心控制', target: '5分钟', tag: '基本站位', desc: '区分大道与短道姿态细节（膝角、上身前倾度）。每日训练前配合镜子进行5分钟体位确认检查。' },
             { name: '靠墙单腿姿势核心控制', target: '3组 x 每侧30秒', tag: '专项耐力 核心', desc: '大腿平行地面，膝角90度，躯干前倾。下侧脚发力，且脚跟贴地，膝盖最大（约100°）。上身要稳，单腿控制感觉要找到。' },
             { name: '陆地侧推步 (连贯技术)', target: '4组 x 每侧15次', tag: '蹬冰技术 单腿平衡', desc: '重心从支撑腿完全平移至另一侧，推冰腿必须完全伸展并在空中停留1秒，收腿要迅速。要求动作连贯，不拖泥带水。' },
             { name: '弯道交叉步模仿', target: '3组 x 10次', tag: '弯道技术 重心转移', desc: '外腿向内发力跨步交叉，右腿在外交叉。注意跨腿时重心向内侧倾斜，模拟入弯感觉。' },
+            { name: '摆臂技术专项训练', target: '3组 x 10次', tag: '摆臂节奏', desc: '区分大道（双臂背部交叉/单臂）与短道（单手背，内侧手摆动）摆臂。配合腿部节奏原地练习，强化手臂协调。' },
             { name: '侧蹬抗阻模仿', target: '3组 x 10次', tag: '爆发力 力量', desc: '腰部绑弹力带，一侧固定，另一侧发力侧蹬。注意保持低姿，感受大腿和臀部的发力，核心收紧。' },
             { name: '滑行板 (Slide Board) 训练', target: '4组 x 1分钟', tag: '核心力量 专项耐力', desc: '穿鞋套在滑行板上进行连贯的滑行模拟。头与躯干保持稳定不随腿晃动，从每次滑行（约40次）开始，逐渐增加到1分钟或更多。' }
           ]
@@ -165,8 +167,10 @@ const BLAZE_ACADEMY = {
           items: [
             { name: '徒手深蹲 (体能基础)', target: '4组 x 12次', tag: '腿部力量 发力', desc: '双脚与肩同宽，臀部向后坐，膝盖不超过脚尖。下蹲时吸气，起立时呼气，保持躯干挺直，重心放在脚后跟。' },
             { name: '单腿深蹲 (重组推刃力量)', target: '3组 x 每侧8次', tag: '单侧力量 平衡', desc: '单腿站立，另一条腿前伸，缓慢下蹲。初学者可手扶固定物辅助，下蹲至大腿平行于地面。' },
+            { name: '侧向跨跳 (行进间)', target: '3组 x 每侧8次', tag: '侧向爆发', desc: '单腿发力侧向跃起，对侧单腿稳定支撑，停顿1-2秒后再次起跳。模拟推刃与缓冲，距离从0.5米逐渐增至1.5米。' },
             { name: '臀桥 (后侧链激活)', target: '3组 x 15次', tag: '伸髋发力 臀大肌', desc: '仰卧屈膝，脚跟踩地，臀部发力将髋部顶起至大腿与躯干呈一直线。顶峰收缩1秒。' },
             { name: '蛙跳 (爆发力基础)', target: '4组 x 10次', tag: '下肢爆发力 跳跃', desc: '深蹲姿势起跳，双手向前摆动带动身体，落地时注意缓冲，连续跳跃。' },
+            { name: '臀肌激活 (弹力带侧走)', target: '3组 x 每侧15步', tag: '臀中肌 激活', desc: '弹力带套于膝盖上方，低姿侧向行走。感受臀中肌发力，这是滑冰推刃力量的极大来源。' },
             { name: '俯卧撑 (静/动态核心)', target: '3组 x 10次', tag: '上肢力量 核心稳定', desc: '双手撑地与肩同宽，身体呈一直线，屈肘下放至胸部贴近地面，然后推起。' }
           ]
         },
@@ -175,6 +179,7 @@ const BLAZE_ACADEMY = {
           items: [
             { name: '平板支撑变式', target: '3组 x 1分钟', tag: '核心稳定 抗旋转', desc: '包括单腿抬起、单臂前伸等变式，增加核心抗旋转能力。' },
             { name: '死虫子 (Dead Bug)', target: '3组 x 15次', tag: '核心控制 协调', desc: '仰卧，双臂伸直，双腿屈膝90度。对侧手臂和腿同时下放至贴近地面，腰部始终贴地。' },
+            { name: '速滑位等长收缩 + 上肢稳定', target: '3组 x 20次摆臂', tag: '专项核心', desc: '保持标准速滑低姿，同时进行单臂前后摆动。核心必须始终紧绷使躯干稳定，不随摆臂晃动。' },
             { name: '登山跑 (Mountain Climber)', target: '4组 x 30秒', tag: '心肺耐力 核心', desc: '俯卧撑姿势，双腿交替提膝向胸部靠拢，保持高步频，核心收紧。' }
           ]
         },
@@ -185,13 +190,22 @@ const BLAZE_ACADEMY = {
             { name: '敏捷梯进阶', target: '4-6趟', tag: '步频 协调', desc: '引入更复杂的步伐，如交叉步、阿里洗牌步等。' },
             { name: '折返跑 (T字测验/变向跑)', target: '4-6趟', tag: '敏捷变向 加速', desc: '短距离内的全力冲刺与急停变向，模拟赛道突发情况。' }
           ]
+        },
+        {
+          name: '五、 有氧基础与速度耐力训练',
+          items: [
+            { name: '持续低姿态陆地连滑步', target: '1-2组 x 5-8分钟', tag: '有氧 冰感耐力', desc: '连续横向移动，重心保持低位，专注动作而非速度。心率控制在130-145bpm的有氧区间。' },
+            { name: '间歇冲刺 (20米 x 6-8次)', target: '2组', tag: '加速 爆发力', desc: '低姿位起跑，全力冲刺20米，走回原点作为间歇。强调起跑时的蹬地爆发力和前几步的低姿加速。' },
+            { name: '变速跑 (节奏感知训练)', target: '4-6圈', tag: '变速 有氧耐力', desc: '田径场直道加速（约80%强度），弯道减速维持低姿位侧滑。训练在不同速度下维持技术动作的能力。' }
+          ]
         }
       ],
       weeklyPlan: [
-        { day: '周一', title: '技术日', duration: '60分钟', tasks: ['单腿姿势控制 3组', '侧推步连贯 4组', '滑行板训练 4组'] },
-        { day: '周三', title: '力量日', duration: '60分钟', tasks: ['徒手深蹲 4组', '单腿深蹲 3组', '死虫子 3组'] },
-        { day: '周五', title: '爆发力日', duration: '60分钟', tasks: ['滑步跳 4组', '蛙跳 4组', '折返跑 5趟'] },
-        { day: '周日', title: '综合日', duration: '75分钟', tasks: ['登山跑 4组', '侧蹬抗阻 3组', '平板变式 3组'] }
+        { day: '周一', title: '专项技术规范', duration: '60分钟', tasks: ['速滑基本站位与重心控制', '陆地侧推步 (连贯技术)', '摆臂技术专项训练', '滑行板训练', '平板支撑变式'] },
+        { day: '周二', title: '基础力量与激活', duration: '60分钟', tasks: ['臀肌激活 (弹力带侧走)', '徒手深蹲 (体能基础)', '单腿深蹲 (重组推刃力量)', '臀桥', '俯卧撑'] },
+        { day: '周四', title: '爆发力与敏捷', duration: '60分钟', tasks: ['侧向跨跳 (行进间)', '蛙跳 (爆发力基础)', '侧向滑步跳', '敏捷梯进阶', '折返跑'] },
+        { day: '周五', title: '专项耐力与核心', duration: '75分钟', tasks: ['持续低姿态陆地连滑步', '速滑位等长收缩 + 上肢稳定', '死虫子 (Dead Bug)', '靠墙单腿姿势控制'] },
+        { day: '周六', title: '速度速度与节奏', duration: '75分钟', tasks: ['间歇冲刺 (20米 x 6-8次)', '变速跑 (节奏感知训练)', '弯道交叉步模仿', '侧蹬抗阻模仿'] }
       ]
     },
     {
@@ -336,9 +350,11 @@ const BLAZE_ACADEMY = {
         {
           name: '1. Specific Tech Mimicking',
           items: [
+            { name: 'Basic Stance & CoG Control', target: '5 mins', tag: 'Stance', desc: 'Differentiate long vs. short track posture (knee angle, forward lean). 5-min daily mirror check before training.' },
             { name: 'Wall-sit Single Leg Hold', target: '3 sets x 30s/leg', tag: 'Core Control', desc: 'Thigh parallel, knee at 90°, chest forward. Push from the bottom leg, keep the knee max at 100°.' },
             { name: 'Dryland Lateral Pushes', target: '4 sets x 15 reps/leg', tag: 'Push Tech', desc: 'Full weight transfer. Push leg fully extended, 1s pause in air, quick recovery.' },
             { name: 'Corner Crossovers Mimic', target: '3 sets x 10 reps', tag: 'Cornering', desc: 'Outer leg pushes inward and crosses over. Focus on inner lean to simulate entering a corner.' },
+            { name: 'Arm Swing Specific Training', target: '3 sets x 10 reps', tag: 'Arm Rhythm', desc: 'Specific arm mechanics for long track (back cross) vs. short track (one hand back). Coordinate with leg rhythm.' },
             { name: 'Banded Lateral Pushes', target: '3 sets x 10 reps', tag: 'Power', desc: 'Resistance band on waist. Stay low, feel the glute and quad activation.' },
             { name: 'Slide Board Training', target: '4 sets x 1 min', tag: 'Endurance', desc: 'Continuous slide mimicking. Keep head/trunk stable, increase duration gradually.' }
           ]
@@ -348,8 +364,10 @@ const BLAZE_ACADEMY = {
           items: [
             { name: 'Bodyweight Squats', target: '4 sets x 12 reps', tag: 'Legs', desc: 'Feet shoulder-width apart, sit back, keep weight on heels, straight back.' },
             { name: 'Assisted Pistol Squats', target: '3 sets x 8 reps/leg', tag: 'Single Leg', desc: 'Hold onto a stable object, lower until thigh is parallel to ground.' },
+            { name: 'Lateral Bounds (Moving)', target: '3 sets x 8 reps/side', tag: 'Lateral Power', desc: 'Leap side-to-side, land on single leg and pause 1-2s. Distance 0.5m to 1.5m.' },
             { name: 'Glute Bridges', target: '3 sets x 15 reps', tag: 'Hips', desc: 'Squeeze glutes at the top to train hip extension power.' },
             { name: 'Frog Jumps', target: '4 sets x 10 reps', tag: 'Explosive', desc: 'Deep squat start, use arm swing for momentum, absorb impact on landing.' },
+            { name: 'Glute Activation (Banded Walk)', target: '3 sets x 15 steps', tag: 'Glute Medius', desc: 'Band above knees, low posture lateral walk. Feel the glute medius, crucial for push-off power.' },
             { name: 'Push-ups', target: '3 sets x 10 reps', tag: 'Upper Body', desc: 'Keep body straight, lower chest to the ground.' }
           ]
         },
@@ -358,6 +376,7 @@ const BLAZE_ACADEMY = {
           items: [
             { name: 'Plank Variations', target: '3 sets x 1 min', tag: 'Core', desc: 'Include single-leg raises or arm reaches to build anti-rotation core strength.' },
             { name: 'Dead Bug', target: '3 sets x 15 reps', tag: 'Coordination', desc: 'Lower opposite arm and leg simultaneously while keeping lower back glued to the floor.' },
+            { name: 'Skating Iso-Hold + Arm Swing', target: '3 sets x 20 swings', tag: 'Specific Core', desc: 'Hold low skating posture while performing arm swings. Core must stay perfectly stable without swaying.' },
             { name: 'Mountain Climbers', target: '4 sets x 30s', tag: 'Cardio', desc: 'High knee drive in push-up position, maintain high cadence.' }
           ]
         },
@@ -368,13 +387,22 @@ const BLAZE_ACADEMY = {
             { name: 'Agility Ladder Advanced', target: '4-6 laps', tag: 'Quick Feet', desc: 'Introduce complex patterns like Ali shuffle or cross-steps.' },
             { name: 'T-Drill / Shuttle Runs', target: '4-6 laps', tag: 'Agility', desc: 'Max sprint and sudden stops to simulate race-day scenarios.' }
           ]
+        },
+        {
+          name: '5. Aerobic Base & Speed Endurance',
+          items: [
+            { name: 'Continuous Low Posture Slide', target: '1-2 sets x 5-8 mins', tag: 'Aerobic', desc: 'Continuous lateral movement. Focus on form, keep HR in aerobic zone (130-145bpm).' },
+            { name: 'Interval Sprints (20m)', target: '2 sets x 6-8 reps', tag: 'Acceleration', desc: 'Low start, max sprint 20m, walk back to rest. Emphasize explosive first steps.' },
+            { name: 'Fartlek (Pace Perception)', target: '4-6 laps', tag: 'Fartlek', desc: 'Accelerate on straights (80%), slow down and hold low posture on corners.' }
+          ]
         }
       ],
       weeklyPlan: [
-        { day: 'Mon', title: 'Tech Day', duration: '60 mins', tasks: ['Wall-sit Leg Hold 3 sets', 'Lateral Pushes 4 sets', 'Slide Board 4 sets'] },
-        { day: 'Wed', title: 'Strength Day', duration: '60 mins', tasks: ['Squats 4x12', 'Pistol Squats 3x8/leg', 'Dead Bug 3 sets'] },
-        { day: 'Fri', title: 'Plyo Day', duration: '60 mins', tasks: ['Skater Jumps 4x16', 'Frog Jumps 4x10', 'Shuttle Runs 5 laps'] },
-        { day: 'Sun', title: 'Conditioning', duration: '75 mins', tasks: ['Mountain Climbers 4x30s', 'Banded Pushes 3 sets', 'Plank 3x1 min'] }
+        { day: 'Mon', title: 'Tech Standardization', duration: '60 mins', tasks: ['Basic Stance & CoG Control', 'Dryland Lateral Pushes', 'Arm Swing Specific Training', 'Slide Board Training', 'Plank Variations'] },
+        { day: 'Tue', title: 'Strength & Activation', duration: '60 mins', tasks: ['Glute Activation (Banded Walk)', 'Bodyweight Squats', 'Assisted Pistol Squats', 'Glute Bridges', 'Push-ups'] },
+        { day: 'Thu', title: 'Plyo & Agility', duration: '60 mins', tasks: ['Lateral Bounds (Moving)', 'Frog Jumps', 'Skater Jumps', 'Agility Ladder Advanced', 'T-Drill / Shuttle Runs'] },
+        { day: 'Fri', title: 'Endurance & Core', duration: '75 mins', tasks: ['Continuous Low Posture Slide', 'Skating Iso-Hold + Arm Swing', 'Dead Bug', 'Wall-sit Single Leg Hold'] },
+        { day: 'Sat', title: 'Speed & Rhythm', duration: '75 mins', tasks: ['Interval Sprints (20m)', 'Fartlek (Pace Perception)', 'Corner Crossovers Mimic', 'Banded Lateral Pushes'] }
       ]
     },
     {
