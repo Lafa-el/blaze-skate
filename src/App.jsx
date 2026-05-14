@@ -44,10 +44,13 @@ import {
   UserCircle,
   LogOut,
   SlidersHorizontal,
-  ShieldAlert
+  ShieldAlert,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  LockKeyhole
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-// 引入了 signInWithEmailAndPassword 用于登录已有账号
 import { getAuth, signInAnonymously, onAuthStateChanged, EmailAuthProvider, linkWithCredential, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
@@ -64,10 +67,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 唯一保留这一个变量！它将作为你云端数据库里最顶层的“大文件夹”名字
 const safeAppId = 'blaze-skate-production';
 
-// --- 主题配置 (Theme Engine) ---
+// --- 主题配置 ---
 const THEMES = {
   purple: {
     id: 'purple', name: '薰衣草紫', enName: 'Lavender',
@@ -175,126 +177,272 @@ const THEMES = {
   }
 };
 
-// 免费用户可用的主题
 const FREE_THEMES = ['purple', 'blue', 'white'];
 
-// --- 内容库配置 (Task Library) ---
-const TASK_LIBRARY = {
+// --- 💎 独家青训体系数据 (BLAZE ACADEMY) ---
+const BLAZE_ACADEMY = {
   zh: [
     {
-      category: '热身准备',
-      tasks: [
-        { text: '慢跑热身', target: '10-15分钟' },
-        { text: '动态拉伸 (全身)', target: '10分钟' },
-        { text: '踝/膝/髋关节激活', target: '各方向20次' },
-        { text: '跳绳 (低阻力)', target: '10分钟' }
+      id: 'age4_6',
+      title: '启蒙阶段',
+      age: '4-6岁',
+      target: '建立运动兴趣与基础协调能力，滑冰启蒙。',
+      duration: '30-45 分钟',
+      frequency: '每周 2-3 次',
+      core: '游戏化、互动性',
+      color: 'bg-amber-100 text-amber-800 border-amber-200',
+      iconColor: 'text-amber-500',
+      modules: [
+        {
+          name: '一、 基础平衡与体态感知训练',
+          items: [
+            { name: '单脚站立游戏', target: '左右脚各10秒', tag: '平衡', desc: '以“金鸡独立”形式激发兴趣。要求站立腿微屈，上身直立。' },
+            { name: '平衡垫/泡沫轴站立', target: '3组 x 15秒', tag: '本体感觉', desc: '刺激踝关节本体感觉。双脚开始，逐渐加入干扰动作。' },
+            { name: '走平衡木/陆地模拟滑行走', target: '2-3趟', tag: '动态控制', desc: '双臂背背，低姿态，横向走，头顶放沙袋走。' },
+            { name: '俯卧撑位平板支撑 (改良版)', target: '3组 x 10-15秒', tag: '核心', desc: '以膝盖着地的改良平板为主，保持头背腿一直线。' }
+          ]
+        },
+        {
+          name: '二、 速度滑冰基础体位模仿训练',
+          items: [
+            { name: '“鸭子步”低姿走', target: '10-15米 x 3趟', tag: '滑冰体位', desc: '双脚外八，膝盖弯曲，上身前倾，双手放背后。' },
+            { name: '原地连贯提臀练习', target: '3组 x 10次', tag: '冰感', desc: '单腿或双脚体验冰面收腿动作，要求节奏控制。' },
+            { name: '侧推步基础 (横向移动)', target: '每侧5-8步', tag: '推刃体验', desc: '双脚与肩同宽，低姿，向侧面推蹬，重心理解。' },
+            { name: '静位保持 (静态速度滑冰)', target: '2-3组 x 20秒', tag: '肌肉记忆', desc: '陆地蹲起，大腿平行地面，模拟起跑姿势。' }
+          ]
+        },
+        {
+          name: '三、 全身协调与灵敏度游戏',
+          items: [
+            { name: '跨越游戏 (速度梯)', target: '3-4趟', tag: '敏捷', desc: '单脚交替，侧向跳跃，节奏感训练。' },
+            { name: '追逐反应游戏', target: '5-8次', tag: '反应', desc: '听指令变向跑动，方向变换与加速能力。' },
+            { name: '跳房子 (多样化跳)', target: '3-5分钟', tag: '跳跃', desc: '双脚开合，单脚落地，空间感知能力。' }
+          ]
+        }
+      ],
+      weeklyPlan: [
+        { day: '周二', title: '体位 & 平衡', duration: '35分钟', tasks: ['“鸭子步”低姿走 3趟', '单脚站立游戏 各10秒', '平衡垫/泡沫轴站立 3组'] },
+        { day: '周四', title: '协调 & 灵敏', duration: '40分钟', tasks: ['跨越游戏(速度梯) 4趟', '追逐反应游戏 5次', '跳房子游戏 5分钟'] },
+        { day: '周六', title: '综合趣味', duration: '45分钟', tasks: ['走平衡木 3趟', '侧推步基础 每侧8步', '俯卧撑位平板支撑 3组'] }
       ]
     },
     {
-      category: '爆发力 (陆地)',
-      tasks: [
-        { text: '侧向滑步跳 (Skater Jumps)', target: '4组 x 16次' },
-        { text: '跳箱 (Box Jumps)', target: '4组 x 8次' },
-        { text: '立定蛙跳', target: '4组 x 10次' },
-        { text: '单腿纵跳', target: '3组 x 每侧8次' }
+      id: 'age7_10',
+      title: '进阶阶段',
+      age: '7-10岁',
+      target: '引入基础力量与爆发力训练，规范滑冰动作模式。',
+      duration: '60-75 分钟',
+      frequency: '每周 3-4 次',
+      core: '规范度、动作质量优先',
+      color: 'bg-blue-100 text-blue-800 border-blue-200',
+      iconColor: 'text-blue-500',
+      modules: [
+        {
+          name: '一、 速度滑冰专项技术模拟训练',
+          items: [
+            { name: '靠墙单腿滑行姿势控制', target: '3组 x 每侧30秒', tag: '专项控制', desc: '大腿平行地面，膝盖不超过脚尖，上身前倾。' },
+            { name: '陆地侧推步 (连贯技术)', target: '4组 x 每侧15次', tag: '推刃技术', desc: '从起蹬到收腿的完整动作控制，保持重心稳定。' },
+            { name: '弯道交叉步模仿', target: '3组 x 10次', tag: '弯道技术', desc: '内侧腿外压，外侧腿内压，体会重心的转移。' },
+            { name: '滑行板 (Slide Board) 训练', target: '4组 x 1分钟', tag: '核心力量', desc: '在滑行板上进行连贯的滑行模拟。' }
+          ]
+        },
+        {
+          name: '二、 基础力量与核心能力构建',
+          items: [
+            { name: '深蹲 (自重/轻负重)', target: '4组 x 12次', tag: '下肢力量', desc: '双脚与肩同宽，臀部向后坐，膝盖不内扣。' },
+            { name: '单腿深蹲 (辅助或半程)', target: '3组 x 每侧8次', tag: '单侧力量', desc: '手扶固定物进行，强化单侧腿的独立发力。' },
+            { name: '臀桥 (单/双腿)', target: '3组 x 15次', tag: '伸髋发力', desc: '仰卧，臀部发力顶起，体会臀大肌的收缩。' },
+            { name: '仰卧起坐/卷腹', target: '3组 x 20次', tag: '核心前侧', desc: '保持下背部贴地，感受腹肌的发力。' }
+          ]
+        },
+        {
+          name: '三、 爆发力与灵敏度进阶',
+          items: [
+            { name: '侧向滑步跳 (Skater Jumps)', target: '4组 x 16次', tag: '侧向爆发', desc: '模仿滑冰起跑，强调侧向推蹬的爆发力。' },
+            { name: '西班牙跳 (双腿跳跃)', target: '3组 x 10次', tag: '垂直爆发', desc: '双脚起跳，尽力向上，落地轻盈。' },
+            { name: '变向跑 (T字测验/折返跑)', target: '4-6趟', tag: '敏捷变向', desc: '快速加速与制动，提升急停急起能力。' }
+          ]
+        }
+      ],
+      weeklyPlan: [
+        { day: '周一', title: '技术日', duration: '60分钟', tasks: ['靠墙单腿姿势控制 3组', '陆地侧推步 4组', '弯道交叉步模仿 3组'] },
+        { day: '周三', title: '力量日', duration: '60分钟', tasks: ['深蹲 4组x12次', '单腿深蹲 3组x8次', '臀桥 3组x15次', '卷腹 3组x20次'] },
+        { day: '周五', title: '爆发力日', duration: '60分钟', tasks: ['侧向滑步跳 4组x16次', '西班牙跳 3组x10次', '变向跑 5趟'] },
+        { day: '周日', title: '综合日', duration: '75分钟', tasks: ['滑行板训练 4组x1分钟', '陆地侧推步 3组', '单脚站立进阶'] }
       ]
     },
     {
-      category: '核心与力量',
-      tasks: [
-        { text: '杠铃深蹲 (Squats)', target: '4组 x 8-10次' },
-        { text: '保加利亚分腿蹲', target: '3组 x 每侧10次' },
-        { text: '罗马尼亚硬拉 (RDL)', target: '4组 x 10次' },
-        { text: '平板支撑及变式', target: '3组 x 1分钟' },
-        { text: '俄罗斯转体 (负重)', target: '3组 x 20次' }
-      ]
-    },
-    {
-      category: '专项体能 (耐力)',
-      tasks: [
-        { text: '靠墙静蹲 (Wall Sit)', target: '3组 x 1.5-2分钟' },
-        { text: '滑行板 (Slide Board)', target: '5组 x 1-2分钟' },
-        { text: '动感单车间歇', target: '20s冲刺/40s慢骑 x 10' },
-        { text: '折返跑冲刺', target: '5趟 x 4组' }
-      ]
-    },
-    {
-      category: '技术模仿',
-      tasks: [
-        { text: '陆地交叉步模仿', target: '3组 x 20次' },
-        { text: '弹力带抗阻侧蹬', target: '4组 x 每侧15次' },
-        { text: '镜前低姿势定型', target: '3组 x 1分钟' },
-        { text: '弯道倾角模拟', target: '3组 x 30秒' }
-      ]
-    },
-    {
-      category: '恢复放松',
-      tasks: [
-        { text: '泡沫轴筋膜放松', target: '15分钟' },
-        { text: '下肢静态拉伸', target: '10-15分钟' },
-        { text: '冰浴 / 冷水浴', target: '10分钟' },
-        { text: '瑜伽垫上冥想', target: '10分钟' }
+      id: 'age11_16',
+      title: '青少年专项阶段',
+      age: '11-16岁',
+      target: '最大力量、爆发力、专项无氧耐力全面跃升。',
+      duration: '90-120 分钟',
+      frequency: '每周 4-6 次',
+      core: '高强度、高频次、大负荷',
+      color: 'bg-rose-100 text-rose-800 border-rose-200',
+      iconColor: 'text-rose-500',
+      modules: [
+        {
+          name: '一、 最大力量与核心抗力量',
+          items: [
+            { name: '负重深蹲 (杠铃深蹲)', target: '4-5组 x 6-8次', tag: '绝对力量', desc: '使用杠铃进行最大力量储备，注意深度和核心收紧。' },
+            { name: '罗马尼亚硬拉 (RDL)', target: '4组 x 8-10次', tag: '后侧链', desc: '强化腘绳肌和臀大肌，提升伸髋爆发力。' },
+            { name: '杠铃臀推 (Hip Thrust)', target: '4组 x 10次', tag: '伸髋爆发', desc: '冰上推进力的核心来源，强调顶峰收缩。' },
+            { name: '保加利亚分腿蹲', target: '4组 x 每侧8次', tag: '单侧极限', desc: '极大提升单腿支撑时的稳定性和力量。' }
+          ]
+        },
+        {
+          name: '二、 爆发力与增强式训练 (Plyometrics)',
+          items: [
+            { name: '跳箱训练 (Box Jumps)', target: '4组 x 6次', tag: '增强式', desc: '追求极致的起跳速度和高度，落地要求缓冲。' },
+            { name: '侧向连续跳 (单/双腿)', target: '4组 x 12次', tag: '专项爆发', desc: '连续的侧向推蹬，模拟冰上的连续加速。' },
+            { name: '医药球抛掷 (侧向/过头)', target: '4组 x 10次', tag: '核心爆发', desc: '核心躯干的旋转爆发力，提升整体发力连贯性。' }
+          ]
+        },
+        {
+          name: '三、 专项无氧耐力与速度耐力',
+          items: [
+            { name: '滑行板高强度间歇 (HIIT)', target: '8-10组 x 45秒', tag: '无氧耐力', desc: '全力滑行45秒，休息30秒，挑战乳酸阈值。' },
+            { name: '动感单车冲刺间歇', target: '10组 x 20秒', tag: '速度耐力', desc: '20秒最大功率冲刺，40秒极慢骑恢复。' },
+            { name: '阻力雪橇/拖车冲刺', target: '6-8趟 x 20米', tag: '抗阻冲刺', desc: '强迫下肢在疲劳和高阻力状态下维持步频。' }
+          ]
+        },
+        {
+          name: '四、 高级核心与静力性训练',
+          items: [
+            { name: '负重平板支撑 / 健腹轮', target: '4组 x 1分钟 / 10次', tag: '抗伸展核心', desc: '背部放杠铃片，或使用健腹轮，极致核心考验。' },
+            { name: '悬垂举腿', target: '4组 x 12次', tag: '下腹/屈髋', desc: '单杠悬垂，依靠核心力量将双腿举至水平。' }
+          ]
+        }
+      ],
+      weeklyPlan: [
+        { day: '周一', title: '最大力量日', duration: '90分钟', tasks: ['负重深蹲 5组x6次', '罗马尼亚硬拉 4组x8次', '保加利亚分腿蹲 4组'] },
+        { day: '周二', title: '专项爆发日', duration: '80分钟', tasks: ['跳箱训练 4组x6次', '侧向连续跳 4组x12次', '医药球抛掷 4组x10次'] },
+        { day: '周四', title: '专项耐力日', duration: '100分钟', tasks: ['滑行板HIIT 8组x45秒', '动感单车冲刺 10组', '悬垂举腿 4组'] },
+        { day: '周五', title: '综合爆发日', duration: '90分钟', tasks: ['阻力雪橇冲刺 6趟', '杠铃臀推 4组x10次', '健腹轮 4组'] },
+        { day: '周六', title: '超量恢复/有氧', duration: '60分钟', tasks: ['慢跑/轻松骑行 40分钟', '全面拉伸与泡沫轴 20分钟'] }
       ]
     }
   ],
   en: [
     {
-      category: 'Warm-up',
-      tasks: [
-        { text: 'Light Jogging', target: '10-15 mins' },
-        { text: 'Dynamic Stretching', target: '10 mins' },
-        { text: 'Joint Mobility', target: '20 reps each' },
-        { text: 'Jump Rope', target: '10 mins' }
+      id: 'age4_6',
+      title: 'Intro Stage',
+      age: 'Age 4-6',
+      target: 'Build interest & basic coordination for skating.',
+      duration: '30-45 mins',
+      frequency: '2-3 / week',
+      core: 'Gamified & Interactive',
+      color: 'bg-amber-100 text-amber-800 border-amber-200',
+      iconColor: 'text-amber-500',
+      modules: [
+        {
+          name: '1. Balance & Posture Awareness',
+          items: [
+            { name: 'Single-leg Stance Game', target: '10s each leg', tag: 'Balance', desc: 'Stand on one leg, keep upper body straight.' },
+            { name: 'Foam Roller Stance', target: '3 sets x 15s', tag: 'Proprioception', desc: 'Stimulate ankle joints on an unstable surface.' },
+            { name: 'Balance Beam / Dryland Walk', target: '2-3 laps', tag: 'Dynamic', desc: 'Low posture walk, hands behind back.' },
+            { name: 'Modified Push-up Plank', target: '3 sets x 15s', tag: 'Core', desc: 'Knee-supported plank, keep back straight.' }
+          ]
+        },
+        {
+          name: '2. Basic Skating Posture Mimic',
+          items: [
+            { name: 'Duck Walk', target: '10m x 3 laps', tag: 'Posture', desc: 'Feet apart, knees bent, chest forward.' },
+            { name: 'Stationary Heel Kicks', target: '3 sets x 10 reps', tag: 'Ice Feel', desc: 'Mimic the ice recovery phase.' },
+            { name: 'Basic Lateral Push', target: '5-8 reps/side', tag: 'Push', desc: 'Low posture, push sideways.' }
+          ]
+        }
+      ],
+      weeklyPlan: [
+        { day: 'Tue', title: 'Posture & Balance', duration: '35 mins', tasks: ['Duck Walk 3 laps', 'Single-leg Stance 10s', 'Foam Roller 3 sets'] },
+        { day: 'Thu', title: 'Coordination', duration: '40 mins', tasks: ['Agility Ladder 4 laps', 'Reaction Run 5 reps', 'Hopscotch 5 mins'] },
+        { day: 'Sat', title: 'Fun & Games', duration: '45 mins', tasks: ['Balance Beam 3 laps', 'Lateral Push 8 reps/side', 'Modified Plank 3 sets'] }
       ]
     },
     {
-      category: 'Power & Plyos',
-      tasks: [
-        { text: 'Skater Jumps', target: '4 sets x 16 reps' },
-        { text: 'Box Jumps', target: '4 sets x 8 reps' },
-        { text: 'Broad Jumps', target: '4 sets x 10 reps' },
-        { text: 'Single Leg Bounds', target: '3 sets x 8 reps/leg' }
+      id: 'age7_10',
+      title: 'Advanced Stage',
+      age: 'Age 7-10',
+      target: 'Introduce basic strength, plyos, and form correction.',
+      duration: '60-75 mins',
+      frequency: '3-4 / week',
+      core: 'Form & Quality First',
+      color: 'bg-blue-100 text-blue-800 border-blue-200',
+      iconColor: 'text-blue-500',
+      modules: [
+        {
+          name: '1. Specific Tech Mimicking',
+          items: [
+            { name: 'Wall-sit Single Leg Hold', target: '3 sets x 30s/leg', tag: 'Control', desc: 'Thigh parallel, chest forward.' },
+            { name: 'Dryland Lateral Pushes', target: '4 sets x 15 reps/leg', tag: 'Push Tech', desc: 'Full extension and recovery.' },
+            { name: 'Corner Crossovers Mimic', target: '3 sets x 10 reps', tag: 'Cornering', desc: 'Weight transfer practice.' },
+            { name: 'Slide Board Training', target: '4 sets x 1 min', tag: 'Core/Power', desc: 'Continuous slide mimicking.' }
+          ]
+        },
+        {
+          name: '2. Foundation Strength',
+          items: [
+            { name: 'Bodyweight Squats', target: '4 sets x 12 reps', tag: 'Legs', desc: 'Feet shoulder-width apart.' },
+            { name: 'Assisted Pistol Squats', target: '3 sets x 8 reps/leg', tag: 'Single Leg', desc: 'Hold onto a stable object.' },
+            { name: 'Glute Bridges', target: '3 sets x 15 reps', tag: 'Hips', desc: 'Squeeze glutes at the top.' }
+          ]
+        }
+      ],
+      weeklyPlan: [
+        { day: 'Mon', title: 'Tech Day', duration: '60 mins', tasks: ['Wall-sit Leg Hold 3 sets', 'Lateral Pushes 4 sets', 'Crossover Mimic 3 sets'] },
+        { day: 'Wed', title: 'Strength Day', duration: '60 mins', tasks: ['Squats 4x12', 'Pistol Squats 3x8/leg', 'Glute Bridges 3x15'] },
+        { day: 'Fri', title: 'Plyo Day', duration: '60 mins', tasks: ['Skater Jumps 4x16', 'Vertical Jumps 3x10', 'Shuttle Runs 5 laps'] },
+        { day: 'Sun', title: 'Conditioning', duration: '75 mins', tasks: ['Slide Board 4x1 min', 'Lateral Pushes 3 sets', 'Plank 3x1 min'] }
       ]
     },
     {
-      category: 'Strength & Core',
-      tasks: [
-        { text: 'Barbell Squats', target: '4 sets x 8-10 reps' },
-        { text: 'Bulgarian Split Squats', target: '3 sets x 10 reps/leg' },
-        { text: 'Romanian Deadlifts (RDL)', target: '4 sets x 10 reps' },
-        { text: 'Plank Variations', target: '3 sets x 1 min' },
-        { text: 'Weighted Russian Twists', target: '3 sets x 20 reps' }
-      ]
-    },
-    {
-      category: 'Conditioning',
-      tasks: [
-        { text: 'Wall Sit', target: '3 sets x 1.5-2 mins' },
-        { text: 'Slide Board', target: '5 sets x 1-2 mins' },
-        { text: 'Bike Intervals', target: '20s sprint/40s rest x 10' },
-        { text: 'Shuttle Sprints', target: '5 shuttles x 4 sets' }
-      ]
-    },
-    {
-      category: 'Tech & Form',
-      tasks: [
-        { text: 'Dryland Crossovers', target: '3 sets x 20 reps' },
-        { text: 'Banded Push-offs', target: '4 sets x 15 reps/leg' },
-        { text: 'Low Position Hold', target: '3 sets x 1 min' },
-        { text: 'Corner Lean Drill', target: '3 sets x 30 sec' }
-      ]
-    },
-    {
-      category: 'Recovery',
-      tasks: [
-        { text: 'Foam Rolling', target: '15 mins' },
-        { text: 'Static Stretching (Legs)', target: '10-15 mins' },
-        { text: 'Ice Bath / Cold Plunge', target: '10 mins' },
-        { text: 'Yoga / Meditation', target: '10 mins' }
+      id: 'age11_16',
+      title: 'Pro Youth Stage',
+      age: 'Age 11-16',
+      target: 'Maximize power, core, and anaerobic endurance.',
+      duration: '90-120 mins',
+      frequency: '4-6 / week',
+      core: 'High Intensity & Load',
+      color: 'bg-rose-100 text-rose-800 border-rose-200',
+      iconColor: 'text-rose-500',
+      modules: [
+        {
+          name: '1. Max Strength & Core',
+          items: [
+            { name: 'Barbell Back Squats', target: '4-5 sets x 6-8 reps', tag: 'Absolute', desc: 'Heavy load, tight core.' },
+            { name: 'Romanian Deadlift (RDL)', target: '4 sets x 8-10 reps', tag: 'Posterior', desc: 'Hamstrings and glutes focus.' },
+            { name: 'Barbell Hip Thrusts', target: '4 sets x 10 reps', tag: 'Hip Power', desc: 'The source of on-ice propulsion.' },
+            { name: 'Bulgarian Split Squats', target: '4 sets x 8 reps/leg', tag: 'Single Max', desc: 'Ultimate single-leg stability.' }
+          ]
+        },
+        {
+          name: '2. Plyometrics',
+          items: [
+            { name: 'Box Jumps', target: '4 sets x 6 reps', tag: 'Explosive', desc: 'Max height and fast takeoff.' },
+            { name: 'Continuous Lateral Bounds', target: '4 sets x 12 reps', tag: 'Specific', desc: 'Mimics continuous on-ice pushes.' },
+            { name: 'Med Ball Rotational Throws', target: '4 sets x 10 reps', tag: 'Core Power', desc: 'Rotational power transfer.' }
+          ]
+        },
+        {
+          name: '3. Anaerobic & Speed Endurance',
+          items: [
+            { name: 'Slide Board HIIT', target: '8-10 sets x 45s', tag: 'Anaerobic', desc: '45s all-out, 30s rest. Lactic threshold.' },
+            { name: 'Spin Bike Sprints', target: '10 sets x 20s', tag: 'Speed Endure', desc: '20s max power, 40s slow recovery.' }
+          ]
+        }
+      ],
+      weeklyPlan: [
+        { day: 'Mon', title: 'Max Strength', duration: '90 mins', tasks: ['Barbell Squats 5x6', 'RDL 4x8', 'Bulgarian Squats 4 sets'] },
+        { day: 'Tue', title: 'Specific Plyos', duration: '80 mins', tasks: ['Box Jumps 4x6', 'Lateral Bounds 4x12', 'Med Ball Throws 4x10'] },
+        { day: 'Thu', title: 'Endurance', duration: '100 mins', tasks: ['Slide Board HIIT 8x45s', 'Bike Sprints 10 sets', 'Hanging Leg Raises 4 sets'] },
+        { day: 'Fri', title: 'Combo Power', duration: '90 mins', tasks: ['Sled Pushes 6 laps', 'Hip Thrusts 4x10', 'Ab Wheel Rollouts 4 sets'] },
+        { day: 'Sat', title: 'Active Recovery', duration: '60 mins', tasks: ['Light Jog 40 mins', 'Foam Roll & Stretch 20 mins'] }
       ]
     }
   ]
 };
+
 
 // --- 语言配置 (Translations) ---
 const translations = {
@@ -348,9 +496,13 @@ const translations = {
     checkinRecords: '坚持训练的每一天都值得被记录',
     checkinLegend: '已打卡',
     themeSettingTitle: '主题配色',
-    openLibrary: '速度滑冰陆地训练核心动作库',
-    closeLibrary: '关闭内容库',
-    taskAdded: '已添加',
+    openAcademy: 'BLAZE SKATE 青训体系',
+    academySub: '全周期速滑专业陆地训练',
+    closeAcademy: '关闭青训大厅',
+    importToToday: '导入今日任务',
+    taskAdded: '已导入',
+    proLocked: 'PRO 会员专属内容',
+    proLockedDesc: '升级 BLAZE PRO 解锁完整动作矩阵与一键排课功能。',
     profileTitle: '个人中心',
     appPreferences: '应用偏好',
     trainingConfig: '训练与核心数据',
@@ -386,7 +538,6 @@ const translations = {
     recentHighlight: '最新高光时刻',
     noRecentRecord: '暂无近期记录',
     keepItUp: '继续保持！',
-    // 账号系统新增翻译
     accountStatus: '账号安全与同步',
     guestMode: '游客模式 (仅本地缓存)',
     guestWarning: '清理微信或浏览器缓存会导致数据丢失，请尽快注册以开启云同步。',
@@ -406,7 +557,7 @@ const translations = {
     bound: '已绑定',
     unbound: '未绑定',
     logout: '退出登录',
-    version: '版本 v1.1.0',
+    version: '版本 v1.2.0',
     copyright: '© 2026 BlazeSkate.com 保留所有权利。',
     greetings: [
       '夜深了，良好的睡眠也是训练的一部分 🌙',
@@ -432,7 +583,7 @@ const translations = {
     proFeatures: [
       '无限制的专属成绩项目定制与分析',
       '解锁奖励商店与专属特权兑换',
-      '海量专业陆地训练动作库一键导入',
+      '解锁 BLAZE 独家青训体系完整动作矩阵',
       '解锁全部 8 款专属沉浸式训练主题',
       '高阶家长端密码锁与全局积分控制'
     ],
@@ -497,9 +648,13 @@ const translations = {
     checkinRecords: 'Every day of hard work leaves a mark',
     checkinLegend: 'Completed',
     themeSettingTitle: 'Theme Palette',
-    openLibrary: 'Speed Skating Dryland Task Library',
-    closeLibrary: 'Close Library',
-    taskAdded: 'Added',
+    openAcademy: 'BLAZE SKATE ACADEMY',
+    academySub: 'PROFESSIONAL DRYLAND TRAINING',
+    closeAcademy: 'Close Academy',
+    importToToday: 'Import to Today',
+    taskAdded: 'Imported',
+    proLocked: 'PRO Exclusive Content',
+    proLockedDesc: 'Upgrade to BLAZE PRO to unlock full exercises & 1-click importing.',
     profileTitle: 'My Profile',
     appPreferences: 'App Preferences',
     trainingConfig: 'Training & Data',
@@ -535,7 +690,6 @@ const translations = {
     recentHighlight: 'Recent Highlight',
     noRecentRecord: 'No recent records',
     keepItUp: 'Keep it up!',
-    // Account system
     accountStatus: 'Account & Sync',
     guestMode: 'Guest Mode (Local)',
     guestWarning: 'Clearing your browser cache will erase your data. Register to enable cloud sync.',
@@ -555,7 +709,7 @@ const translations = {
     bound: 'Linked',
     unbound: 'Not Linked',
     logout: 'Log Out',
-    version: 'Version v1.1.0',
+    version: 'Version v1.2.0',
     copyright: '© 2026 BlazeSkate.com All rights reserved.',
     greetings: [
       'Late night. Rest is part of your training. 🌙',
@@ -581,7 +735,7 @@ const translations = {
     proFeatures: [
       'Unlimited custom distances & analytics',
       'Unlock Reward Shop & exclusive items',
-      'Import tasks from PRO Library',
+      'Unlock BLAZE Academy Full Exercise Matrix',
       'Unlock all 8 premium app themes',
       'Parental PIN Lock & Points control'
     ],
@@ -601,7 +755,7 @@ const translations = {
 // 初始默认数据
 const defaultData = {
   points: 0,
-  language: 'en',
+  language: 'zh',
   theme: 'purple',
   avatar: '', 
   parentPin: '',
@@ -611,29 +765,29 @@ const defaultData = {
   dailyBonusPoints: 20,
   completedDays: [], 
   customRewards: [
-    { id: 1, name: 'Snack of Choice', cost: 200, icon: '🍿' },
-    { id: 2, name: '2-Hour Weekend Gaming', cost: 500, icon: '🎮' },
-    { id: 3, name: 'Dream Toy Voucher', cost: 1000, icon: '🎁' },
-    { id: 4, name: 'New Skate Gear Fund', cost: 3000, icon: '⛸️' },
+    { id: 1, name: '心仪零食一份', cost: 200, icon: '🍿' },
+    { id: 2, name: '周末自由游戏 2 小时', cost: 500, icon: '🎮' },
+    { id: 3, name: '梦想玩具兑换券', cost: 1000, icon: '🎁' },
+    { id: 4, name: '新滑冰装备基金', cost: 3000, icon: '⛸️' },
   ],
-  customDistances: ['Start', 'Lap', '500m', '777m', '1000m', '1500m'],
+  customDistances: ['起跑', '单圈', '500m', '777m', '1000m', '1500m'],
   rewardHistory: [],
   races: [
-    { id: 1, name: 'National Champ', date: '2026-11-20' }
+    { id: 1, name: '全国锦标赛', date: '2026-11-20' }
   ],
   weeklyTemplate: {
-    0: 'Rest Day',
-    1: 'Strength Day',
-    2: 'Power/Sprint',
-    3: 'Conditioning',
-    4: 'Technique',
-    5: 'Intervals',
-    6: 'Endurance',
+    0: '休息日',
+    1: '力量训练日',
+    2: '爆发与冲刺',
+    3: '无氧耐力日',
+    4: '冰上技术日',
+    5: '专项间歇日',
+    6: '长距离耐力',
   },
   tasks: [
-    { id: 1, text: 'Jogging', target: '15 mins', completed: false, isTemplate: true },
-    { id: 2, text: 'Slide Board', target: '5 sets x 1 min', completed: false, isTemplate: true },
-    { id: 3, text: 'Wall Sit', target: '3 sets x 1.5 mins', completed: false, isTemplate: true },
+    { id: 1, text: '慢跑热身', target: '15 分钟', completed: false, isTemplate: true },
+    { id: 2, text: '滑行板 (Slide Board)', target: '5组 x 1分钟', completed: false, isTemplate: true },
+    { id: 3, text: '靠墙静蹲', target: '3组 x 1.5分钟', completed: false, isTemplate: true },
   ],
   records: [
     { date: '2026-05-01', time: 48.5 },
@@ -667,7 +821,7 @@ const getRecordsKey = (dist) => {
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('tasks'); // 默认展示任务页以突出新大厅
   const [data, setData] = useState(defaultData);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -704,9 +858,11 @@ export default function App() {
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
 
-  const [showLibrary, setShowLibrary] = useState(false);
-  const [activeLibraryCat, setActiveLibraryCat] = useState(0);
-  const [addedLibraryTaskIds, setAddedLibraryTaskIds] = useState([]);
+  // Blaze Academy State
+  const [showAcademyModal, setShowAcademyModal] = useState(false);
+  const [activeAcademyAgeIdx, setActiveAcademyAgeIdx] = useState(0);
+  const [expandedAcademyModule, setExpandedAcademyModule] = useState(0);
+  const [importedWeeklyIds, setImportedWeeklyIds] = useState([]);
 
   const [showHistory, setShowHistory] = useState(false);
   const [celebration, setCelebration] = useState(null);
@@ -930,15 +1086,15 @@ export default function App() {
     });
   };
 
-  const addSpecificTask = (text, target) => {
+  const addSpecificTask = (text, target, isTemplate = false) => {
     const newTasks = [
       ...data.tasks, 
       { 
-        id: Date.now(), 
+        id: Date.now() + Math.random(), 
         text: text.trim(), 
         target: target ? target.trim() : null,
         completed: false, 
-        isTemplate: false 
+        isTemplate: isTemplate 
       }
     ];
     updateData({ tasks: newTasks });
@@ -946,18 +1102,32 @@ export default function App() {
 
   const addTask = () => {
     if (newTaskText.trim()) {
-      addSpecificTask(newTaskText, newTaskTarget);
+      addSpecificTask(newTaskText, newTaskTarget, false);
       setNewTaskText('');
       setNewTaskTarget('');
     }
   };
 
-  const addFromLibrary = (libTask, idx) => {
-    addSpecificTask(libTask.text, libTask.target);
-    setAddedLibraryTaskIds(prev => [...prev, idx]);
+  const importAcademyRoutine = (routine, idx) => {
+    if (!data.isPro) {
+      setShowProModal(true);
+      return;
+    }
+    
+    // 把该计划里的所有 task 提取出来，解析成名称和目标，一键导入
+    routine.tasks.forEach((taskStr, index) => {
+      setTimeout(() => {
+        const parts = taskStr.split(' ');
+        const target = parts.length > 1 ? parts.pop() : '';
+        const name = parts.join(' ');
+        addSpecificTask(name, target, true);
+      }, index * 50); // 错开添加时间，防止 key 冲突
+    });
+
+    setImportedWeeklyIds(prev => [...prev, idx]);
     setTimeout(() => {
-      setAddedLibraryTaskIds(prev => prev.filter(id => id !== idx));
-    }, 1500);
+      setImportedWeeklyIds(prev => prev.filter(id => id !== idx));
+    }, 2000);
   };
 
   const deleteTask = (e, id) => {
@@ -1440,17 +1610,37 @@ export default function App() {
       </div>
 
       {isParentMode && (
-        <div className={`flex flex-col gap-3 pt-4 border-t ${tc.borderLight}`}>
-          <button 
-            onClick={() => data.isPro ? setShowLibrary(true) : setShowProModal(true)}
-            className={`w-full flex items-center justify-center gap-3 p-4 rounded-xl border-2 border-dashed ${tc.borderLight} ${tc.badgeBg} ${tc.textPrimary} transition-all font-bold text-base shadow-sm ${!data.isPro ? 'opacity-90' : 'hover:opacity-80'}`}
+        <div className={`flex flex-col gap-3 pt-6`}>
+          
+          {/* 🌟 升级后的豪华入口：BLAZE 青训体系 */}
+          <div 
+            onClick={() => setShowAcademyModal(true)}
+            className={`relative overflow-hidden w-full rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] cursor-pointer group active:scale-[0.98] transition-transform`}
           >
-            <Dumbbell size={24} />
-            {t.openLibrary}
-            {!data.isPro && <Crown size={18} className="text-yellow-500 ml-1" />}
-          </button>
+            {/* 卡片背景与动画光晕 */}
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-black z-0"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/20 rounded-full blur-2xl z-0 group-hover:bg-rose-500/30 transition-colors"></div>
+            <div className="absolute bottom-[-20%] left-[-10%] w-32 h-32 bg-blue-500/20 rounded-full blur-2xl z-0 group-hover:bg-blue-500/30 transition-colors"></div>
+            
+            <div className="relative z-10 flex flex-col items-center justify-center p-6 text-center">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Crown size={20} className="text-yellow-400 drop-shadow-md" />
+                <span className="text-white font-black text-lg tracking-wider">{t.openAcademy}</span>
+                <Sparkles size={16} className="text-rose-400 absolute right-8 top-6 animate-pulse" />
+              </div>
+              <div className="text-slate-300 text-xs font-medium tracking-widest uppercase opacity-80 mb-4">{t.academySub}</div>
+              
+              <div className="flex gap-2 w-full justify-center">
+                {BLAZE_ACADEMY[data.language || 'zh'].map((stage, i) => (
+                  <span key={i} className={`text-[9px] font-bold px-2.5 py-1 rounded-md bg-white/10 text-white/90 border border-white/5`}>
+                    {stage.age}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 mt-2">
             <input 
               type="text" 
               value={newTaskText}
@@ -1679,7 +1869,6 @@ export default function App() {
     );
   };
 
-  // 全新重构的设置页面 (SettingsView)
   const SettingsView = () => {
     const handleSaveSettings = () => {
       updateData({ 
@@ -1727,6 +1916,45 @@ export default function App() {
       await updateData({ language: targetLang });
     };
 
+    const renderThemeSelector = () => (
+      <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
+        <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
+          <Palette size={18} className={tc.textMuted} /> {t.themeSettingTitle}
+        </h3>
+        <div className="grid grid-cols-4 gap-3">
+          {Object.keys(THEMES).map(key => {
+            const theme = THEMES[key];
+            const isActive = (data.theme || 'purple') === key;
+            const isFreeTheme = FREE_THEMES.includes(key);
+            const isLocked = !data.isPro && !isFreeTheme;
+
+            return (
+              <button
+                key={key}
+                onClick={() => {
+                  if (isLocked) setShowProModal(true);
+                  else updateData({ theme: key });
+                }}
+                className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all relative ${
+                  isActive ? tc.badgeBg + ' ring-2 ' + tc.focusRing : 'hover:opacity-70 ' + tc.calEmpty.split(' ')[0]
+                }`}
+              >
+                {isLocked && (
+                  <div className="absolute -top-1 -right-1 bg-slate-800 rounded-full p-0.5 shadow-md z-10">
+                    <Crown size={12} className="text-yellow-400" />
+                  </div>
+                )}
+                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${theme.gradientIcon} shadow-sm border border-white/20 ${isLocked ? 'opacity-50 grayscale' : ''}`}></div>
+                <span className={`text-[10px] font-bold ${isActive ? tc.textPrimary : tc.textMuted}`}>
+                  {data.language === 'en' ? theme.enName : theme.name}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    );
+
     return (
       <div className="space-y-8">
         <div>
@@ -1734,7 +1962,6 @@ export default function App() {
           <p className={`text-sm ${tc.textMuted} mt-1`}>{t.customizePlan}</p>
         </div>
 
-        {/* 模块 1：应用偏好设置 */}
         <section className="space-y-4">
           <h3 className={`text-xs font-black tracking-wider uppercase ${tc.textPrimary} pl-1 flex items-center gap-2`}>
             <SlidersHorizontal size={14} /> {t.appPreferences}
@@ -1752,45 +1979,9 @@ export default function App() {
             </button>
           </div>
 
-          <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
-            <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-              <Palette size={18} className={tc.textMuted} /> {t.themeSettingTitle}
-            </h3>
-            <div className="grid grid-cols-4 gap-3">
-              {Object.keys(THEMES).map(key => {
-                const theme = THEMES[key];
-                const isActive = (data.theme || 'purple') === key;
-                const isFreeTheme = FREE_THEMES.includes(key);
-                const isLocked = !data.isPro && !isFreeTheme;
-
-                return (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      if (isLocked) setShowProModal(true);
-                      else updateData({ theme: key });
-                    }}
-                    className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all relative ${
-                      isActive ? tc.badgeBg + ' ring-2 ' + tc.focusRing : 'hover:opacity-70 ' + tc.calEmpty.split(' ')[0]
-                    }`}
-                  >
-                    {isLocked && (
-                      <div className="absolute -top-1 -right-1 bg-slate-800 rounded-full p-0.5 shadow-md z-10">
-                        <Crown size={12} className="text-yellow-400" />
-                      </div>
-                    )}
-                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${theme.gradientIcon} shadow-sm border border-white/20 ${isLocked ? 'opacity-50 grayscale' : ''}`}></div>
-                    <span className={`text-[10px] font-bold ${isActive ? tc.textPrimary : tc.textMuted}`}>
-                      {data.language === 'en' ? theme.enName : theme.name}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+          {renderThemeSelector()}
         </section>
 
-        {/* 模块 2：安全与权限 */}
         <section className="space-y-4">
           <h3 className={`text-xs font-black tracking-wider uppercase ${tc.textPrimary} pl-1 flex items-center gap-2`}>
             <ShieldAlert size={14} /> {t.securityAndAccess}
@@ -1863,7 +2054,6 @@ export default function App() {
           </div>
         </section>
 
-        {/* 模块 3：核心训练与数据配置（需要家长锁解锁） */}
         {isParentMode && (
           <section className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
             <h3 className={`text-xs font-black tracking-wider uppercase ${tc.textPrimary} pl-1 flex items-center gap-2`}>
@@ -2108,7 +2298,6 @@ export default function App() {
     );
   };
 
-  // 全新的个人中心弹窗 (Profile Center)
   const ProfileModal = () => {
     if (!showProfileModal) return null;
     return (
@@ -2122,7 +2311,6 @@ export default function App() {
         </div>
 
         <div className="flex-1 p-6 space-y-8">
-          {/* 头像与身份区 */}
           <div className="flex flex-col items-center">
             <div className="relative mb-4 group cursor-pointer">
               {data.avatar ? (
@@ -2141,7 +2329,6 @@ export default function App() {
             <p className={`text-xs font-bold ${tc.textMuted} mt-1 uppercase tracking-wider`}>ID: {user?.uid?.slice(0,8) || '...'}</p>
           </div>
 
-          {/* 会员卡片区 */}
           {data.isPro ? (
             <div className={`relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-6 rounded-3xl shadow-lg flex justify-between items-center text-white`}>
               <Sparkles className="absolute right-10 top-2 opacity-20" size={80} />
@@ -2175,7 +2362,6 @@ export default function App() {
             </div>
           )}
 
-          {/* 账号与安全区 */}
           <div className={`${tc.cardBg} p-5 rounded-3xl shadow-sm border-2 ${user?.isAnonymous ? 'border-orange-300' : tc.borderLight}`}>
             <div className="flex justify-between items-center mb-4">
               <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
@@ -2234,59 +2420,182 @@ export default function App() {
     );
   };
 
+  // 全新杀手锏级系统：BLAZE 青训体系 (Blaze Academy)
   const TaskLibraryModal = () => {
-    if (!showLibrary) return null;
-    const currentLib = TASK_LIBRARY[data.language || 'zh'];
-    const activeData = currentLib[activeLibraryCat];
+    if (!showAcademyModal) return null;
+    const academyData = BLAZE_ACADEMY[data.language || 'zh'];
+    const activeStage = academyData[activeAcademyAgeIdx];
 
     return (
       <div className={`fixed inset-0 z-50 flex flex-col ${tc.appBg} transition-colors duration-300`}>
-        <div className={`flex items-center justify-between px-5 py-4 ${tc.headerBg} border-b ${tc.borderLight}`}>
-          <button onClick={() => setShowLibrary(false)} className={`p-2 -ml-2 ${tc.textMuted} hover:${tc.textPrimary} shrink-0`}>
+        <div className={`flex items-center justify-between px-5 py-4 ${tc.headerBg} border-b ${tc.borderLight} sticky top-0 z-10`}>
+          <button onClick={() => setShowAcademyModal(false)} className={`p-2 -ml-2 ${tc.textMuted} hover:${tc.textPrimary} shrink-0`}>
             <ArrowLeft size={24} />
           </button>
-          <h2 className={`text-lg font-black ${tc.textHeading} truncate`}>{t.openLibrary}</h2>
+          <div className="flex flex-col items-center">
+            <h2 className={`text-base font-black ${tc.textHeading} tracking-wide`}>{t.openAcademy}</h2>
+            <span className={`text-[10px] font-bold ${tc.textMuted}`}>{t.academySub}</span>
+          </div>
           <div className="w-8 shrink-0"></div>
         </div>
 
-        <div className={`flex gap-2 px-5 py-3 overflow-x-auto no-scrollbar border-b ${tc.borderLight}`}>
-          {currentLib.map((cat, idx) => (
+        {/* 顶部年龄段切换 Tab */}
+        <div className={`flex justify-center gap-2 px-5 py-3 ${tc.cardBg} border-b ${tc.borderLight} shadow-sm z-0`}>
+          {academyData.map((stage, idx) => (
             <button
               key={idx}
-              onClick={() => setActiveLibraryCat(idx)}
-              className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all shrink-0 ${
-                activeLibraryCat === idx 
-                  ? tc.btnPrimary + ' shadow-md' 
-                  : tc.cardBg + ' ' + tc.textPrimary + ' hover:opacity-80'
+              onClick={() => { setActiveAcademyAgeIdx(idx); setExpandedAcademyModule(0); }}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${
+                activeAcademyAgeIdx === idx 
+                  ? stage.color + ' shadow-md border ring-2 ring-white ring-offset-1' 
+                  : `${tc.badgeBg} ${tc.textMuted} hover:opacity-80`
               }`}
             >
-              {cat.category}
+              {stage.age}
             </button>
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 space-y-3">
-          {activeData.tasks.map((libTask, idx) => {
-            const isAdded = addedLibraryTaskIds.includes(idx);
-            return (
-              <div key={idx} className={`p-4 ${tc.cardBg} rounded-xl shadow-sm flex items-center justify-between transition-all`}>
-                <div className="flex-1 pr-4 min-w-0">
-                  <div className={`font-bold ${tc.appText} text-base mb-1 truncate`}>{libTask.text}</div>
-                  <div className={`text-xs font-medium ${tc.textPrimary} truncate`}>🎯 {t.targetLabel}: {libTask.target}</div>
+        <div className="flex-1 overflow-y-auto p-5 pb-32 space-y-6 relative">
+          
+          {/* 阶段概览卡片 */}
+          <div className={`relative p-5 rounded-2xl ${activeStage.color} shadow-sm border overflow-hidden`}>
+            <div className="absolute -right-6 -bottom-6 opacity-10">
+              <Dumbbell size={120} />
+            </div>
+            <div className="relative z-10">
+              <h3 className="text-xl font-black mb-1">{activeStage.title}</h3>
+              <p className="text-sm font-medium mb-4 opacity-90 leading-relaxed">{activeStage.target}</p>
+              
+              <div className="flex gap-2">
+                <div className="flex-1 bg-white/40 rounded-lg p-2 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-black uppercase opacity-70 mb-0.5">{data.language === 'en' ? 'Duration' : '单次时长'}</span>
+                  <span className="text-xs font-bold text-center leading-tight">{activeStage.duration}</span>
                 </div>
-                <button
-                  onClick={() => addFromLibrary(libTask, idx)}
-                  disabled={isAdded}
-                  className={`p-2 rounded-xl transition-all flex flex-col items-center justify-center min-w-[56px] shrink-0 ${
-                    isAdded ? 'bg-green-100 text-green-600' : tc.badgeBg + ' ' + tc.textPrimary + ' hover:opacity-80'
-                  }`}
-                >
-                  {isAdded ? <Check size={20} /> : <Plus size={20} />}
-                  {isAdded && <span className="text-[10px] mt-0.5 whitespace-nowrap">{t.taskAdded}</span>}
-                </button>
+                <div className="flex-1 bg-white/40 rounded-lg p-2 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-black uppercase opacity-70 mb-0.5">{data.language === 'en' ? 'Freq' : '训练频次'}</span>
+                  <span className="text-xs font-bold text-center leading-tight">{activeStage.frequency}</span>
+                </div>
+                <div className="flex-1 bg-white/40 rounded-lg p-2 flex flex-col items-center justify-center">
+                  <span className="text-[10px] font-black uppercase opacity-70 mb-0.5">{data.language === 'en' ? 'Core' : '核心重点'}</span>
+                  <span className="text-xs font-bold text-center leading-tight">{activeStage.core}</span>
+                </div>
               </div>
-            );
-          })}
+            </div>
+          </div>
+
+          {/* 动作模块列表 (手风琴) */}
+          <div className="space-y-3">
+            {activeStage.modules.map((module, mIdx) => {
+              const isExpanded = expandedAcademyModule === mIdx;
+              return (
+                <div key={mIdx} className={`${tc.cardBg} rounded-2xl shadow-sm border ${tc.borderLight} overflow-hidden transition-all`}>
+                  <button 
+                    onClick={() => setExpandedAcademyModule(isExpanded ? -1 : mIdx)}
+                    className="w-full flex items-center justify-between p-4 bg-white/50 hover:bg-white transition-colors"
+                  >
+                    <span className={`font-black text-sm ${tc.textHeading} text-left`}>{module.name}</span>
+                    {isExpanded ? <ChevronUp size={20} className={tc.textMuted} /> : <ChevronDown size={20} className={tc.textMuted} />}
+                  </button>
+                  
+                  {isExpanded && (
+                    <div className="px-4 pb-4 space-y-3">
+                      {module.items.map((item, iIdx) => {
+                        const isLocked = !data.isPro && iIdx > 0;
+                        return (
+                          <div 
+                            key={iIdx} 
+                            onClick={() => { if (isLocked) setShowProModal(true); }}
+                            className={`p-3 rounded-xl border flex flex-col gap-2 relative overflow-hidden transition-all ${
+                              isLocked ? 'bg-slate-50 border-slate-100 cursor-pointer group' : `${tc.inputBg} ${tc.borderLight}`
+                            }`}
+                          >
+                            <div className={`flex justify-between items-start ${isLocked ? 'blur-[3px] opacity-40 select-none' : ''}`}>
+                              <div className="flex-1 pr-3">
+                                <div className={`font-bold text-sm ${tc.appText} mb-0.5`}>{item.name}</div>
+                                <div className={`text-[11px] ${tc.textMuted} leading-tight`}>{item.desc}</div>
+                              </div>
+                              <span className={`text-[10px] font-black px-2 py-1 rounded bg-white shadow-sm border ${tc.borderLight} ${activeStage.iconColor} shrink-0`}>
+                                {item.tag}
+                              </span>
+                            </div>
+                            
+                            <div className={`flex items-center gap-1.5 mt-1 ${isLocked ? 'blur-[3px] opacity-40 select-none' : ''}`}>
+                              <CheckCircle2 size={14} className={tc.textPrimary} />
+                              <span className={`text-xs font-bold ${tc.textPrimary}`}>{item.target}</span>
+                            </div>
+
+                            {/* 锁定的视觉覆盖层 */}
+                            {isLocked && (
+                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[1px]">
+                                <div className="bg-slate-800 text-white rounded-full p-2 mb-1 shadow-md group-hover:scale-110 transition-transform">
+                                  <LockKeyhole size={16} />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-800 tracking-widest">{t.proLocked}</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 杀手锏：一键导入参考周训练 */}
+          <div className="pt-6 mt-4 border-t-2 border-dashed border-slate-200">
+            <h3 className={`text-base font-black ${tc.textHeading} mb-4 flex items-center gap-2`}>
+              <CalendarDays size={20} className={activeStage.iconColor} /> 
+              {data.language === 'en' ? 'Reference Weekly Plan' : '参考周训练安排'}
+            </h3>
+            
+            <div className="space-y-3">
+              {activeStage.weeklyPlan.map((dayPlan, wIdx) => {
+                const isImported = importedWeeklyIds.includes(wIdx);
+                return (
+                  <div key={wIdx} className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} flex flex-col`}>
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-black ${activeStage.color} px-2 py-1 rounded shadow-sm`}>{dayPlan.day}</span>
+                        <span className={`text-sm font-bold ${tc.appText}`}>{dayPlan.title}</span>
+                      </div>
+                      <span className={`text-[10px] font-bold ${tc.textMuted}`}>{dayPlan.duration}</span>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {dayPlan.tasks.map((task, tIdx) => (
+                        <span key={tIdx} className={`text-[10px] ${tc.inputBg} ${tc.textMuted} px-2 py-1 rounded-md border ${tc.borderLight}`}>
+                          {task}
+                        </span>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => importAcademyRoutine(dayPlan, wIdx)}
+                      disabled={isImported}
+                      className={`w-full py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all ${
+                        isImported 
+                          ? 'bg-green-500 text-white scale-[0.98]' 
+                          : !data.isPro 
+                            ? 'bg-slate-800 text-white hover:bg-slate-700 shadow-md'
+                            : `${tc.btnPrimary} shadow-md active:scale-95`
+                      }`}
+                    >
+                      {isImported ? (
+                        <><Check size={16} /> {t.taskAdded}</>
+                      ) : !data.isPro ? (
+                        <><Crown size={14} className="text-yellow-400"/> PRO {t.importToToday}</>
+                      ) : (
+                        <><Download size={16} /> {t.importToToday}</>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -2332,7 +2641,6 @@ export default function App() {
     );
   };
 
-  // 全新支持主题色的注册/登录弹窗
   const AuthModal = () => {
     if (!showAuthModal) return null;
     return (
@@ -2644,7 +2952,6 @@ export default function App() {
             <span className="font-bold text-sm">{data.points}</span>
           </div>
           
-          {/* 这里是个人中心的入口 */}
           <button onClick={() => setShowProfileModal(true)} className="relative shrink-0 active:scale-95 transition-transform">
             {data.avatar ? (
               <img src={data.avatar} alt="User Avatar" className={`w-10 h-10 rounded-full object-cover border-2 ${tc.borderLight} shadow-sm ml-1`} />
