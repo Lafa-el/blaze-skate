@@ -2416,7 +2416,7 @@ export default function App() {
           ))}
         </div>
 
-{/* 新增的头部判断逻辑：针对 4-6岁(zh) 启用截图专属设计，其他阶段保留默认 */}
+{/* 头部分支渲染逻辑 */}
         {activeStage.id === 'age4_6' && data.language === 'zh' ? (
           <div className="space-y-4">
             {/* 1. 顶部启蒙阶段卡片 */}
@@ -2457,8 +2457,48 @@ export default function App() {
               <span className="font-bold text-gray-900">教练须知：</span>该阶段儿童骨骼肌肉系统尚未发育成熟，严禁任何负重训练、高强度跳跃及对抗训练。以身体意识唤醒、感官协调和运动趣味为核心目标。
             </div>
           </div>
+        ) : activeStage.id === 'age7_10' && data.language === 'zh' ? (
+          <div className="space-y-4">
+            {/* 1. 顶部进阶阶段卡片 */}
+            <div className="bg-[#f8f8f5] p-5 rounded-xl border border-gray-200/50 flex items-start gap-4">
+              <div className="w-12 h-12 bg-[#bfdbfe] rounded-full flex items-center justify-center shrink-0">
+                <span className="text-2xl leading-none">⚡</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-gray-800 mb-1">进阶阶段·7-10岁</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  系统建立速滑专项陆地技术，引入基础力量与爆发力训练。每次60-75分钟，每周3-4次。开始区分短道/大道方向，技术动作规范化是核心。
+                </p>
+              </div>
+            </div>
+
+            {/* 2. 中间四个参数指标卡片 */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
+                <span className="text-[11px] text-gray-500 font-medium">核心目标</span>
+                <span className="text-[13px] font-bold text-gray-900">专项技术规范化</span>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
+                <span className="text-[11px] text-gray-500 font-medium">单次时长</span>
+                <span className="text-[13px] font-bold text-gray-900">60-75 分钟</span>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
+                <span className="text-[11px] text-gray-500 font-medium">频率</span>
+                <span className="text-[13px] font-bold text-gray-900">每周 3-4 次</span>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm flex flex-col justify-center gap-1.5">
+                <span className="text-[11px] text-gray-500 font-medium">负荷特点</span>
+                <span className="text-[13px] font-bold text-gray-900">中低强度 + 动作质量优先</span>
+              </div>
+            </div>
+
+            {/* 3. 底部教练须知卡片 */}
+            <div className="bg-[#f8f8f5] p-4 rounded-r-xl border-l-4 border-[#3b82f6] text-sm text-gray-600 leading-relaxed">
+              <span className="font-bold text-gray-900">训练原则：</span>该阶段是“技术窗口期”，动作模式一旦错误将难以纠正。每个练习优先保证动作质量，宁可减量减速，不可降低动作标准。开始引入少量自重力量训练。
+            </div>
+          </div>
         ) : (
-          /* 原有的默认渲染逻辑 (7-10岁, 11-16岁以及英文版生效) */
+          /* 原有的默认渲染逻辑 (11-16岁以及英文版生效) */
           <div className={`relative p-5 rounded-2xl ${activeStage.color} shadow-sm border overflow-hidden`}>
             <div className="absolute -right-6 -bottom-6 opacity-10">
               <Dumbbell size={120} />
