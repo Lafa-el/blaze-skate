@@ -266,8 +266,8 @@ const BLAZE_ACADEMY = {
       title: 'Intro Stage',
       age: 'Age 4-6',
       target: 'Gamified training to build interest & basic coordination. Focus on participation and habits, absolutely no competition-driven results.',
-      duration: '30-45 mins',
-      frequency: '2-3 / week',
+      duration: '30-45 Mins',
+      frequency: '2-3 / per week',
       core: 'Gamified & Interactive',
       color: 'bg-amber-100 text-amber-800 border-amber-200',
       iconColor: 'text-amber-500',
@@ -319,8 +319,8 @@ const BLAZE_ACADEMY = {
       title: 'Advanced Stage',
       age: 'Age 7-10',
       target: 'Systematically establish dryland skating techniques, introduce basic strength & plyometrics. Quality of form is the absolute priority.',
-      duration: '60-75 mins',
-      frequency: '3-4 / week',
+      duration: '60-75 Mins',
+      frequency: '3-4 / per week',
       core: 'Form & Quality First',
       color: 'bg-blue-100 text-blue-800 border-blue-200',
       iconColor: 'text-blue-500',
@@ -374,8 +374,8 @@ const BLAZE_ACADEMY = {
       title: 'Pro Youth Stage',
       age: 'Age 11-16',
       target: 'Full transition to high-intensity competitive conditioning. Maximize strength, explosive power, and anaerobic endurance.',
-      duration: '90-120 mins',
-      frequency: '4-6 / week',
+      duration: '90-120 Mins',
+      frequency: '4-6 / per week',
       core: 'High Intensity & Load',
       color: 'bg-rose-100 text-rose-800 border-rose-200',
       iconColor: 'text-rose-500',
@@ -2543,7 +2543,7 @@ export default function App() {
               <span className="font-bold text-gray-900">{data.language === 'zh' ? '周期化原则：' : 'Periodization: '}</span>
               {data.language === 'zh'
                 ? '赛前期（8-12周）以技术完善和速度耐力为主；准备期（12-16周）以最大力量和爆发力为主；赛季期维持力量，以冰上训练为主；过渡期（4周）以主动恢复为主。陆地训练强度随赛季调整。'
-                : 'Pre-season (8-12w) focuses on tech & speed endurance; Prep (12-16w) on max strength & power; In-season maintains strength; Transition (4w) for active recovery.'}
+                : 'Pre-season (8-12Weeks) focuses on tech & speed endurance; Prep (12-16Weeks) on max strength & power; In-season maintains strength; Transition (4Weeks) for active recovery.'}
             </div>
           </div>
         )}
