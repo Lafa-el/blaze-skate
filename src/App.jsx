@@ -42,7 +42,9 @@ import {
   Mail,
   Smartphone,
   UserCircle,
-  LogOut
+  LogOut,
+  SlidersHorizontal,
+  ShieldAlert
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 // 引入了 signInWithEmailAndPassword 用于登录已有账号
@@ -349,11 +351,15 @@ const translations = {
     openLibrary: '速度滑冰陆地训练核心动作库',
     closeLibrary: '关闭内容库',
     taskAdded: '已添加',
+    profileTitle: '个人中心',
+    appPreferences: '应用偏好',
+    trainingConfig: '训练与核心数据',
+    securityAndAccess: '安全与权限',
     profileAvatar: '自定义头像',
-    uploadAvatarDesc: '上传你的专属照片',
+    uploadAvatarDesc: '点击头像上传你的专属照片',
     brandSub: '冰焰速滑训练系统',
     parentMode: '家长 / 教练模式',
-    unlockPrompt: '请输入 4 位数字密码解锁编辑权限',
+    unlockPrompt: '请输入 4 位数字密码解锁核心编辑权限',
     setPinPrompt: '设置 4 位数字密码以锁定训练排课与成绩录入',
     pinPlaceholder: '4位数字',
     unlock: '解锁',
@@ -370,7 +376,7 @@ const translations = {
     redeemSuccess: '兑换成功！',
     enjoyReward: '快去享受你的【{reward}】吧！',
     close: '关闭',
-    unlockedStatus: '权限已解锁',
+    unlockedStatus: '核心权限已解锁',
     emojiPlaceholder: '图标 (Emoji)',
     itemNamePlaceholder: '商品名称',
     pointsRequired: '所需积分:',
@@ -384,7 +390,7 @@ const translations = {
     accountStatus: '账号安全与同步',
     guestMode: '游客模式 (仅本地缓存)',
     guestWarning: '清理微信或浏览器缓存会导致数据丢失，请尽快注册以开启云同步。',
-    bindAccountBtn: '注册并保存数据',
+    bindAccountBtn: '注册 / 登录',
     officialAccount: '正式账号 (云端同步中)',
     manageAccountBtn: '账号管理',
     authTitle: '注册 / 登录',
@@ -400,7 +406,7 @@ const translations = {
     bound: '已绑定',
     unbound: '未绑定',
     logout: '退出登录',
-    version: '版本 v1.0.0',
+    version: '版本 v1.1.0',
     copyright: '© 2026 BlazeSkate.com 保留所有权利。',
     greetings: [
       '夜深了，良好的睡眠也是训练的一部分 🌙',
@@ -468,7 +474,7 @@ const translations = {
     points: 'pts',
     redeem: 'Redeem',
     notEnough: 'Not enough',
-    settings: 'App Settings',
+    settings: 'Settings',
     customizePlan: 'Customize your training plan',
     raceDate: 'Race Target Date',
     weeklyTemplate: 'Weekly Template',
@@ -494,10 +500,14 @@ const translations = {
     openLibrary: 'Speed Skating Dryland Task Library',
     closeLibrary: 'Close Library',
     taskAdded: 'Added',
+    profileTitle: 'My Profile',
+    appPreferences: 'App Preferences',
+    trainingConfig: 'Training & Data',
+    securityAndAccess: 'Security & Access',
     profileAvatar: 'Custom Avatar',
-    uploadAvatarDesc: 'Upload your profile photo',
+    uploadAvatarDesc: 'Tap avatar to upload photo',
     brandSub: 'TRAINING PLATFORM',
-    parentMode: 'Parent Mode',
+    parentMode: 'Parent / Coach Mode',
     unlockPrompt: 'Enter 4-digit PIN to unlock editing',
     setPinPrompt: 'Set a 4-digit PIN to lock planning & records',
     pinPlaceholder: '4-digit',
@@ -515,7 +525,7 @@ const translations = {
     redeemSuccess: 'Success!',
     enjoyReward: 'Go enjoy your [{reward}]!',
     close: 'Close',
-    unlockedStatus: 'Unlocked',
+    unlockedStatus: 'Core Access Unlocked',
     emojiPlaceholder: 'Emoji',
     itemNamePlaceholder: 'Item Name',
     pointsRequired: 'Cost:',
@@ -527,7 +537,7 @@ const translations = {
     keepItUp: 'Keep it up!',
     // Account system
     accountStatus: 'Account & Sync',
-    guestMode: 'Guest Mode (Local Only)',
+    guestMode: 'Guest Mode (Local)',
     guestWarning: 'Clearing your browser cache will erase your data. Register to enable cloud sync.',
     bindAccountBtn: 'Register / Login',
     officialAccount: 'Official Account (Synced)',
@@ -545,7 +555,7 @@ const translations = {
     bound: 'Linked',
     unbound: 'Not Linked',
     logout: 'Log Out',
-    version: 'Version v1.0.0',
+    version: 'Version v1.1.0',
     copyright: '© 2026 BlazeSkate.com All rights reserved.',
     greetings: [
       'Late night. Rest is part of your training. 🌙',
@@ -644,7 +654,6 @@ const getPrevDayStr = (dateStr) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 };
 
-// 辅助函数：根据不同的项目名称获取它在数据库里的存储Key
 const getRecordsKey = (dist) => {
   if (dist === '500m') return 'records';
   if (dist === '777m') return 'records777';
@@ -702,12 +711,11 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [celebration, setCelebration] = useState(null);
 
-  // PRO Modal State
+  // Modals State
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
   const [showPaymentInfo, setShowPaymentInfo] = useState(false); 
   const [isCopied, setIsCopied] = useState(false); 
-  
-  // 账号系统新增的状态
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [authEmail, setAuthEmail] = useState('');
@@ -770,16 +778,13 @@ export default function App() {
     
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        // 如果本地缓存里已经有正式账号或历史匿名账号，直接使用
         setUser(currentUser);
       } else {
-        // 只有在明确判断出“没有任何登录记录”时，才主动创建新的匿名账号
         try {
           await signInAnonymously(auth);
-          // 匿名登录成功后，onAuthStateChanged 会再次触发并带上新账号，所以这里不用手动 setUser
         } catch (error) {
           console.error("Auth error:", error);
-          setLoading(false); // 防止无限卡死在加载动画
+          setLoading(false);
         }
       }
     });
@@ -832,7 +837,6 @@ export default function App() {
     await setDoc(userRef, safeData, { merge: true });
   };
 
-  // 修复并增强账号注册/登录逻辑
   const handleLinkAccount = async () => {
     if (!authEmail || !authPassword || authPassword.length < 6) {
       setAuthError(data.language === 'en' ? 'Password must be at least 6 characters' : '密码长度至少为 6 位'); 
@@ -841,7 +845,6 @@ export default function App() {
     setIsAuthLoading(true);
     setAuthError('');
     try {
-      // 尝试绑定当前游客账号到这个邮箱（注册）
       const credential = EmailAuthProvider.credential(authEmail, authPassword);
       await linkWithCredential(auth.currentUser, credential);
       setShowAuthModal(false);
@@ -850,7 +853,6 @@ export default function App() {
       alert(data.language === 'en' ? "Successfully linked! Your data is now saved." : "绑定成功！您的数据已永久保存。");
     } catch (error) {
       console.error(error);
-      // 如果发现这个邮箱已经被注册过了
       if (error.code === 'auth/email-already-in-use' || error.code === 'auth/credential-already-in-use') {
         const confirmMsg = data.language === 'en' 
           ? "This email is already registered. Would you like to log in to this existing account instead?\n(Note: Current local guest data will be replaced by your cloud data.)"
@@ -858,7 +860,6 @@ export default function App() {
           
         if (window.confirm(confirmMsg)) {
           try {
-            // 直接执行登录已有账号
             await signInWithEmailAndPassword(auth, authEmail, authPassword);
             setShowAuthModal(false);
             setAuthEmail('');
@@ -885,6 +886,7 @@ export default function App() {
     if (window.confirm(confirmMsg)) {
       await signOut(auth);
       setShowAccountModal(false);
+      setShowProfileModal(false);
       window.location.reload(); 
     }
   };
@@ -1052,7 +1054,7 @@ export default function App() {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_SIZE = 150; 
+        const MAX_SIZE = 250; // 头像大图所以扩大了尺寸限制
         let width = img.width;
         let height = img.height;
 
@@ -1678,6 +1680,7 @@ export default function App() {
     );
   };
 
+  // 全新重构的设置页面 (SettingsView)
   const SettingsView = () => {
     const handleSaveSettings = () => {
       updateData({ 
@@ -1725,239 +1728,153 @@ export default function App() {
       await updateData({ language: targetLang });
     };
 
-    const renderThemeSelector = () => (
-      <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
-        <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-          <Palette size={18} /> {t.themeSettingTitle}
-        </h3>
-        <div className="grid grid-cols-4 gap-3">
-          {Object.keys(THEMES).map(key => {
-            const theme = THEMES[key];
-            const isActive = (data.theme || 'purple') === key;
-            const isFreeTheme = FREE_THEMES.includes(key);
-            const isLocked = !data.isPro && !isFreeTheme;
-
-            return (
-              <button
-                key={key}
-                onClick={() => {
-                  if (isLocked) setShowProModal(true);
-                  else updateData({ theme: key });
-                }}
-                className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all relative ${
-                  isActive ? tc.badgeBg + ' ring-2 ' + tc.focusRing : 'hover:opacity-70 ' + tc.calEmpty.split(' ')[0]
-                }`}
-              >
-                {isLocked && (
-                  <div className="absolute -top-1 -right-1 bg-slate-800 rounded-full p-0.5 shadow-md z-10">
-                    <Crown size={12} className="text-yellow-400" />
-                  </div>
-                )}
-                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${theme.gradientIcon} shadow-sm border border-white/20 ${isLocked ? 'opacity-50 grayscale' : ''}`}></div>
-                <span className={`text-[10px] font-bold ${isActive ? tc.textPrimary : tc.textMuted}`}>
-                  {data.language === 'en' ? theme.enName : theme.name}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    );
-
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div>
           <h2 className={`text-2xl font-black ${tc.textHeading}`}>{t.settings}</h2>
           <p className={`text-sm ${tc.textMuted} mt-1`}>{t.customizePlan}</p>
         </div>
 
-        {data.isPro ? (
-          <div className={`relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-5 rounded-2xl shadow-lg flex justify-between items-center text-white`}>
-            <Sparkles className="absolute right-10 top-2 opacity-20" size={60} />
-            <div>
-              <h3 className="font-black text-lg flex items-center gap-1.5 tracking-tight">
-                <Crown size={22} className="text-yellow-200 fill-yellow-200/20" /> 
-                {t.proActiveTitle}
-              </h3>
-              <p className="text-xs font-medium opacity-90 mt-0.5">{t.proActiveSub}</p>
-            </div>
-            <div className="bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm text-xs font-bold shrink-0">
-              {t.proTag}
-            </div>
-          </div>
-        ) : (
-          <div 
-            onClick={() => setShowProModal(true)}
-            className={`relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-5 rounded-2xl shadow-lg flex justify-between items-center text-white cursor-pointer hover:opacity-95 transition-all transform hover:scale-[1.02]`}
-          >
-            <Sparkles className="absolute right-10 top-2 opacity-20" size={60} />
-            <div>
-              <h3 className="font-black text-lg flex items-center gap-1.5 tracking-tight">
-                <Crown size={22} className="text-yellow-200 fill-yellow-200/20" /> 
-                {t.proTitle}
-              </h3>
-              <p className="text-xs font-medium opacity-90 mt-0.5">{t.proSubtitle}</p>
-            </div>
-            <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm shrink-0">
-              <ChevronRight size={20} className="text-white" />
-            </div>
-          </div>
-        )}
-
-        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm border-2 ${user?.isAnonymous ? 'border-orange-300' : tc.borderLight}`}>
-          <div className="flex justify-between items-center mb-3">
-            <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-              <Cloud size={18} className={user?.isAnonymous ? 'text-orange-500' : 'text-blue-500'} />
-              {t.accountStatus}
-            </h3>
-            {user?.isAnonymous ? (
-              <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">{t.guestMode}</span>
-            ) : (
-              <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded">{t.officialAccount}</span>
-            )}
-          </div>
-          
-          {user?.isAnonymous ? (
-            <div className="space-y-4">
-              <p className={`text-xs ${tc.textMuted} leading-relaxed bg-orange-50/50 p-3 rounded-xl border border-orange-100/50`}>
-                {t.guestWarning}
-              </p>
-              <button 
-                onClick={() => setShowAuthModal(true)}
-                className={`w-full ${tc.btnPrimary} py-3 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95`}
-              >
-                {t.bindAccountBtn}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 bg-blue-50/50 p-3 rounded-xl border border-blue-100/50">
-                <div className={`w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 shrink-0`}>
-                  <UserCircle size={24} />
-                </div>
-                <div className="min-w-0">
-                  <div className="font-bold text-blue-900 truncate">{data.username || user?.email || '已绑定正式账号'}</div>
-                  <div className="text-xs text-blue-600 truncate">{user?.email || '手机号绑定用户'}</div>
-                </div>
-              </div>
-              <button 
-                onClick={() => setShowAccountModal(true)}
-                className={`w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95`}
-              >
-                {t.manageAccountBtn}
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
-          <h3 className={`${tc.textHeading} font-bold flex items-center gap-2 shrink-0`}>
-            <Globe size={18} /> {t.language}
+        {/* 模块 1：应用偏好设置 */}
+        <section className="space-y-4">
+          <h3 className={`text-xs font-black tracking-wider uppercase ${tc.textPrimary} pl-1 flex items-center gap-2`}>
+            <SlidersHorizontal size={14} /> {t.appPreferences}
           </h3>
-          <button 
-            onClick={toggleLanguage}
-            className={`${tc.badgeBg} ${tc.textPrimary} px-4 py-2 rounded-lg font-bold text-sm hover:opacity-80 transition-colors flex items-center gap-2 shrink-0 whitespace-nowrap`}
-          >
-            {data.language === 'en' ? '🇨🇳 中文' : '🇬🇧 English'}
-          </button>
-        </div>
-
-        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm border-2 ${data.parentPin && !isUnlocked ? 'border-orange-300 bg-orange-50/30' : tc.borderLight}`}>
-          <div className="flex justify-between items-center mb-3">
-            <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-              {data.parentPin && !isUnlocked ? <Lock size={18} className="text-orange-500" /> : <ShieldCheck size={18} className="text-green-500" />}
-              {t.parentMode}
-              {!data.isPro && <Crown size={14} className="text-yellow-500" />}
-            </h3>
-            {data.parentPin && isUnlocked && (
-              <button onClick={() => setIsUnlocked(false)} className={`text-xs font-bold ${tc.btnCancel} px-3 py-1.5 rounded-lg shrink-0 whitespace-nowrap`}>
-                {t.lockNow}
-              </button>
-            )}
-          </div>
           
-          {!data.parentPin && (
-            <div className="space-y-3">
-              <p className={`text-xs ${tc.textMuted}`}>{t.setPinPrompt}</p>
-              <div className="flex gap-2">
-                <input 
-                  type="password" 
-                  maxLength={4}
-                  value={pinInput}
-                  disabled={!data.isPro}
-                  onClick={() => !data.isPro && setShowProModal(true)}
-                  onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
-                  placeholder={t.pinPlaceholder}
-                  className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold disabled:opacity-50`}
-                />
-                <button onClick={data.isPro ? handleSetPin : () => setShowProModal(true)} className={`${tc.btnPrimary} px-4 py-2 rounded-xl font-bold text-sm shadow-sm shrink-0 whitespace-nowrap ${!data.isPro ? 'opacity-90' : ''}`}>
-                  {data.isPro ? String(t.setPin) : <span className="flex items-center"><Crown size={14} className="inline mr-1 -mt-0.5"/>PRO</span>}
-                </button>
-              </div>
-            </div>
-          )}
+          <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
+            <h3 className={`${tc.textHeading} font-bold flex items-center gap-2 shrink-0`}>
+              <Globe size={18} className={tc.textMuted} /> {t.language}
+            </h3>
+            <button 
+              onClick={toggleLanguage}
+              className={`${tc.badgeBg} ${tc.textPrimary} px-4 py-2 rounded-lg font-bold text-sm hover:opacity-80 transition-colors flex items-center gap-2 shrink-0 whitespace-nowrap`}
+            >
+              {data.language === 'en' ? '🇨🇳 中文' : '🇬🇧 English'}
+            </button>
+          </div>
 
-          {data.parentPin && !isUnlocked && (
-            <div className="space-y-3">
-              <p className={`text-xs text-orange-600 font-medium`}>{t.unlockPrompt}</p>
-              <div className="flex gap-2">
-                <input 
-                  type="password" 
-                  maxLength={4}
-                  value={pinInput}
-                  onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
-                  placeholder="****"
-                  className={`flex-1 min-w-0 bg-white border border-orange-200 focus:ring-orange-400 rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold text-gray-800`}
-                />
-                <button onClick={handleUnlock} className={`bg-orange-500 hover:bg-orange-400 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center gap-1 shrink-0 whitespace-nowrap`}>
-                  <Unlock size={16} /> {t.unlock}
-                </button>
-              </div>
-            </div>
-          )}
+          <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
+            <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
+              <Palette size={18} className={tc.textMuted} /> {t.themeSettingTitle}
+            </h3>
+            <div className="grid grid-cols-4 gap-3">
+              {Object.keys(THEMES).map(key => {
+                const theme = THEMES[key];
+                const isActive = (data.theme || 'purple') === key;
+                const isFreeTheme = FREE_THEMES.includes(key);
+                const isLocked = !data.isPro && !isFreeTheme;
 
-          {data.parentPin && isUnlocked && (
-            <div className="flex justify-between items-center bg-green-50 p-3 rounded-xl border border-green-100">
-              <span className="text-sm font-bold text-green-700">{t.unlockedStatus}</span>
-              <button onClick={handleRemovePin} className="text-xs font-bold text-red-500 hover:bg-red-50 px-2 py-1 rounded shrink-0 whitespace-nowrap">
-                {t.removePin}
-              </button>
-            </div>
-          )}
-
-          {pinError && <div className={`text-xs ${pinError.includes('✅') ? 'text-green-600' : 'text-red-500'} font-bold mt-2 ${pinError.includes('✅') ? '' : 'animate-pulse'}`}>{pinError}</div>}
-        </div>
-
-        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex items-center justify-between`}>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              {data.avatar ? (
-                <img src={data.avatar} alt="Avatar" className={`w-16 h-16 rounded-full object-cover border-2 ${tc.borderLight}`} />
-              ) : (
-                <div className={`w-16 h-16 rounded-full ${tc.badgeBg} flex items-center justify-center border-2 ${tc.borderLight}`}>
-                  <User size={24} className={tc.textPrimary} />
-                </div>
-              )}
-              <label className={`absolute bottom-0 right-0 ${tc.btnPrimary} p-1.5 rounded-full cursor-pointer shadow-md border-2 ${tc.borderLight} transition-all flex items-center justify-center`}>
-                <Camera size={14} />
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-              </label>
-            </div>
-            <div>
-              <h3 className={`${tc.textHeading} font-bold`}>{t.profileAvatar}</h3>
-              <p className={`text-xs ${tc.textMuted}`}>{t.uploadAvatarDesc}</p>
+                return (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      if (isLocked) setShowProModal(true);
+                      else updateData({ theme: key });
+                    }}
+                    className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all relative ${
+                      isActive ? tc.badgeBg + ' ring-2 ' + tc.focusRing : 'hover:opacity-70 ' + tc.calEmpty.split(' ')[0]
+                    }`}
+                  >
+                    {isLocked && (
+                      <div className="absolute -top-1 -right-1 bg-slate-800 rounded-full p-0.5 shadow-md z-10">
+                        <Crown size={12} className="text-yellow-400" />
+                      </div>
+                    )}
+                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${theme.gradientIcon} shadow-sm border border-white/20 ${isLocked ? 'opacity-50 grayscale' : ''}`}></div>
+                    <span className={`text-[10px] font-bold ${isActive ? tc.textPrimary : tc.textMuted}`}>
+                      {data.language === 'en' ? theme.enName : theme.name}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           </div>
-        </div>
+        </section>
 
-        {renderThemeSelector()}
+        {/* 模块 2：安全与权限 */}
+        <section className="space-y-4">
+          <h3 className={`text-xs font-black tracking-wider uppercase ${tc.textPrimary} pl-1 flex items-center gap-2`}>
+            <ShieldAlert size={14} /> {t.securityAndAccess}
+          </h3>
 
+          <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm border-2 ${data.parentPin && !isUnlocked ? 'border-orange-300 bg-orange-50/30' : tc.borderLight}`}>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
+                {data.parentPin && !isUnlocked ? <Lock size={18} className="text-orange-500" /> : <ShieldCheck size={18} className="text-green-500" />}
+                {t.parentMode}
+                {!data.isPro && <Crown size={14} className="text-yellow-500" />}
+              </h3>
+              {data.parentPin && isUnlocked && (
+                <button onClick={() => setIsUnlocked(false)} className={`text-xs font-bold ${tc.btnCancel} px-3 py-1.5 rounded-lg shrink-0 whitespace-nowrap`}>
+                  {t.lockNow}
+                </button>
+              )}
+            </div>
+            
+            {!data.parentPin && (
+              <div className="space-y-3">
+                <p className={`text-xs ${tc.textMuted}`}>{t.setPinPrompt}</p>
+                <div className="flex gap-2">
+                  <input 
+                    type="password" 
+                    maxLength={4}
+                    value={pinInput}
+                    disabled={!data.isPro}
+                    onClick={() => !data.isPro && setShowProModal(true)}
+                    onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
+                    placeholder={t.pinPlaceholder}
+                    className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold disabled:opacity-50`}
+                  />
+                  <button onClick={data.isPro ? handleSetPin : () => setShowProModal(true)} className={`${tc.btnPrimary} px-4 py-2 rounded-xl font-bold text-sm shadow-sm shrink-0 whitespace-nowrap ${!data.isPro ? 'opacity-90' : ''}`}>
+                    {data.isPro ? String(t.setPin) : <span className="flex items-center"><Crown size={14} className="inline mr-1 -mt-0.5"/>PRO</span>}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {data.parentPin && !isUnlocked && (
+              <div className="space-y-3">
+                <p className={`text-xs text-orange-600 font-medium`}>{t.unlockPrompt}</p>
+                <div className="flex gap-2">
+                  <input 
+                    type="password" 
+                    maxLength={4}
+                    value={pinInput}
+                    onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
+                    placeholder="****"
+                    className={`flex-1 min-w-0 bg-white border border-orange-200 focus:ring-orange-400 rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold text-gray-800`}
+                  />
+                  <button onClick={handleUnlock} className={`bg-orange-500 hover:bg-orange-400 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center gap-1 shrink-0 whitespace-nowrap`}>
+                    <Unlock size={16} /> {t.unlock}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {data.parentPin && isUnlocked && (
+              <div className="flex justify-between items-center bg-green-50 p-3 rounded-xl border border-green-100">
+                <span className="text-sm font-bold text-green-700">{t.unlockedStatus}</span>
+                <button onClick={handleRemovePin} className="text-xs font-bold text-red-500 hover:bg-red-50 px-2 py-1 rounded shrink-0 whitespace-nowrap">
+                  {t.removePin}
+                </button>
+              </div>
+            )}
+
+            {pinError && <div className={`text-xs ${pinError.includes('✅') ? 'text-green-600' : 'text-red-500'} font-bold mt-2 ${pinError.includes('✅') ? '' : 'animate-pulse'}`}>{pinError}</div>}
+          </div>
+        </section>
+
+        {/* 模块 3：核心训练与数据配置（需要家长锁解锁） */}
         {isParentMode && (
-          <>
+          <section className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+            <h3 className={`text-xs font-black tracking-wider uppercase ${tc.textPrimary} pl-1 flex items-center gap-2`}>
+              <Settings size={14} /> {t.trainingConfig}
+            </h3>
+
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <div className="flex justify-between items-center">
                 <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                  <LineChart size={18} /> {t.distanceManagement}
+                  <LineChart size={18} className={tc.textMuted} /> {t.distanceManagement}
                   {!data.isPro && <Crown size={14} className="text-yellow-500" />}
                 </h3>
                 <button 
@@ -1996,7 +1913,7 @@ export default function App() {
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <div className="flex justify-between items-center">
                 <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                  <ShoppingCart size={18} /> {t.shopManagement}
+                  <ShoppingCart size={18} className={tc.textMuted} /> {t.shopManagement}
                   {!data.isPro && <Crown size={14} className="text-yellow-500" />}
                 </h3>
                 <button 
@@ -2068,7 +1985,7 @@ export default function App() {
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <div className="flex justify-between items-center">
                 <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                  <Trophy size={18} /> {t.raceDate}
+                  <Trophy size={18} className={tc.textMuted} /> {t.raceDate}
                 </h3>
                 <button 
                   onClick={() => setFormRaces([...formRaces, { id: Date.now(), name: '', date: '' }])}
@@ -2117,7 +2034,7 @@ export default function App() {
 
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                <Calendar size={18} /> {t.weeklyTemplate}
+                <Calendar size={18} className={tc.textMuted} /> {t.weeklyTemplate}
               </h3>
               <div className="space-y-3">
                 {(t.daysNames || []).map((day, index) => (
@@ -2136,7 +2053,7 @@ export default function App() {
 
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                <Award size={18} /> {t.pointsSettingTitle}
+                <Award size={18} className={tc.textMuted} /> {t.pointsSettingTitle}
                 {!data.isPro && <Crown size={14} className="text-yellow-500" />}
               </h3>
               <div className={`space-y-3 ${!data.isPro && 'opacity-60 grayscale'}`}>
@@ -2186,21 +2103,132 @@ export default function App() {
                 </>
               )}
             </button>
-          </>
+          </section>
         )}
+      </div>
+    );
+  };
 
-        <div className={`pt-8 pb-4 flex flex-col items-center justify-center opacity-80`}>
-          <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${tc.gradientIcon} flex items-center justify-center shadow-md mb-3`}>
-            <Flame size={24} className="text-white" />
+  // 全新的个人中心弹窗 (Profile Center)
+  const ProfileModal = () => {
+    if (!showProfileModal) return null;
+    return (
+      <div className={`fixed inset-0 z-[60] flex flex-col ${tc.appBg} overflow-y-auto animate-in fade-in slide-in-from-right-8 duration-300`}>
+        <div className={`flex items-center justify-between px-5 py-4 ${tc.headerBg} border-b ${tc.borderLight} sticky top-0 z-10`}>
+          <button onClick={() => setShowProfileModal(false)} className={`p-2 -ml-2 ${tc.textMuted} hover:${tc.textPrimary} shrink-0`}>
+            <ArrowLeft size={24} />
+          </button>
+          <h2 className={`text-lg font-black ${tc.textHeading}`}>{t.profileTitle}</h2>
+          <div className="w-8 shrink-0"></div>
+        </div>
+
+        <div className="flex-1 p-6 space-y-8">
+          {/* 头像与身份区 */}
+          <div className="flex flex-col items-center">
+            <div className="relative mb-4 group cursor-pointer">
+              {data.avatar ? (
+                <img src={data.avatar} alt="Avatar" className={`w-24 h-24 rounded-full object-cover border-4 ${tc.borderLight} shadow-lg`} />
+              ) : (
+                <div className={`w-24 h-24 rounded-full ${tc.badgeBg} flex items-center justify-center border-4 ${tc.borderLight} shadow-lg`}>
+                  <User size={40} className={tc.textPrimary} />
+                </div>
+              )}
+              <label className={`absolute bottom-0 right-0 ${tc.btnPrimary} p-2 rounded-full cursor-pointer shadow-xl border-2 ${tc.borderLight} transition-transform hover:scale-110 active:scale-95`}>
+                <Camera size={16} />
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              </label>
+            </div>
+            <h2 className={`text-xl font-black ${tc.textHeading}`}>{data.username || (user?.isAnonymous ? 'Guest Skater' : user?.email?.split('@')[0] || 'Blaze Skater')}</h2>
+            <p className={`text-xs font-bold ${tc.textMuted} mt-1 uppercase tracking-wider`}>ID: {user?.uid?.slice(0,8) || '...'}</p>
           </div>
-          <h3 className={`font-black text-lg ${tc.textHeading} tracking-tight`}>BLAZE SKATE</h3>
-          <p className={`text-[10px] font-bold ${tc.textPrimary} tracking-widest uppercase mt-0.5`}>
-            {t.brandSub}
-          </p>
-          
-          <div className={`mt-4 text-center space-y-1`}>
-            <p className={`text-xs font-medium ${tc.textMuted}`}>{t.version}</p>
-            <p className={`text-[10px] ${tc.textMuted}`}>{t.copyright}</p>
+
+          {/* 会员卡片区 */}
+          {data.isPro ? (
+            <div className={`relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-6 rounded-3xl shadow-lg flex justify-between items-center text-white`}>
+              <Sparkles className="absolute right-10 top-2 opacity-20" size={80} />
+              <div>
+                <h3 className="font-black text-xl flex items-center gap-2 tracking-tight mb-1">
+                  <Crown size={24} className="text-yellow-200 fill-yellow-200/20" /> 
+                  {t.proActiveTitle}
+                </h3>
+                <p className="text-sm font-medium opacity-90">{t.proActiveSub}</p>
+              </div>
+              <div className="bg-white/20 px-4 py-1.5 rounded-full backdrop-blur-sm text-sm font-bold shrink-0">
+                {t.proTag}
+              </div>
+            </div>
+          ) : (
+            <div 
+              onClick={() => setShowProModal(true)}
+              className={`relative overflow-hidden bg-gradient-to-r from-amber-400 to-orange-500 p-6 rounded-3xl shadow-lg flex justify-between items-center text-white cursor-pointer hover:opacity-95 transition-all transform hover:scale-[1.02] active:scale-[0.98]`}
+            >
+              <Sparkles className="absolute right-10 top-2 opacity-20" size={80} />
+              <div>
+                <h3 className="font-black text-xl flex items-center gap-2 tracking-tight mb-1">
+                  <Crown size={24} className="text-yellow-200 fill-yellow-200/20" /> 
+                  {t.proTitle}
+                </h3>
+                <p className="text-sm font-medium opacity-90">{t.proSubtitle}</p>
+              </div>
+              <div className="bg-white/20 p-2.5 rounded-full backdrop-blur-sm shrink-0 shadow-sm">
+                <ChevronRight size={20} className="text-white" />
+              </div>
+            </div>
+          )}
+
+          {/* 账号与安全区 */}
+          <div className={`${tc.cardBg} p-5 rounded-3xl shadow-sm border-2 ${user?.isAnonymous ? 'border-orange-300' : tc.borderLight}`}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
+                <Cloud size={20} className={user?.isAnonymous ? 'text-orange-500' : 'text-blue-500'} />
+                {t.accountStatus}
+              </h3>
+              {user?.isAnonymous ? (
+                <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">{t.guestMode}</span>
+              ) : (
+                <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded">{t.officialAccount}</span>
+              )}
+            </div>
+            
+            {user?.isAnonymous ? (
+              <div className="space-y-4">
+                <p className={`text-xs ${tc.textMuted} leading-relaxed bg-orange-50/50 p-3 rounded-xl border border-orange-100/50`}>
+                  {t.guestWarning}
+                </p>
+                <button 
+                  onClick={() => setShowAuthModal(true)}
+                  className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95`}
+                >
+                  {t.bindAccountBtn}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 bg-blue-50/50 p-3.5 rounded-xl border border-blue-100/50">
+                  <div className={`w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 shrink-0`}>
+                    <UserCircle size={24} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-bold text-blue-900 truncate">{data.username || user?.email || '已绑定正式账号'}</div>
+                    <div className="text-xs text-blue-600 truncate">{user?.email || '手机号绑定用户'}</div>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowAccountModal(true)}
+                  className={`w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95`}
+                >
+                  {t.manageAccountBtn}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className={`pt-10 pb-6 flex flex-col items-center justify-center opacity-70`}>
+            <div className={`w-10 h-10 rounded-[0.8rem] bg-gradient-to-br ${tc.gradientIcon} flex items-center justify-center shadow-md mb-3 grayscale opacity-80`}>
+              <Flame size={20} className="text-white" />
+            </div>
+            <p className={`text-xs font-bold ${tc.textMuted}`}>{t.version}</p>
+            <p className={`text-[10px] font-medium ${tc.textMuted} mt-1`}>{t.copyright}</p>
           </div>
         </div>
       </div>
@@ -2533,11 +2561,47 @@ export default function App() {
     );
   };
 
+  // 全新升级的高级启动屏 (Splash Screen)
   if (loading) {
     return (
-      <div className={`min-h-screen ${THEMES.purple.appBg} flex flex-col items-center justify-center ${THEMES.purple.textPrimary} font-sans max-w-md mx-auto shadow-2xl`}>
-        <div className={`w-12 h-12 border-4 ${THEMES.purple.spinner} rounded-full animate-spin mb-4`}></div>
-        <p className="font-bold">{t.loading}</p>
+      <div className={`min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans max-w-md mx-auto shadow-2xl relative overflow-hidden`}>
+        {/* 漂亮的背景光晕 */}
+        <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-blue-50/80 to-transparent z-0"></div>
+        <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-orange-200/40 rounded-full blur-3xl z-0"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-purple-200/40 rounded-full blur-3xl z-0"></div>
+
+        <div className="relative z-10 flex flex-col items-center animate-in fade-in zoom-in-95 duration-700">
+          {/* 品牌 Logo */}
+          <div className="h-24 w-24 rounded-[2rem] shadow-[0_10px_40px_rgba(59,130,246,0.15)] border-2 border-white bg-gradient-to-br from-cyan-50 via-blue-50 to-blue-200 flex items-center justify-center relative overflow-hidden mb-6 group">
+             <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/90 to-transparent"></div>
+             <div className="absolute bottom-0 inset-x-0 h-1/3 bg-gradient-to-t from-blue-400/20 to-transparent"></div>
+             <Flame size={44} strokeWidth={2} className="absolute text-orange-600/40 fill-orange-500/20 scale-y-[-0.6] translate-y-[26px] blur-[3px] z-0" />
+             <Flame size={48} strokeWidth={2} className="relative z-10 text-rose-500 fill-orange-400 drop-shadow-[0_4px_12px_rgba(249,115,22,0.6)] animate-pulse" />
+             <div className="absolute bottom-3 right-2 w-4 h-[2px] bg-white/60 -rotate-45 rounded-full"></div>
+             <div className="absolute bottom-5 right-5 w-2 h-[2px] bg-white/70 -rotate-45 rounded-full"></div>
+          </div>
+
+          {/* 品牌名称 */}
+          <div className="flex items-baseline mb-1">
+            <span className="text-3xl font-black italic tracking-tight text-slate-800">BLAZE</span>
+            <span className="text-3xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-rose-500">SKATE</span>
+          </div>
+          <span className="text-[9px] font-bold tracking-[0.35em] uppercase text-slate-400 mb-12">
+            {t.brandSub || 'Training Platform'}
+          </span>
+
+          {/* 跳动的加载指示器 */}
+          <div className="flex flex-col items-center">
+            <div className="flex gap-2.5 mb-4">
+              <div className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-rose-400 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            </div>
+            <p className="text-[13px] font-bold text-slate-400 animate-pulse tracking-wider uppercase">
+              {t.loading || 'Loading...'}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -2580,13 +2644,16 @@ export default function App() {
             <span className="font-bold text-sm">{data.points}</span>
           </div>
           
-          {data.avatar ? (
-            <img src={data.avatar} alt="User Avatar" className={`w-10 h-10 rounded-full object-cover border-2 ${tc.borderLight} shadow-sm ml-1 shrink-0`} />
-          ) : (
-            <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center border-2 ${tc.borderLight} shadow-sm ml-1 shrink-0`}>
-              <User size={18} className={tc.textPrimary} />
-            </div>
-          )}
+          {/* 这里是个人中心的入口 */}
+          <button onClick={() => setShowProfileModal(true)} className="relative shrink-0 active:scale-95 transition-transform">
+            {data.avatar ? (
+              <img src={data.avatar} alt="User Avatar" className={`w-10 h-10 rounded-full object-cover border-2 ${tc.borderLight} shadow-sm ml-1`} />
+            ) : (
+              <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center border-2 ${tc.borderLight} shadow-sm ml-1`}>
+                <User size={18} className={tc.textPrimary} />
+              </div>
+            )}
+          </button>
         </div>
       </header>
 
@@ -2627,8 +2694,10 @@ export default function App() {
         </div>
       </nav>
 
+      {/* 弹窗组件挂载区 */}
       {TaskLibraryModal()}
       {RewardHistoryModal()}
+      {ProfileModal()}
       {AuthModal()}
       {AccountManagementModal()}
       {ProShowcaseModal()}
