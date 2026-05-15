@@ -1375,87 +1375,185 @@ export default function App() {
   };
 
   const DashboardView = () => {
-    // 1. 获取所有未来的比赛，并按时间先后顺序排列
-    const upcomingRaces = [...(data.races || [])]
-      .filter(r => {
-        const raceDate = new Date(r.date.replace(/-/g, '/')); // 兼容 iOS
-        const today = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
-        return raceDate >= today;
-      })
-      .sort((a, b) => new Date(a.date.replace(/-/g, '/')) - new Date(b.date.replace(/-/g, '/')));
+    const activeRaces = (data.races || (data.raceDate ? [{ id: 1, name: t.raceDate, date: data.raceDate }] : []))
+      .map(r => ({
+        ...r,
+        days: Math.ceil((new Date(r.date) - currentTime) / (1000 * 60 * 60 * 24))
+      }))
+      .filter(r => r.days >= -1)
+      .sort((a, b) => a.days - b.days);
+
+    const nearestRace = activeRaces.length > 0 ? activeRaces[0] : null;
+    const otherRaces = activeRaces.slice(1);
+
+    const totalTasks = data.tasks?.length || 0;
+    const completedTasks = (data.tasks || []).filter(t => t.completed).length;
+    const progressPercent = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+    const dayOfWeek = currentTime.getDay(); 
+    const startOfWeek = new Date(currentTime);
+    startOfWeek.setDate(currentTime.getDate() - dayOfWeek);
+    
+    const currentWeek = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const isCompleted = (data.completedDays || []).includes(dateStr);
+      
+      const dDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+      const todayDateOnly = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate()).getTime();
+      const isFuture = dDateOnly > todayDateOnly;
+      
+      const dayNameBase = t.daysNames?.[i] || '';
+      
+      currentWeek.push({
+        name: dayNameBase,
+        nameDisplay: data.language === 'en' ? dayNameBase.substring(0,3) : dayNameBase.replace('周',''),
+        isCompleted,
+        isFuture,
+        isToday: i === dayOfWeek
+      });
+    }
+
+    const allRecords = currentDistNames.flatMap(dist => {
+      const key = getRecordsKey(dist);
+      return (data[key] || []).map(r => ({ ...r, distance: dist }));
+    });
+    
+    allRecords.sort((a, b) => {
+      const dA = a.date || '';
+      const dB = b.date || '';
+      const dateA = dA.includes('-') ? dA : (dA ? `${currentTime.getFullYear()}-${dA.replace('/', '-')}` : '');
+      const dateB = dB.includes('-') ? dB : (dB ? `${currentTime.getFullYear()}-${dB.replace('/', '-')}` : '');
+      return dateB.localeCompare(dateA);
+    });
+    const latestRecord = allRecords.length > 0 ? allRecords[0] : null;
+
+    const hour = currentTime.getHours();
+    let greetingIndex = 0;
+    if (hour >= 5 && hour < 9) greetingIndex = 1; 
+    else if (hour >= 9 && hour < 12) greetingIndex = 2; 
+    else if (hour >= 12 && hour < 18) greetingIndex = 3; 
+    else if (hour >= 18 && hour < 23) greetingIndex = 4; 
+    else greetingIndex = 0; 
+
+    const safeTips = t.tips || [];
+    const dayOfYear = Math.floor((currentTime - new Date(currentTime.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+    const tipIndex = safeTips.length > 0 ? dayOfYear % safeTips.length : 0;
 
     return (
-      <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="space-y-4">
         
-        {/* ========================================================= */}
-        {/* 区域 1：比赛倒计时横向滑动卡片区 (替代了原来的今日核心和倒计时) */}
-        {/* ========================================================= */}
-        <div 
-          className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 -mx-5 px-5" 
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} // 隐藏滚动条
-        >
-          {upcomingRaces.length > 0 ? (
-            upcomingRaces.map((race, idx) => {
-              const raceDate = new Date(race.date.replace(/-/g, '/'));
-              const today = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
-              const daysLeft = Math.ceil((raceDate - today) / (1000 * 60 * 60 * 24));
-              
-              return (
-                <div key={race.id || idx} className={`shrink-0 w-[90%] snap-center relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br ${tc.gradientPrimary} text-white shadow-lg`}>
-                  <div className="absolute -right-4 -top-4 opacity-10">
-                    <Trophy size={110} />
-                  </div>
-                  <div className="relative z-10 flex justify-between items-end">
-                    <div>
-                      <div className="text-white/80 font-bold text-sm mb-1">{race.date.replace(/-/g, '/')}</div>
-                      <div className="font-black text-2xl tracking-tight leading-tight mb-1 truncate max-w-[180px]">{race.name}</div>
-                      <div className="text-white/90 text-sm font-medium">{race.target || '全力以赴'}</div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <div className="text-[10px] text-white/80 font-bold uppercase tracking-widest mb-1">倒计时</div>
-                      <div className="flex items-baseline gap-1 justify-end">
-                        <span className="font-black text-5xl">{daysLeft}</span>
-                        <span className="text-white/80 text-sm font-bold">天</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            // 占位卡片：如果没有排比赛，引导用户去添加
-            <div className={`shrink-0 w-full snap-center relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br ${tc.gradientPrimary} text-white shadow-lg flex items-center justify-between`}>
-              <div className="absolute -right-4 -top-4 opacity-10"><Trophy size={110} /></div>
-              <div className="relative z-10">
-                <div className="font-black text-xl mb-1">暂无赛事安排</div>
-                <div className="text-white/80 text-sm">去“数据”页面添加你的下一个目标吧！</div>
-              </div>
-              <Trophy size={40} className="text-white/50 relative z-10" />
+        <div className={`${tc.cardBg} p-6 rounded-2xl shadow-sm`}>
+          <h2 className={`${tc.textPrimary} opacity-80 text-sm font-semibold flex items-center gap-2`}>
+            <Calendar size={16} /> 
+            {currentTime.toLocaleDateString(data.language === 'en' ? 'en-US' : 'zh-CN', { month: 'long', day: 'numeric', weekday: 'long' })}
+          </h2>
+          <h1 className={`text-2xl font-black ${tc.textHeading} mt-2 tracking-tight leading-snug`}>{t.greetings?.[greetingIndex] || ''}</h1>
+        </div>
+
+        {safeTips.length > 0 && (
+          <div className={`bg-gradient-to-br ${tc.navActive} border ${tc.borderLight} p-5 rounded-2xl shadow-sm relative overflow-hidden`}>
+            <Quote size={80} className={`absolute -right-2 -bottom-2 opacity-5 ${tc.textPrimary} -rotate-12`} />
+            <div className={`flex items-center gap-2 mb-2 ${tc.textPrimary}`}>
+              <Sparkles size={18} className="animate-pulse" />
+              <span className="text-sm font-bold">{t.coachTipTitle}</span>
             </div>
+            <p className={`text-sm ${tc.textHeading} font-medium leading-relaxed relative z-10 pr-4`}>
+              "{safeTips[tipIndex]}"
+            </p>
+          </div>
+        )}
+
+        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
+          <div className="flex justify-between items-end mb-3">
+            <h3 className={`text-sm font-bold ${tc.textHeading} flex items-center gap-2`}><CheckCircle2 size={18} className={tc.textPrimary} /> {t.dailyProgress}</h3>
+            <span className={`text-xs font-bold ${tc.textMuted}`}>{(t.completedTasks || '').replace('{completed}', completedTasks).replace('{total}', totalTasks)}</span>
+          </div>
+          <div className={`h-3 w-full ${tc.badgeBg} rounded-full overflow-hidden`}>
+            <div 
+              className={`h-full bg-gradient-to-r ${tc.gradientIcon} transition-all duration-500 ease-out`} 
+              style={{ width: `${progressPercent}%` }}
+            ></div>
+          </div>
+        </div>
+
+        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
+          <h3 className={`text-sm font-bold ${tc.textHeading} mb-4 flex items-center gap-2`}><Flame size={18} className="text-orange-500" /> {t.weeklyActivity}</h3>
+          <div className="flex justify-between items-center px-1">
+            {currentWeek.map((day, idx) => (
+              <div key={idx} className="flex flex-col items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  day.isCompleted ? `bg-gradient-to-br ${tc.gradientIcon} text-white shadow-md scale-110` :
+                  day.isFuture ? `${tc.badgeBg} opacity-40 text-gray-400` :
+                  day.isToday ? `border-2 ${tc.borderLight} ${tc.textPrimary} bg-white` :
+                  `${tc.badgeBg} ${tc.textMuted} opacity-60`
+                }`}>
+                  {day.isCompleted ? <Flame size={16} /> : <span className="text-[11px] font-bold">{day.nameDisplay?.[0] || ''}</span>}
+                </div>
+                <span className={`text-[10px] font-bold ${day.isToday ? tc.textPrimary : tc.textMuted}`}>{day.nameDisplay}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className={`bg-gradient-to-br ${tc.gradientCard} p-5 rounded-2xl shadow-md flex flex-col justify-between`}>
+            <div className="flex items-center gap-2 mb-2 opacity-90">
+              <Trophy size={18} className="shrink-0" />
+              <span className="text-sm font-medium line-clamp-1 break-all">
+                {nearestRace ? nearestRace.name : t.daysToRace}
+              </span>
+            </div>
+            <div className="text-3xl font-black mt-1">
+              {nearestRace ? Math.max(0, nearestRace.days) : '--'} <span className="text-lg font-normal opacity-80">{t.days}</span>
+            </div>
+            <div className="text-xs mt-1 opacity-80">{t.keepGoing}</div>
+          </div>
+          
+          <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
+            <div className={`flex items-center gap-2 mb-2 ${tc.textMuted}`}>
+              <Zap size={18} className="text-orange-400" />
+              <span className="text-sm font-medium">{t.todayFocus}</span>
+            </div>
+            <div className={`text-xl font-bold ${tc.textPrimary} leading-tight`}>{todayTrainingType || 'Rest'}</div>
+          </div>
+        </div>
+
+        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
+          <div className={`flex items-center gap-2 mb-3 ${tc.textMuted}`}>
+            <Award size={18} className="text-yellow-500" />
+            <span className="text-sm font-bold">{t.recentHighlight}</span>
+          </div>
+          {latestRecord ? (
+            <div className="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl">
+              <div>
+                <div className={`text-2xl font-black ${tc.textPrimary}`}>{latestRecord.time}s</div>
+                <div className={`text-xs ${tc.textMuted} mt-1 font-medium`}>{(latestRecord.date || '').replace(/-/g, '/')} • {latestRecord.distance}</div>
+              </div>
+              <div className={`px-3 py-1.5 ${tc.badgeYellow} rounded-lg text-xs font-bold shadow-sm`}>
+                {t.keepItUp}
+              </div>
+            </div>
+          ) : (
+            <div className={`text-sm ${tc.textMuted} py-2`}>{t.noRecentRecord}</div>
           )}
         </div>
 
-        {/* ========================================================= */}
-        {/* 区域 2：核心数据统计区 (原样保留) */}
-        {/* ========================================================= */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className={`${tc.cardBg} rounded-3xl p-5 flex flex-col justify-center items-center shadow-sm border ${tc.borderLight}`}>
-            <Flame size={28} className={tc.textPrimary} />
-            <div className={`text-2xl font-black mt-2 ${tc.textHeading}`}>
-              {data.tasks ? data.tasks.filter(t => t.completed).length : 0} 
-              <span className={`text-sm ${tc.textMuted} font-bold ml-1`}>/ {data.tasks ? data.tasks.length : 0}</span>
-            </div>
-            <div className={`text-xs font-bold ${tc.textMuted} mt-1`}>今日任务完成</div>
+        {otherRaces.length > 0 && (
+          <div className="space-y-2 mt-4">
+            <h3 className={`text-sm font-bold ${tc.textHeading} px-1 mb-2`}>{t.upcomingRaces}</h3>
+            {otherRaces.map(r => (
+              <div key={r.id} className={`${tc.cardBg} p-3 rounded-xl shadow-sm flex justify-between items-center`}>
+                <span className={`font-medium ${tc.appText} text-sm truncate pr-2`}>{r.name}</span>
+                <div className={`${tc.textPrimary} font-black text-sm whitespace-nowrap ${tc.badgeBg} px-2 py-1 rounded`}>
+                  {Math.max(0, r.days)} {t.days}
+                </div>
+              </div>
+            ))}
           </div>
-          
-          <div className={`${tc.cardBg} rounded-3xl p-5 flex flex-col justify-center items-center shadow-sm border ${tc.borderLight}`}>
-            <Award size={28} className="text-yellow-500" />
-            <div className={`text-2xl font-black mt-2 text-yellow-500`}>{data.points}</div>
-            <div className={`text-xs font-bold ${tc.textMuted} mt-1`}>可用燃烧积分</div>
-          </div>
-        </div>
-
-        {/* 注：这里已经彻底删除了最底部的“其他即将到来的比赛”列表！ */}
+        )}
       </div>
     );
   };
@@ -2910,149 +3008,76 @@ export default function App() {
     );
   };
 
-  // 系统设置弹窗组件 (已移除一周训练模板)
   const AccountManagementModal = () => {
-    if (!showAccountManagement) return null;
-
+    if (!showAccountModal) return null;
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in" onClick={() => setShowAccountManagement(false)}>
-        <div className={`${tc.cardBg} w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]`} onClick={e => e.stopPropagation()}>
-          <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center bg-gray-50/50`}>
-            <h2 className={`font-black text-lg ${tc.textHeading}`}>系统设置</h2>
-            <button onClick={() => setShowAccountManagement(false)} className={`p-1.5 ${tc.textMuted} hover:text-red-500 rounded-xl transition-colors bg-white shadow-sm border ${tc.borderLight}`}>
-              <X size={20} />
-            </button>
+      <div className={`fixed inset-0 z-[70] flex flex-col ${tc.appBg} overflow-y-auto animate-in fade-in slide-in-from-bottom-10 duration-200`}>
+        <div className={`flex items-center justify-between px-5 py-4 border-b ${tc.borderLight} sticky top-0 ${tc.headerBg} backdrop-blur-md z-10`}>
+          <button onClick={() => setShowAccountModal(false)} className={`p-2 -ml-2 ${tc.textMuted} hover:${tc.textPrimary} shrink-0 transition-colors`}>
+            <ArrowLeft size={24} />
+          </button>
+          <h2 className={`text-lg font-black ${tc.textHeading}`}>{t.accountManageTitle}</h2>
+          <div className="w-8 shrink-0"></div>
+        </div>
+
+        <div className="flex-1 p-5 space-y-6">
+          <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-3`}>
+            <label className={`text-sm font-bold flex items-center gap-2 ${tc.textHeading}`}>
+              <UserCircle size={18} className={tc.textPrimary} />
+              {t.usernameLabel}
+            </label>
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                value={data.username}
+                onChange={(e) => updateData({ username: e.target.value })}
+                placeholder={data.language === 'en' ? "Your skater codename" : "给宝宝起个炫酷的滑冰代号"}
+                className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-3 text-sm ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+              />
+            </div>
           </div>
 
-          <div className="p-5 overflow-y-auto space-y-6">
-            {/* 1. 主题与语言 */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h3 className={`text-sm font-bold ${tc.textMuted} mb-2 ml-1`}>外观主题</h3>
-                <select
-                  value={data.theme}
-                  onChange={(e) => updateData({ theme: e.target.value })}
-                  className={`w-full p-3 rounded-xl border ${tc.borderLight} bg-gray-50 text-sm font-bold ${tc.textHeading} focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
-                >
-                  <option value="purple">活力紫 (Purple)</option>
-                  <option value="blue">冰蓝 (Blue)</option>
-                  <option value="dark">暗夜 (Dark)</option>
-                </select>
-              </div>
-              <div>
-                <h3 className={`text-sm font-bold ${tc.textMuted} mb-2 ml-1`}>语言</h3>
-                <select
-                  value={data.language}
-                  onChange={(e) => updateData({ language: e.target.value })}
-                  className={`w-full p-3 rounded-xl border ${tc.borderLight} bg-gray-50 text-sm font-bold ${tc.textHeading} focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
-                >
-                  <option value="zh">中文</option>
-                  <option value="en">English</option>
-                </select>
-              </div>
-            </div>
-
-            {/* 2. 积分获取规则设置 */}
-            <div>
-              <h3 className={`text-sm font-bold ${tc.textMuted} mb-3 ml-1 flex items-center gap-2`}><Award size={16} /> 积分获取规则</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50">
-                  <span className={`text-sm font-bold ${tc.textHeading}`}>单项任务完成</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-yellow-500 font-black">+</span>
-                    <input
-                      type="number"
-                      value={data.pointsPerTask || 10}
-                      onChange={e => updateData({ pointsPerTask: Number(e.target.value) })}
-                      className="w-16 p-1 text-center rounded-lg border border-gray-200 font-bold focus:outline-none focus:border-purple-400"
-                    />
-                    <span className={`text-xs ${tc.textMuted}`}>分</span>
-                  </div>
+          <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
+            <div className={`flex items-center justify-between pb-4 border-b ${tc.borderLight}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary} shrink-0`}>
+                  <Mail size={20} />
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50">
-                  <span className={`text-sm font-bold ${tc.textHeading}`}>全天完成额外奖励</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-yellow-500 font-black">+</span>
-                    <input
-                      type="number"
-                      value={data.dailyBonusPoints || 20}
-                      onChange={e => updateData({ dailyBonusPoints: Number(e.target.value) })}
-                      className="w-16 p-1 text-center rounded-lg border border-gray-200 font-bold focus:outline-none focus:border-purple-400"
-                    />
-                    <span className={`text-xs ${tc.textMuted}`}>分</span>
+                <div>
+                  <div className={`text-sm font-bold ${tc.textHeading}`}>{t.emailLabel}</div>
+                  <div className={`text-xs ${user?.email ? tc.textMuted : 'text-orange-500 font-bold'}`}>
+                    {user?.email || t.unbound}
                   </div>
                 </div>
               </div>
+              {user?.email && <span className="text-xs font-bold text-green-500 bg-green-50 px-2 py-1 rounded shrink-0">{t.bound}</span>}
             </div>
 
-            {/* 3. 奖励兑换清单设置 */}
-            <div>
-              <h3 className={`text-sm font-bold ${tc.textMuted} mb-3 ml-1 flex items-center gap-2`}><Gift size={16} /> 奖励兑换清单</h3>
-              <div className="space-y-2">
-                {(data.customRewards || []).map((reward, index) => (
-                  <div key={reward.id} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={reward.icon}
-                      onChange={e => {
-                        const newRewards = [...data.customRewards];
-                        newRewards[index].icon = e.target.value;
-                        updateData({ customRewards: newRewards });
-                      }}
-                      className="w-12 p-3 text-center rounded-xl border border-gray-100 bg-gray-50"
-                      placeholder="图标"
-                    />
-                    <input
-                      type="text"
-                      value={reward.name}
-                      onChange={e => {
-                        const newRewards = [...data.customRewards];
-                        newRewards[index].name = e.target.value;
-                        updateData({ customRewards: newRewards });
-                      }}
-                      className="flex-1 p-3 rounded-xl border border-gray-100 bg-gray-50 font-bold text-sm"
-                      placeholder="奖励名称"
-                    />
-                    <input
-                      type="number"
-                      value={reward.cost}
-                      onChange={e => {
-                        const newRewards = [...data.customRewards];
-                        newRewards[index].cost = Number(e.target.value);
-                        updateData({ customRewards: newRewards });
-                      }}
-                      className="w-20 p-3 text-center rounded-xl border border-gray-100 bg-gray-50 font-black text-yellow-500"
-                      placeholder="价格"
-                    />
-                    <button
-                      onClick={() => {
-                        const newRewards = data.customRewards.filter(r => r.id !== reward.id);
-                        updateData({ customRewards: newRewards });
-                      }}
-                      className="p-3 text-gray-300 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={() => updateData({ customRewards: [...(data.customRewards || []), { id: Date.now(), name: '', cost: 100, icon: '🎁' }] })}
-                  className={`w-full py-3 rounded-xl border-2 border-dashed ${tc.borderLight} text-sm font-bold ${tc.textMuted} hover:text-purple-500 transition-colors flex items-center justify-center gap-2`}
-                >
-                  <Plus size={16} /> 添加新奖励
-                </button>
+            <div className={`flex items-center justify-between`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary} shrink-0`}>
+                  <Smartphone size={20} />
+                </div>
+                <div>
+                  <div className={`text-sm font-bold ${tc.textHeading}`}>{t.phoneLabel}</div>
+                  <div className={`text-xs text-orange-500 font-bold`}>{t.unbound}</div>
+                </div>
               </div>
+              <button 
+                onClick={() => alert("手机号绑定需配合企业短信服务，当前为演示版本，暂未开通真实短信网关。")}
+                className={`text-xs font-bold ${tc.btnPrimary} px-3 py-1.5 rounded-lg shadow-sm shrink-0`}
+              >
+                {t.bindAccountBtn}
+              </button>
             </div>
           </div>
 
-          <div className="p-4 border-t border-gray-100 flex gap-3 bg-gray-50/50">
-            <button onClick={() => setShowAccountManagement(false)} className={`flex-1 bg-gradient-to-r ${tc.gradientPrimary} text-white font-bold py-3 rounded-xl shadow-md active:scale-95 transition-all`}>
-              保存设置
-            </button>
-            <button onClick={() => { setUser(null); updateData(defaultData); }} className="px-4 py-3 bg-red-50 text-red-500 font-bold rounded-xl active:scale-95 transition-all">
-              退出登录
-            </button>
-          </div>
+          <button 
+            onClick={handleLogout}
+            className={`w-full mt-4 flex items-center justify-center gap-2 bg-red-50 text-red-500 hover:bg-red-100 py-4 rounded-2xl font-bold transition-colors`}
+          >
+            <LogOut size={18} /> {t.logout}
+          </button>
         </div>
       </div>
     );
