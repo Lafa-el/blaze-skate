@@ -1006,9 +1006,9 @@ export default function App() {
     // 1. 获取今天的日期字符串 (格式：YYYY-MM-DD)
     const todayStr = `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, '0')}-${String(currentTime.getDate()).padStart(2, '0')}`;
     
-    // 2. 逻辑判断：如果记录的“最后登录日期”存在且不是今天，说明日期已经切换了
-    if (data.lastLoginDate && data.lastLoginDate !== todayStr) {
-      console.log("检测到跨天，正在执行自动化清理与备份...");
+    // 2. 逻辑判断：如果记录的“最后登录日期”存在，且“今天”大于“最后登录日期”（防时间倒退/跨时区）
+    if (data.lastLoginDate && todayStr > data.lastLoginDate) {
+      console.log("检测到时间向前跨天，正在执行自动化清理与备份...");
       
       let updatedHistory = { ...(data.taskHistory || {}) };
       
