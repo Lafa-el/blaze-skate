@@ -793,6 +793,8 @@ const translations = {
 
 // 初始默认数据
 const defaultData = {
+  lastLoginDate: '',  // 新增：记录最后一次打开APP的日期
+  taskHistory: {},    // 新增：用来存每天任务快照的字典
   points: 0,
   language: 'zh',
   theme: 'purple',
@@ -903,6 +905,7 @@ export default function App() {
   const [importedSingleItemIds, setImportedSingleItemIds] = useState([]); // 新增：控制单项添加的动画状态
 
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedHistoryDate, setSelectedHistoryDate] = useState(null); // 新增：控制日历快照弹窗
   const [celebration, setCelebration] = useState(null);
 
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -1005,6 +1008,38 @@ export default function App() {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  // --- 核心逻辑：跨天自动清空任务，并生成昨日快照 ---
+  useEffect(() => {
+    // 如果数据还在加载或者用户未登录，先不执行逻辑
+    if (loading || !user) return; 
+    
+    // 1. 获取今天的日期字符串 (格式：YYYY-MM-DD)
+    const todayStr = `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, '0')}-${String(currentTime.getDate()).padStart(2, '0')}`;
+    
+    // 2. 逻辑判断：如果记录的“最后登录日期”存在且不是今天，说明日期已经切换了
+    if (data.lastLoginDate && data.lastLoginDate !== todayStr) {
+      console.log("检测到跨天，正在执行自动化清理与备份...");
+      
+      let updatedHistory = { ...(data.taskHistory || {}) };
+      
+      // 3. 生成快照：如果最后登录的那天有任务，将其存入历史字典
+      if (data.tasks && data.tasks.length > 0) {
+        updatedHistory[data.lastLoginDate] = data.tasks;
+      }
+      
+      // 4. 执行云端同步更新
+      updateData({
+        tasks: [],               // 清空首页任务列表
+        lastLoginDate: todayStr, // 更新最后登录日期为今天
+        taskHistory: updatedHistory // 保存历史快照
+      });
+      
+    } else if (!data.lastLoginDate) {
+      // 5. 初始化逻辑：如果是第一次使用，记录下今天的日期
+      updateData({ lastLoginDate: todayStr });
+    }
+  }, [currentTime.getDate(), loading, user]); // 关键：监听日期的天数变化
 
   useEffect(() => {
     const currentRaces = data.races || (data.raceDate ? [{ id: 1, name: 'Main Target', date: data.raceDate }] : []);
@@ -1584,7 +1619,10 @@ export default function App() {
               return (
                 <div 
                   key={d} 
-                  className={`relative h-10 flex flex-col items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                  // ✨ 修改 1：添加点击事件，点击时将当前日期字符串传给状态变量
+                  onClick={() => setSelectedHistoryDate(dateStr)} 
+                  // ✨ 修改 2：在 className 中加入 cursor-pointer（手型光标）和缩放动画（hover:scale-110 active:scale-95）
+                  className={`relative h-10 flex flex-col items-center justify-center rounded-xl text-sm font-bold transition-all cursor-pointer hover:scale-110 active:scale-95 ${
                     isCompleted 
                       ? `bg-gradient-to-br ${tc.gradientIcon} text-white shadow-md` 
                       : isToday 
@@ -1602,6 +1640,79 @@ export default function App() {
           <div className={`mt-6 flex items-center justify-center gap-2 text-xs font-bold ${tc.textMuted}`}>
             <div className={`w-3 h-3 rounded-sm bg-gradient-to-br ${tc.gradientIcon}`}></div>
             <span>{t.checkinLegend}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+// 新增：历史任务快照弹窗组件
+  const HistoryDetailModal = () => {
+    if (!selectedHistoryDate) return null; // 如果没有选中日期，就不渲染弹窗
+    
+    // 从快照保险柜中提取当天的任务数据
+    const historyTasks = (data.taskHistory || {})[selectedHistoryDate] || [];
+    // 检查那天是否达成了“全天完成”成就
+    const isCompletedDay = (data.completedDays || []).includes(selectedHistoryDate);
+    
+    // 计算完成度
+    const completedCount = historyTasks.filter(t => t.completed).length;
+    const totalCount = historyTasks.length;
+
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm p-5 animate-in fade-in duration-200" onClick={() => setSelectedHistoryDate(null)}>
+        <div className={`${tc.cardBg} w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden`} onClick={e => e.stopPropagation()}>
+          {/* 弹窗头部 */}
+          <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
+            <h3 className={`font-black ${tc.textHeading} flex items-center gap-2`}>
+              <CalendarDays size={18} className={tc.textPrimary} />
+              {selectedHistoryDate.replace(/-/g, '/')} 训练快照
+            </h3>
+            <button onClick={() => setSelectedHistoryDate(null)} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
+              <X size={20} />
+            </button>
+          </div>
+          
+          {/* 弹窗内容区 */}
+          <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+            {totalCount === 0 ? (
+              <div className={`text-center py-8 text-sm ${tc.textMuted} font-medium`}>当天没有排课或未留下记录 📭</div>
+            ) : (
+              <>
+                {/* 完成度统计卡片 */}
+                <div className="flex justify-between items-center bg-gray-50/50 border border-gray-100 p-4 rounded-2xl">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 font-bold mb-1">单日完成度</span>
+                    <span className={`text-xl font-black ${isCompletedDay ? 'text-green-500' : tc.textHeading}`}>
+                      {completedCount} / {totalCount}
+                    </span>
+                  </div>
+                  {isCompletedDay ? (
+                    <Flame size={32} className="text-orange-500 animate-pulse" />
+                  ) : (
+                    <Circle size={28} className="text-gray-300" />
+                  )}
+                </div>
+                
+                {/* 任务明细列表 */}
+                <div className="space-y-2 mt-4">
+                  <div className={`text-[10px] font-black uppercase text-gray-400 tracking-wider mb-2 ml-1`}>任务明细</div>
+                  {historyTasks.map((task, idx) => (
+                    <div key={idx} className={`p-3 rounded-xl flex items-center gap-3 border ${tc.borderLight} ${task.completed ? 'bg-gray-50/50' : 'bg-white'}`}>
+                      {task.completed ? (
+                        <CheckCircle2 size={18} className="text-green-500 shrink-0" />
+                      ) : (
+                        <Circle size={18} className="text-gray-300 shrink-0" />
+                      )}
+                      <div className={`flex-1 min-w-0 flex flex-col`}>
+                        <span className={`text-sm font-bold truncate ${task.completed ? 'text-gray-400 line-through' : tc.textHeading}`}>{task.text}</span>
+                        {task.target && <span className={`text-[10px] font-bold mt-0.5 ${task.completed ? 'text-gray-400' : tc.textPrimary}`}>{task.target}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -3201,6 +3312,7 @@ export default function App() {
       </nav>
 
       {/* 弹窗组件挂载区 */}
+      {HistoryDetailModal()} {/* ✨ 新增：挂载日历快照弹窗 */}
       {RewardHistoryModal()}
       {ProfileModal()}
       {AuthModal()}
