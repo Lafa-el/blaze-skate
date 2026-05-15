@@ -1153,16 +1153,48 @@ export default function App() {
       return;
     }
     
-    routine.tasks.forEach((taskStr, index) => {
-      setTimeout(() => {
-        const parts = taskStr.split(' ');
-        const target = parts.length > 1 ? parts.pop() : '';
-        const name = parts.join(' ');
-        addSpecificTask(name, target, true);
-      }, index * 50); 
+    // 获取当前的年龄段模块数据，用于匹配动作说明(desc)
+    const academyData = BLAZE_ACADEMY[data.language || 'zh'];
+    const activeStage = academyData[activeAcademyAgeIdx];
+
+    // 将整个周计划的动作打包成一个新的数组
+    const newTasksToAdd = routine.tasks.map((taskStr, index) => {
+      const parts = taskStr.split(' ');
+      const target = parts.length > 1 ? parts.pop() : '';
+      const name = parts.join(' ').trim();
+
+      // 智能匹配算法：从当前大厅数据中自动抓取动作的详细说明 (desc)
+      let matchedDesc = null;
+      for (const module of activeStage.modules) {
+        for (const item of module.items) {
+          // 清洗字符串（去掉括号、特殊符号）进行模糊匹配
+          const cleanItemName = item.name.split(' ')[0].replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+          const cleanTaskName = name.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+          
+          if (cleanItemName && cleanTaskName && (cleanItemName.includes(cleanTaskName) || cleanTaskName.includes(cleanItemName))) {
+            matchedDesc = item.desc;
+            break;
+          }
+        }
+        if (matchedDesc) break;
+      }
+
+      return {
+        id: Date.now() + Math.random() + index, // 确保ID唯一
+        text: name,
+        target: target ? target.trim() : null,
+        desc: matchedDesc, // 附加上刚刚匹配到的动作说明
+        completed: false,
+        isTemplate: true
+      };
     });
 
+    // 【关键修复】一次性把整个数组更新到云端，彻底解决只有最后一条被保存的 Bug
+    updateData({ tasks: [...(data.tasks || []), ...newTasksToAdd] });
+
     setImportedWeeklyIds(prev => [...prev, idx]);
+    if (navigator.vibrate) navigator.vibrate(50); // 增加震动反馈
+    
     setTimeout(() => {
       setImportedWeeklyIds(prev => prev.filter(id => id !== idx));
     }, 2000);
