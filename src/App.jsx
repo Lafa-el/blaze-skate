@@ -1444,10 +1444,7 @@ export default function App() {
 
     return (
       <div className="space-y-4">
-        {/* 👇👇👇 加入这行临时代码 👇👇👇 */}
-        <button onClick={() => updateData({ taskHistory: {} })} className="w-full bg-red-500 text-white font-bold py-2 rounded-xl">临时清理：点我一键清空所有历史快照</button>
-        {/* 👆👆👆 加入这行临时代码 👆👆👆 */}
-
+        
         <div className={`${tc.cardBg} p-6 rounded-2xl shadow-sm`}>
           <h2 className={`${tc.textPrimary} opacity-80 text-sm font-semibold flex items-center gap-2`}>
             <Calendar size={16} /> 
