@@ -1630,7 +1630,7 @@ export default function App() {
                 )}
                 {/* 新增：如果该任务有动作方法 (desc)，则显示在下方 */}
                 {task.desc && (
-                  <span className={`text-[11px] mt-1 line-clamp-2 leading-snug ${task.completed ? tc.textMuted : 'text-gray-500'}`}>
+                  <span className={`text-[11px] mt-1 leading-snug ${task.completed ? tc.textMuted : 'text-gray-500'}`}>
                     {task.desc}
                   </span>
                 )}
