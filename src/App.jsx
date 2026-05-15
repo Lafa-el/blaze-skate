@@ -900,6 +900,7 @@ export default function App() {
   const [activeAcademyAgeIdx, setActiveAcademyAgeIdx] = useState(0);
   const [expandedAcademyModule, setExpandedAcademyModule] = useState(0);
   const [importedWeeklyIds, setImportedWeeklyIds] = useState([]);
+  const [importedSingleItemIds, setImportedSingleItemIds] = useState([]); // 新增：控制单项添加的动画状态
 
   const [showHistory, setShowHistory] = useState(false);
   const [celebration, setCelebration] = useState(null);
@@ -1162,6 +1163,20 @@ export default function App() {
     setImportedWeeklyIds(prev => [...prev, idx]);
     setTimeout(() => {
       setImportedWeeklyIds(prev => prev.filter(id => id !== idx));
+    }, 2000);
+  };
+
+  // 新增：处理单项训练导入的函数
+  const importSingleTask = (e, item, uniqueId) => {
+    e.stopPropagation(); // 阻止冒泡，避免触发卡片外部的点击事件
+    if (navigator.vibrate) navigator.vibrate(50); // 手机轻微震动反馈
+    
+    addSpecificTask(item.name, item.target, true); // 导入任务
+    
+    // 设置“已添加”的打勾视觉反馈，2秒后恢复原状
+    setImportedSingleItemIds(prev => [...prev, uniqueId]);
+    setTimeout(() => {
+      setImportedSingleItemIds(prev => prev.filter(id => id !== uniqueId));
     }, 2000);
   };
 
@@ -2611,12 +2626,14 @@ export default function App() {
                   <div className="px-4 pb-4 space-y-3">
                     {module.items.map((item, iIdx) => {
                       const isLocked = !data.isPro && iIdx > 0;
+                      const uniqueItemId = `${mIdx}-${iIdx}`; // 新增：为每个动作生成唯一ID
+                      
                       return (
                         <div 
                           key={iIdx} 
                           onClick={() => { if (isLocked) setShowProModal(true); }}
                           className={`p-3 rounded-xl border flex flex-col gap-2 relative overflow-hidden transition-all ${
-                            isLocked ? 'bg-slate-50 border-slate-100 cursor-pointer group' : `${tc.inputBg} ${tc.borderLight}`
+                            isLocked ? 'bg-slate-50 border-slate-100 cursor-pointer group' : `${tc.inputBg} ${tc.borderLight} hover:shadow-sm`
                           }`}
                         >
                           <div className={`flex justify-between items-start ${isLocked ? 'blur-[3px] opacity-40 select-none' : ''}`}>
@@ -2629,9 +2646,36 @@ export default function App() {
                             </span>
                           </div>
                           
-                          <div className={`flex items-center gap-1.5 mt-1 ${isLocked ? 'blur-[3px] opacity-40 select-none' : ''}`}>
-                            <CheckCircle2 size={14} className={tc.textPrimary} />
-                            <span className={`text-xs font-bold ${tc.textPrimary}`}>{item.target}</span>
+                          {/* 修改：底部区域改为 flex-between，左边是训练量，右边是添加按钮 */}
+                          <div className={`flex justify-between items-end mt-1 ${isLocked ? 'blur-[3px] opacity-40 select-none' : ''}`}>
+                            <div className="flex items-center gap-1.5">
+                              <CheckCircle2 size={14} className={tc.textPrimary} />
+                              <span className={`text-xs font-bold ${tc.textPrimary}`}>{item.target}</span>
+                            </div>
+                            
+                            {/* 新增的单项导入按钮 */}
+                            <button 
+                              onClick={(e) => {
+                                if (isLocked) { e.stopPropagation(); setShowProModal(true); }
+                                else importSingleTask(e, item, uniqueItemId);
+                              }}
+                              disabled={importedSingleItemIds.includes(uniqueItemId) && !isLocked}
+                              className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all ${
+                                isLocked 
+                                  ? 'bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100' 
+                                  : importedSingleItemIds.includes(uniqueItemId)
+                                    ? 'bg-green-100 text-green-600 border border-green-200'
+                                    : `bg-white text-gray-500 border border-gray-200 hover:bg-gray-50 hover:${tc.textPrimary} shadow-sm active:scale-95`
+                              }`}
+                            >
+                              {isLocked ? (
+                                <><Crown size={12} className="text-yellow-500" /> PRO</>
+                              ) : importedSingleItemIds.includes(uniqueItemId) ? (
+                                <><Check size={12} /> {data.language === 'en' ? 'Added' : '已添加'}</>
+                              ) : (
+                                <><Plus size={12} /> {data.language === 'en' ? 'Add' : '添加'}</>
+                              )}
+                            </button>
                           </div>
 
                           {isLocked && (
