@@ -1701,7 +1701,8 @@ export default function App() {
                     <Edit2 size={16} />
                   </button>
                 )}
-                {isParentMode && (
+                {/* 修改：加了 !task.completed 判断，已完成的任务隐藏删除按钮 */}
+                {isParentMode && !task.completed && (
                   <button 
                     onClick={(e) => deleteTask(e, task.id)} 
                     className={`p-1.5 ${tc.textMuted} hover:text-red-500 active:opacity-70 rounded-lg transition-colors`}
