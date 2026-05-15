@@ -791,10 +791,10 @@ const translations = {
   }
 };
 
-// 初始默认数据
+// 初始默认数据（纯净正式版）
 const defaultData = {
-  lastLoginDate: '',  // 新增：记录最后一次打开APP的日期
-  taskHistory: {},    // 新增：用来存每天任务快照的字典
+  lastLoginDate: '',  
+  taskHistory: {},    
   points: 0,
   language: 'zh',
   theme: 'purple',
@@ -813,9 +813,7 @@ const defaultData = {
   ],
   customDistances: ['起跑', '单圈', '500m', '777m', '1000m', '1500m'],
   rewardHistory: [],
-  races: [
-    { id: 1, name: '全国锦标赛', date: '2026-11-20' }
-  ],
+  races: [], // 清空了默认的比赛记录
   weeklyTemplate: {
     0: '休息日',
     1: '力量训练日',
@@ -825,17 +823,8 @@ const defaultData = {
     5: '专项间歇日',
     6: '长距离耐力',
   },
-  tasks: [
-    { id: 1, text: '慢跑热身', target: '15 分钟', completed: false, isTemplate: true },
-    { id: 2, text: '滑行板 (Slide Board)', target: '5组 x 1分钟', completed: false, isTemplate: true },
-    { id: 3, text: '靠墙静蹲', target: '3组 x 1.5分钟', completed: false, isTemplate: true },
-  ],
-  records: [
-    { date: '2026-05-01', time: 48.5 },
-    { date: '2026-05-02', time: 47.8 },
-    { date: '2026-05-04', time: 47.2 },
-    { date: '2026-05-06', time: 46.5 },
-  ],
+  tasks: [], // 清空了默认的3个测试任务
+  records: [], // 清空了默认的500米测试成绩
   records777: [],
   records1000: [],
   records1500: [],
