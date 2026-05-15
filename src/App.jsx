@@ -1123,13 +1123,15 @@ export default function App() {
     });
   };
 
-  const addSpecificTask = (text, target, isTemplate = false) => {
+  // 修改后：增加 desc 参数并存入 task 对象
+  const addSpecificTask = (text, target, isTemplate = false, desc = null) => {
     const newTasks = [
       ...data.tasks, 
       { 
         id: Date.now() + Math.random(), 
         text: text.trim(), 
         target: target ? target.trim() : null,
+        desc: desc, // 新增：保存动作方法说明
         completed: false, 
         isTemplate: isTemplate 
       }
@@ -1166,14 +1168,14 @@ export default function App() {
     }, 2000);
   };
 
-  // 新增：处理单项训练导入的函数
+  // 修改后：把 item.desc 作为第四个参数传给 addSpecificTask
   const importSingleTask = (e, item, uniqueId) => {
-    e.stopPropagation(); // 阻止冒泡，避免触发卡片外部的点击事件
-    if (navigator.vibrate) navigator.vibrate(50); // 手机轻微震动反馈
+    e.stopPropagation(); 
+    if (navigator.vibrate) navigator.vibrate(50); 
     
-    addSpecificTask(item.name, item.target, true); // 导入任务
+    // 修改：将 item.desc 一并传入
+    addSpecificTask(item.name, item.target, true, item.desc); 
     
-    // 设置“已添加”的打勾视觉反馈，2秒后恢复原状
     setImportedSingleItemIds(prev => [...prev, uniqueId]);
     setTimeout(() => {
       setImportedSingleItemIds(prev => prev.filter(id => id !== uniqueId));
@@ -1618,6 +1620,7 @@ export default function App() {
               ) : (
                 <Circle className={`${tc.textMuted} mr-3 shrink-0 opacity-50`} size={24} />
               )}
+              {/* 左侧文字与说明区域 */}
               <div className={`flex-1 flex flex-col min-w-0 ${task.completed ? tc.textMuted + ' line-through' : tc.appText}`}>
                 <span className="text-base font-medium truncate">{task.text}</span>
                 {task.target && (
@@ -1625,17 +1628,23 @@ export default function App() {
                     🎯 {t.targetLabel}: {task.target}
                   </span>
                 )}
+                {/* 新增：如果该任务有动作方法 (desc)，则显示在下方 */}
+                {task.desc && (
+                  <span className={`text-[11px] mt-1 line-clamp-2 leading-snug ${task.completed ? tc.textMuted : 'text-gray-500'}`}>
+                    {task.desc}
+                  </span>
+                )}
               </div>
               
+              {/* 右侧积分与操作按钮区域 */}
               <div className="flex items-center gap-1 ml-2 shrink-0">
                 {!task.completed && (
                   <span className={`text-[10px] ${tc.badgeYellow} px-2 py-1 rounded-md shrink-0 mr-1`}>
                     +{data.pointsPerTask ?? 20}
                   </span>
                 )}
-                {task.isTemplate && !task.completed && (
-                  <span className={`text-[10px] ${tc.badgeBg} ${tc.textPrimary} font-bold px-2 py-1 rounded-md shrink-0 mr-1`}>{t.template}</span>
-                )}
+                
+                {/* 注意：这里已经删除了显示 "模板" 字样的代码段 */}
                 
                 {isParentMode && !task.completed && (
                   <button 
