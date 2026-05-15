@@ -1147,42 +1147,45 @@ export default function App() {
     }
   };
 
-  // 修改后：智能匹配一键导入函数，解决覆盖和解析错误问题
+  // 修改后：终极智能匹配版，解决名字顺序颠倒或简写导致的匹配失败问题
   const importAcademyRoutine = (routine, idx) => {
     if (!data.isPro) {
       setShowProModal(true);
       return;
     }
     
-    // 获取当前所选年龄段的官方数据库
     const academyData = BLAZE_ACADEMY[data.language || 'zh'];
     const activeStage = academyData[activeAcademyAgeIdx];
 
-    // 将整个周计划的动作打包成一个新的数组，并智能匹配完整数据
     const newTasksToAdd = routine.tasks.map((taskStr, index) => {
       let matchedItem = null;
       
-      // 遍历当前年龄段的所有模块，寻找匹配的动作
+      // 获取可能的纯动作名 (去掉空格后面的训练量，如 "单脚站立游戏 3组" -> "单脚站立游戏")
+      const taskNameShort = taskStr.split(' ')[0];
+      
       for (const module of activeStage.modules) {
         for (const item of module.items) {
-          const cleanItemName = item.name.replace(/\s+/g, '');
-          const cleanTaskStr = taskStr.replace(/\s+/g, '');
+          // 清除所有特殊符号，仅保留中英文和数字
+          const cleanItem = item.name.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+          const cleanTask = taskStr.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+          const cleanTaskShort = taskNameShort.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
           
-          // 1. 完全包含匹配
-          if (cleanTaskStr.includes(cleanItemName) || cleanItemName.includes(cleanTaskStr)) {
+          // 1. 包含匹配 (完整包含 或 短名包含)
+          if (cleanItem.includes(cleanTask) || cleanTask.includes(cleanItem) || (cleanTaskShort && cleanItem.includes(cleanTaskShort))) {
             matchedItem = item;
             break;
           }
           
-          // 2. 核心词汇提取匹配 (提取前2-4个中文字符或4个英文字母进行模糊匹配)
-          const firstZhMatch = taskStr.match(/[\u4e00-\u9fa5]{2,4}/);
-          const firstEnMatch = taskStr.match(/[a-zA-Z]{4,}/);
-          
-          if (firstZhMatch && item.name.includes(firstZhMatch[0])) {
+          // 2. 符号拆分匹配 (完美解决 "走胶带线/平衡木" 对应 "走平衡木 / 地板胶带线行走" 的颠倒问题)
+          const keywords = taskStr.split(/[\/\+、，()（）\s]/).filter(k => k.trim().length >= 2);
+          if (keywords.some(kw => item.name.includes(kw.trim()))) {
             matchedItem = item;
             break;
           }
-          if (firstEnMatch && item.name.includes(firstEnMatch[0])) {
+
+          // 3. 提取前三个连续汉字进行极限保底匹配
+          const firstThreeZh = taskStr.match(/[\u4e00-\u9fa5]{3}/);
+          if (firstThreeZh && item.name.includes(firstThreeZh[0])) {
             matchedItem = item;
             break;
           }
@@ -1190,22 +1193,25 @@ export default function App() {
         if (matchedItem) break;
       }
 
-      // 如果匹配成功，直接拉取词典库里最标准的名字、目标和动作说明！
+      // 如果匹配成功，强制使用官方库里的名字、目标和说明！
       if (matchedItem) {
         return {
-          id: Date.now() + Math.random() + index, // 生成唯一ID
+          id: Date.now() + Math.random() + index, 
           text: matchedItem.name,
-          target: matchedItem.target, // 例如："3组 x 15次"
-          desc: matchedItem.desc,     // 包含具体的动作说明
+          target: matchedItem.target, 
+          desc: matchedItem.desc,     
           completed: false,
           isTemplate: true
         };
       } else {
-        // 如果极少数情况没匹配上，直接保留原文本，不乱拆分
+        // 如果极其特殊情况没匹配上，依然平滑导入原文本
+        const parts = taskStr.split(' ');
+        const target = parts.length > 1 ? parts.pop() : '';
+        const name = parts.join(' ').trim();
         return {
           id: Date.now() + Math.random() + index,
-          text: taskStr,
-          target: null,
+          text: name,
+          target: target || null,
           desc: null,
           completed: false,
           isTemplate: true
@@ -1213,29 +1219,13 @@ export default function App() {
       }
     });
 
-    // 【核心修复】将原任务和新匹配到的任务数组合并，一次性写入，杜绝覆盖 Bug
     updateData({ tasks: [...(data.tasks || []), ...newTasksToAdd] });
 
-    // 触发导入成功的按钮动画与震动反馈
     setImportedWeeklyIds(prev => [...prev, idx]);
     if (navigator.vibrate) navigator.vibrate(50);
     
     setTimeout(() => {
       setImportedWeeklyIds(prev => prev.filter(id => id !== idx));
-    }, 2000);
-  };
-
-  // 修改后：把 item.desc 作为第四个参数传给 addSpecificTask
-  const importSingleTask = (e, item, uniqueId) => {
-    e.stopPropagation(); 
-    if (navigator.vibrate) navigator.vibrate(50); 
-    
-    // 修改：将 item.desc 一并传入
-    addSpecificTask(item.name, item.target, true, item.desc); 
-    
-    setImportedSingleItemIds(prev => [...prev, uniqueId]);
-    setTimeout(() => {
-      setImportedSingleItemIds(prev => prev.filter(id => id !== uniqueId));
     }, 2000);
   };
 
