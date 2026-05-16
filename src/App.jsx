@@ -495,6 +495,8 @@ const translations = {
     trainingReminder: '下午 4:30 训练提醒',
     warmUp: '记得提前 15 分钟热身',
     todayTraining: '今日训练',
+    todayTaskCard: '今日任务',
+    blazePointsCard: '冰焰积分',
     earnPoints: '单项 +{task}分 ｜ 全天完成额外 +{bonus}分',
     template: '模板',
     addCustom: '自定义训练...',
@@ -647,6 +649,8 @@ const translations = {
     trainingReminder: '4:30 PM Training Reminder',
     warmUp: 'Remember to warm up 15 mins early',
     todayTraining: 'Today\'s Training',
+    todayTaskCard: 'Today Tasks',
+    blazePointsCard: 'Blaze Points',
     earnPoints: 'Task +{task} pts | Daily Finish +{bonus} pts',
     template: 'Template',
     addCustom: 'Custom workout...',
@@ -1614,13 +1618,13 @@ const [carouselCounter, setCarouselCounter] = useState(0);
               {data.tasks ? data.tasks.filter(t => t.completed).length : 0} 
               <span className={`text-sm ${tc.textMuted} font-bold ml-1`}>/ {data.tasks ? data.tasks.length : 0}</span>
             </div>
-            <div className={`text-xs font-bold ${tc.textMuted} mt-1`}>今日任务完成</div>
+            <div className={`text-xs font-bold ${tc.textMuted} mt-1`}>{t.todayTaskCard || '今日任务'}</div>
           </div>
           
           <div className={`${tc.cardBg} rounded-3xl p-5 flex flex-col justify-center items-center shadow-sm border ${tc.borderLight}`}>
             <Award size={28} className="text-yellow-500" />
             <div className={`text-2xl font-black mt-2 text-yellow-500`}>{data.points}</div>
-            <div className={`text-xs font-bold ${tc.textMuted} mt-1`}>可用燃烧积分</div>
+            <div className={`text-xs font-bold ${tc.textMuted} mt-1`}>{t.blazePointsCard || '冰焰积分'}</div>
           </div>
         </div>
 
