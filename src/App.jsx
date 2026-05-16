@@ -2241,15 +2241,13 @@ export default function App() {
     );
   };
 
-  // 🌟 新增：比赛目标专属管理弹窗 (Modal)
+  // 🌟 新增：比赛目标专属管理弹窗 (Modal) - 直连云端版
   const RaceManagementModal = () => {
     if (!showRaceModal) return null;
 
     return (
       <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={() => setShowRaceModal(false)}>
         <div className={`${tc.cardBg} w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col`} onClick={e => e.stopPropagation()}>
-          
-          {/* 头部 */}
           <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
             <h3 className={`font-black ${tc.textHeading} flex items-center gap-2`}>
               <Trophy size={18} className={tc.textPrimary} />
@@ -2260,7 +2258,6 @@ export default function App() {
             </button>
           </div>
 
-          {/* 表单输入区 */}
           <div className="p-5 space-y-4 text-left">
             <div className="space-y-3">
               <div>
@@ -2287,8 +2284,9 @@ export default function App() {
             <button 
               onClick={() => {
                 if (newRaceNameInput.trim() && newRaceDateInput) {
-                  // 将新比赛追加进 formRaces 临时列表中
-                  setFormRaces([...formRaces, { id: Date.now(), name: newRaceNameInput.trim(), date: newRaceDateInput }]);
+                  // ✨ 核心变更：不再存入本地变量，直接追加并推送云端
+                  const currentRaces = data.races || (data.raceDate ? [{ id: 'legacy', name: t.raceDate, date: data.raceDate }] : []);
+                  updateData({ races: [...currentRaces, { id: Date.now(), name: newRaceNameInput.trim(), date: newRaceDateInput }] });
                   setNewRaceNameInput('');
                   setNewRaceDateInput('');
                   setShowRaceModal(false);
@@ -2298,16 +2296,15 @@ export default function App() {
               }}
               className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
             >
-              {t.save}
+              {data.language === 'en' ? 'Add Race' : '添加比赛'}
             </button>
           </div>
-
         </div>
       </div>
     );
   };
 
-  // 🛍️ 新增：商店商品录入管理弹窗 (Modal)
+  // 🛍️ 新增：商店商品录入管理弹窗 (Modal) - 直连云端版
   const ShopItemManagementModal = () => {
     if (!showShopItemModal) return null;
     const emojiList = ['🎁', '🎮', '🍦', '🍿', '🧸', '⛸️', '🎫', '🎬', '🏆', '🍔', '🛒', '⚡'];
@@ -2326,7 +2323,6 @@ export default function App() {
           </div>
 
           <div className="p-5 space-y-5 text-left">
-            {/* 图标挑选区 */}
             <div>
               <label className={`text-xs font-bold ${tc.textMuted} ml-1 mb-2 block`}>{data.language === 'en' ? 'Select Icon' : '挑选图标'}</label>
               <div className="grid grid-cols-6 gap-2 bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
@@ -2365,7 +2361,8 @@ export default function App() {
             <button 
               onClick={() => {
                 if (newItemName.trim() && newItemCost) {
-                  setFormRewards([...formRewards, { id: Date.now(), name: newItemName.trim(), cost: parseInt(newItemCost), icon: selectedEmoji }]);
+                  // ✨ 核心变更：不再存入本地变量，直接追加并推送云端
+                  updateData({ customRewards: [...(data.customRewards || []), { id: Date.now(), name: newItemName.trim(), cost: parseInt(newItemCost), icon: selectedEmoji }] });
                   setNewItemName('');
                   setNewItemCost('');
                   setShowShopItemModal(false);
@@ -2373,7 +2370,7 @@ export default function App() {
               }}
               className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
             >
-              {t.save}
+              {data.language === 'en' ? 'Add Item' : '添加商品'}
             </button>
           </div>
         </div>
@@ -2473,20 +2470,7 @@ export default function App() {
   };
 
   const SettingsView = () => {
-    const handleSaveSettings = () => {
-      updateData({ 
-        races: formRaces, 
-        weeklyTemplate: formTemplate,
-        pointsPerTask: parseInt(formPointsPerTask, 10) || 0,
-        dailyBonusPoints: parseInt(formDailyBonus, 10) || 0,
-        customRewards: formRewards.map(r => ({ ...r, cost: parseInt(r.cost, 10) || 0 })),
-        customDistances: formDistances
-      });
-      
-      setSaveSuccess(true);
-      if (navigator.vibrate) navigator.vibrate(50); 
-      setTimeout(() => setSaveSuccess(false), 2000);
-    };
+    // 🗑️ 注意：曾经臃肿的 handleSaveSettings 函数已经被彻底消灭！
 
     const handleSetPin = () => {
       if (/^\d{4}$/.test(pinInput)) {
@@ -2519,16 +2503,14 @@ export default function App() {
       await updateData({ language: targetLang });
     };
 
-    // 🌟 控制折叠面板展开与锁定的高级逻辑
     const toggleSection = (section, isLocked) => {
       if (isLocked) {
-        setExpandedSettingSection('security'); // 如果被锁，强制展开密码面板让家长解锁
+        setExpandedSettingSection('security'); 
         return;
       }
       setExpandedSettingSection(prev => prev === section ? null : section);
     };
 
-    // 统一定义：极简折叠标题栏组件
     const AccordionHeader = ({ id, icon: Icon, title, summary, hasError, isLocked }) => (
       <button 
         onClick={() => toggleSection(id, isLocked)}
@@ -2580,6 +2562,10 @@ export default function App() {
         })}
       </div>
     );
+
+    // 实时抓取云端数据用于列表展示
+    const currentRaces = data.races || (data.raceDate ? [{ id: 'legacy', name: t.raceDate, date: data.raceDate }] : []);
+    const currentRewards = data.customRewards || [];
 
     return (
       <div className="space-y-3 pb-4">
@@ -2746,7 +2732,7 @@ export default function App() {
             id="training" 
             icon={LineChart} 
             title={t.trainingConfig} 
-            summary={isParentMode ? `${formDistances.length} ${data.language==='en'?'Dists':'项目'} · ${formRaces.length} ${data.language==='en'?'Races':'比赛'}` : (data.language==='en'?'🔒 Unlock required':'🔒 请先解锁')}
+            summary={isParentMode ? `${formDistances.length} ${data.language==='en'?'Dists':'项目'} · ${currentRaces.length} ${data.language==='en'?'Races':'比赛'}` : (data.language==='en'?'🔒 Unlock required':'🔒 请先解锁')}
             isLocked={!isParentMode}
           />
           {expandedSettingSection === 'training' && isParentMode && (
@@ -2759,7 +2745,15 @@ export default function App() {
                     {!data.isPro && <Crown size={14} className="text-yellow-500" />}
                   </h3>
                   <button 
-                    onClick={() => data.isPro ? setFormDistances([...formDistances, String(t.newDistance)]) : setShowProModal(true)}
+                    onClick={() => {
+                      if (data.isPro) {
+                        const newDists = [...formDistances, String(t.newDistance)];
+                        setFormDistances(newDists);
+                        updateData({ customDistances: newDists }); // ✨ 智能自动保存
+                      } else {
+                        setShowProModal(true);
+                      }
+                    }}
                     className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
                   >
                     {data.isPro ? <Plus size={16} /> : <Crown size={16} className="text-yellow-500" />}
@@ -2778,10 +2772,19 @@ export default function App() {
                           newDists[index] = e.target.value;
                           setFormDistances(newDists);
                         }}
+                        onBlur={() => updateData({ customDistances: formDistances })} // ✨ 失去焦点无感保存
                         className={`w-16 bg-transparent text-sm font-bold ${tc.appText} focus:outline-none`}
                       />
                       <button 
-                        onClick={() => data.isPro ? setFormDistances(formDistances.filter((_, i) => i !== index)) : setShowProModal(true)}
+                        onClick={() => {
+                          if (data.isPro) {
+                            const newDists = formDistances.filter((_, i) => i !== index);
+                            setFormDistances(newDists);
+                            updateData({ customDistances: newDists }); // ✨ 智能自动保存
+                          } else {
+                            setShowProModal(true);
+                          }
+                        }}
                         className={`p-1 ${tc.textMuted} hover:text-red-500 transition-colors rounded-lg`}
                       >
                         <X size={14} />
@@ -2807,7 +2810,7 @@ export default function App() {
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {[...formRaces]
+                  {[...currentRaces]
                     .sort((a, b) => {
                       const timeA = new Date((a.date || '').replace(/-/g, '/')).getTime() || 0;
                       const timeB = new Date((b.date || '').replace(/-/g, '/')).getTime() || 0;
@@ -2822,7 +2825,7 @@ export default function App() {
                         <button 
                           onClick={() => {
                             if (window.confirm(data.language === 'en' ? 'Delete this race goal?' : '确定要删除这个比赛目标吗？')) {
-                              setFormRaces(formRaces.filter(r => r.id !== race.id));
+                              updateData({ races: currentRaces.filter(r => r.id !== race.id) }); // ✨ 立即删除云端记录
                             }
                           }}
                           className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 active:scale-90 rounded-lg transition-all"
@@ -2832,7 +2835,7 @@ export default function App() {
                       </div>
                     ))
                   }
-                  {formRaces.length === 0 && (
+                  {currentRaces.length === 0 && (
                     <div className={`text-xs ${tc.textMuted} py-2 text-center font-medium`}>
                       {data.language === 'en' ? 'No scheduled races' : '暂无规划中的比赛目标 🏁'}
                     </div>
@@ -2851,7 +2854,7 @@ export default function App() {
             id="rewards" 
             icon={Award} 
             title={data.language==='en'?'Points & Shop':'积分与商店管理'} 
-            summary={isParentMode ? `+${formPointsPerTask} ${t.points} · ${formRewards.length} ${data.language==='en'?'Items':'商品'}` : (data.language==='en'?'🔒 Unlock required':'🔒 请先解锁')}
+            summary={isParentMode ? `+${formPointsPerTask} ${t.points} · ${currentRewards.length} ${data.language==='en'?'Items':'商品'}` : (data.language==='en'?'🔒 Unlock required':'🔒 请先解锁')}
             isLocked={!isParentMode}
           />
           {expandedSettingSection === 'rewards' && isParentMode && (
@@ -2883,6 +2886,7 @@ export default function App() {
                       disabled={!data.isPro}
                       onClick={() => !data.isPro && setShowProModal(true)}
                       onChange={(e) => setFormPointsPerTask(e.target.value)}
+                      onBlur={() => updateData({ pointsPerTask: parseInt(formPointsPerTask, 10) || 0 })} // ✨ 失去焦点无感保存
                       className={`w-24 shrink-0 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
                     />
                   </div>
@@ -2894,6 +2898,7 @@ export default function App() {
                       disabled={!data.isPro}
                       onClick={() => !data.isPro && setShowProModal(true)}
                       onChange={(e) => setFormDailyBonus(e.target.value)}
+                      onBlur={() => updateData({ dailyBonusPoints: parseInt(formDailyBonus, 10) || 0 })} // ✨ 失去焦点无感保存
                       className={`w-24 shrink-0 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
                     />
                   </div>
@@ -2962,7 +2967,7 @@ export default function App() {
                 </div>
                 
                 <div className={`space-y-2 ${!data.isPro && 'opacity-60 grayscale'}`}>
-                  {[...formRewards]
+                  {[...currentRewards]
                     .sort((a, b) => a.cost - b.cost)
                     .map((reward) => (
                       <div key={reward.id} className={`flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-100/60 hover:bg-gray-50 transition-colors`}>
@@ -2976,7 +2981,13 @@ export default function App() {
                           </div>
                         </div>
                         <button 
-                          onClick={() => data.isPro ? setFormRewards(formRewards.filter(r => r.id !== reward.id)) : setShowProModal(true)}
+                          onClick={() => {
+                            if (data.isPro) {
+                              updateData({ customRewards: currentRewards.filter(r => r.id !== reward.id) }); // ✨ 立即删除云端记录
+                            } else {
+                              setShowProModal(true);
+                            }
+                          }}
                           className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 active:scale-90 rounded-lg transition-all"
                         >
                           <Trash2 size={16} />
@@ -2989,31 +3000,8 @@ export default function App() {
             </div>
           )}
         </div>
-
-        {/* =========================================
-            6. 底部保存按钮 (雷打不动)
-        =========================================== */}
-        <button 
-          onClick={handleSaveSettings}
-          disabled={saveSuccess}
-          className={`w-full py-4 rounded-xl font-bold shadow-md flex items-center justify-center gap-2 transition-all duration-300 mt-6 ${
-            saveSuccess 
-              ? 'bg-green-500 hover:bg-green-500 text-white scale-[0.98]' 
-              : tc.btnPrimary
-          }`}
-        >
-          {saveSuccess ? (
-            <>
-              <CheckCircle2 size={20} className="animate-bounce" /> 
-              {t.savedSuccessfully}
-            </>
-          ) : (
-            <>
-              <Save size={20} /> 
-              {t.saveSettings}
-            </>
-          )}
-        </button>
+        
+        {/* 🌟 底部那个占地方的“保存设置”大按钮，已被彻底铲除！页面到这里就干净利落地结束了。 */}
       </div>
     );
   }; // 💡 这是刚才 SettingsView 的闭合括号
