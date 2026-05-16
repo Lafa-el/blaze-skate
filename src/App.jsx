@@ -949,6 +949,12 @@ export default function App() {
   const [newRaceNameInput, setNewRaceNameInput] = useState(''); // 🌟 新增：新比赛名称暂存
   const [newRaceDateInput, setNewRaceDateInput] = useState(''); // 🌟 新增：新比赛日期暂存
 
+  // 🛍️ 新增：商店商品管理弹窗状态
+  const [showShopItemModal, setShowShopItemModal] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemCost, setNewItemCost] = useState('');
+  const [selectedEmoji, setSelectedEmoji] = useState('🎁'); // 默认初始图标
+
   const [carouselCounter, setCarouselCounter] = useState(0);
   const [pbCarouselCounter, setPbCarouselCounter] = useState(0);
   const pbTouchStartX = useRef(null);
@@ -2300,6 +2306,80 @@ export default function App() {
     );
   };
 
+  // 🛍️ 新增：商店商品录入管理弹窗 (Modal)
+  const ShopItemManagementModal = () => {
+    if (!showShopItemModal) return null;
+    const emojiList = ['🎁', '🎮', '🍦', '🍿', '🧸', '⛸️', '🎫', '🎬', '🏆', '🍔', '🛒', '⚡'];
+
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={() => setShowShopItemModal(false)}>
+        <div className={`${tc.cardBg} w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col`} onClick={e => e.stopPropagation()}>
+          <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
+            <h3 className={`font-black ${tc.textHeading} flex items-center gap-2`}>
+              <ShoppingCart size={18} className={tc.textPrimary} />
+              {data.language === 'en' ? 'Add New Item' : '添加新商品'}
+            </h3>
+            <button onClick={() => setShowShopItemModal(false)} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-5 space-y-5 text-left">
+            {/* 图标挑选区 */}
+            <div>
+              <label className={`text-xs font-bold ${tc.textMuted} ml-1 mb-2 block`}>{data.language === 'en' ? 'Select Icon' : '挑选图标'}</label>
+              <div className="grid grid-cols-6 gap-2 bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                {emojiList.map(emoji => (
+                  <button 
+                    key={emoji}
+                    onClick={() => setSelectedEmoji(emoji)}
+                    className={`text-2xl p-2 rounded-xl transition-all ${selectedEmoji === emoji ? 'bg-white shadow-md scale-110 ring-2 ' + tc.focusRing : 'hover:bg-white/50 opacity-60'}`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <input 
+                type="text" 
+                value={newItemName}
+                onChange={(e) => setNewItemName(e.target.value)}
+                placeholder={data.language === 'en' ? 'Item Name (e.g. Extra Game Time)' : '商品名称 (如：周末冰淇淋)'}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3.5 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+              <div className="relative">
+                <input 
+                  type="number" 
+                  value={newItemCost}
+                  onChange={(e) => setNewItemCost(e.target.value)}
+                  placeholder={data.language === 'en' ? 'Points Required' : '所需积分'}
+                  className={`w-full ${tc.inputBg} rounded-xl px-4 py-3.5 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all pl-10`}
+                />
+                <Zap size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-yellow-500" />
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => {
+                if (newItemName.trim() && newItemCost) {
+                  setFormRewards([...formRewards, { id: Date.now(), name: newItemName.trim(), cost: parseInt(newItemCost), icon: selectedEmoji }]);
+                  setNewItemName('');
+                  setNewItemCost('');
+                  setShowShopItemModal(false);
+                }
+              }}
+              className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
+            >
+              {t.save}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const DataView = () => {
     return (
       <div className="space-y-10">
@@ -2311,56 +2391,81 @@ export default function App() {
   };
 
   const ShopView = () => {
-    const currentRewards = data.customRewards || defaultData.customRewards;
+    // 同步展示排序后的商品，让用户一眼看到从易到难的奖励
+    const sortedRewards = [...(data.customRewards || [])].sort((a, b) => a.cost - b.cost);
 
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-end">
-          <div>
-            <h2 className={`text-2xl font-black ${tc.textHeading}`}>{t.rewardShop}</h2>
-            <p className={`text-sm ${tc.textMuted} mt-1`}>{t.treatYourself}</p>
+      <div className="space-y-8 pb-4">
+        {/* 顶部：资产看板 */}
+        <div className={`relative overflow-hidden bg-gradient-to-br ${tc.gradientCard} rounded-[2rem] p-6 text-white shadow-lg`}>
+          <div className="relative z-10 flex justify-between items-center">
+            <div>
+              <h2 className="text-3xl font-black tracking-tight">{t.rewardShop}</h2>
+              <p className="text-xs font-bold opacity-80 mt-1 uppercase tracking-widest">{t.treatYourself}</p>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-black uppercase opacity-70 mb-1">{t.availablePoints}</span>
+              <div className="flex items-center gap-1.5">
+                <Trophy size={20} className="text-yellow-300" />
+                <span className="text-3xl font-black">{data.points}</span>
+              </div>
+            </div>
           </div>
-          <div className="text-right flex flex-col items-end gap-1">
-            <button onClick={() => setShowHistory(true)} className={`flex items-center gap-1 text-[10px] ${tc.textPrimary} ${tc.badgeBg} px-2 py-1.5 rounded-full font-bold shadow-sm hover:opacity-80 transition-opacity`}>
-              <Clock size={12} /> {t.rewardHistory}
-            </button>
-            <div className={`text-xs ${tc.textMuted} font-medium mt-1`}>{t.availablePoints}</div>
-            <div className="text-2xl font-black text-yellow-500 leading-none">{data.points}</div>
-          </div>
+          {/* 背景装饰图案 */}
+          <ShoppingCart size={140} className="absolute -right-6 -bottom-6 opacity-10 -rotate-12 pointer-events-none" />
+          
+          <button 
+            onClick={() => setShowHistory(true)} 
+            className="mt-6 w-full py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95"
+          >
+            <Clock size={14} /> {t.rewardHistory}
+          </button>
         </div>
 
+        {/* 商品网格橱窗 */}
         <div className="grid grid-cols-2 gap-4">
-          {currentRewards.map(reward => (
-            <div key={reward.id} className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex flex-col items-center text-center relative overflow-hidden`}>
-              {!data.isPro && (
-                <div className="absolute top-0 right-0 w-12 h-12 overflow-hidden z-10">
-                   <div className="bg-yellow-500 text-white font-bold text-[8px] py-1 px-4 transform rotate-45 translate-x-3 translate-y-1 shadow-sm uppercase tracking-wider flex items-center justify-center gap-1">
-                     <Crown size={8}/> PRO
-                   </div>
+          {sortedRewards.map(reward => {
+            const canAfford = data.points >= reward.cost;
+            const isLocked = !data.isPro;
+
+            return (
+              <div key={reward.id} className={`${tc.cardBg} rounded-[2rem] p-1 shadow-sm border ${tc.borderLight} transition-all active:scale-[0.98]`}>
+                <div className="flex flex-col items-center text-center p-4">
+                  {/* 图标容器 */}
+                  <div className={`w-20 h-20 rounded-3xl ${tc.badgeBg} flex items-center justify-center text-4xl mb-4 relative shadow-inner`}>
+                    {reward.icon}
+                    {isLocked && <Crown size={12} className="absolute top-2 right-2 text-yellow-500 animate-pulse" />}
+                  </div>
+
+                  {/* 名称 */}
+                  <div className={`font-black ${tc.textHeading} text-sm leading-tight h-10 flex items-center px-1 mb-2`}>
+                    {reward.name}
+                  </div>
+
+                  {/* 价格标签 */}
+                  <div className={`flex items-center gap-1 mb-4 px-3 py-1 rounded-full ${canAfford ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-400'} transition-colors`}>
+                    <Zap size={12} className={canAfford ? 'fill-yellow-500' : ''} />
+                    <span className="text-xs font-black">{reward.cost}</span>
+                  </div>
+
+                  {/* 兑换按钮 */}
+                  <button 
+                    onClick={() => isLocked ? setShowProModal(true) : buyReward(reward)}
+                    disabled={!isLocked && !canAfford}
+                    className={`w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${
+                      isLocked 
+                        ? 'bg-slate-800 text-white shadow-md' 
+                        : canAfford 
+                          ? tc.btnPrimary + ' shadow-md' 
+                          : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                    }`}
+                  >
+                    {isLocked ? 'Unlock PRO' : canAfford ? t.redeem : t.notEnough}
+                  </button>
                 </div>
-              )}
-              <div className="text-4xl mb-3 drop-shadow-sm">{reward.icon}</div>
-              <div className={`font-bold ${tc.appText} mb-1 text-sm leading-tight h-10 flex items-center`}>{reward.name}</div>
-              <div className="text-yellow-500 font-black text-sm mb-4">{reward.cost} {t.points}</div>
-              <button 
-                onClick={() => data.isPro ? buyReward(reward) : setShowProModal(true)}
-                disabled={data.isPro && data.points < reward.cost}
-                className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all ${
-                  !data.isPro 
-                    ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md active:scale-95'
-                    : (data.points >= reward.cost 
-                        ? tc.btnPrimary + ' shadow-md active:scale-95' 
-                        : (data.theme === 'black' ? 'bg-slate-700 text-slate-500' : 'bg-gray-100 text-gray-400') + ' cursor-not-allowed')
-                }`}
-              >
-                {!data.isPro ? (
-                  <span className="flex items-center justify-center gap-1.5"><Crown size={14}/> PRO {t.redeem}</span>
-                ) : (
-                  data.points >= reward.cost ? t.redeem : t.notEnough
-                )}
-              </button>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -2735,75 +2840,45 @@ export default function App() {
             </div>
 
             {/* 从这里开始粘贴：全新安家的【商店商品管理】卡片 */}
-            <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
+            <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4 mt-4`}>
+              {/* 头部：标题 + 呼出弹窗按钮 */}
               <div className="flex justify-between items-center">
                 <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
                   <ShoppingCart size={18} className={tc.textMuted} /> {t.shopManagement}
                   {!data.isPro && <Crown size={14} className="text-yellow-500" />}
                 </h3>
                 <button 
-                  onClick={() => data.isPro ? setFormRewards([...formRewards, { id: Date.now(), name: '', cost: 100, icon: '🎁' }]) : setShowProModal(true)}
+                  onClick={() => data.isPro ? setShowShopItemModal(true) : setShowProModal(true)}
                   className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
                 >
                   {data.isPro ? <Plus size={16} /> : <Crown size={16} className="text-yellow-500" />}
                 </button>
               </div>
               
-              <div className="space-y-3">
-                {formRewards.map((reward, index) => (
-                  <div key={reward.id} className={`flex flex-col gap-2 p-3 ${tc.inputBg} rounded-xl relative pr-10 ${!data.isPro && 'opacity-60 grayscale'}`}>
-                    <button 
-                      onClick={() => data.isPro ? setFormRewards(formRewards.filter(r => r.id !== reward.id)) : setShowProModal(true)}
-                      className={`absolute top-1/2 -translate-y-1/2 right-3 ${tc.textMuted} hover:text-red-500 transition-colors`}
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                    
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        value={reward.icon}
-                        disabled={!data.isPro}
-                        onClick={() => !data.isPro && setShowProModal(true)}
-                        onChange={(e) => {
-                          const newRewards = [...formRewards];
-                          newRewards[index].icon = e.target.value;
-                          setFormRewards(newRewards);
-                        }}
-                        placeholder={String(t.emojiPlaceholder || '')}
-                        className={`w-14 shrink-0 text-center ${tc.cardBg} rounded-lg px-2 py-2 text-xl focus:outline-none focus:ring-1 ${tc.focusRing}`}
-                      />
-                      <input 
-                        type="text" 
-                        value={reward.name}
-                        disabled={!data.isPro}
-                        onClick={() => !data.isPro && setShowProModal(true)}
-                        onChange={(e) => {
-                          const newRewards = [...formRewards];
-                          newRewards[index].name = e.target.value;
-                          setFormRewards(newRewards);
-                        }}
-                        placeholder={String(t.itemNamePlaceholder || '')}
-                        className={`flex-1 min-w-0 ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
-                      />
+              {/* 商品列表：按照所需积分【升序排列】 */}
+              <div className={`space-y-2 ${!data.isPro && 'opacity-60 grayscale'}`}>
+                {[...formRewards]
+                  .sort((a, b) => a.cost - b.cost) // 升序排列
+                  .map((reward) => (
+                    <div key={reward.id} className={`flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-100/60 hover:bg-gray-50 transition-colors`}>
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <span className="text-2xl bg-white w-10 h-10 flex items-center justify-center rounded-lg shadow-sm shrink-0">{reward.icon}</span>
+                        <div className="flex flex-col min-w-0">
+                          <span className={`font-bold text-sm ${tc.textHeading} truncate`}>{reward.name}</span>
+                          <span className="text-[10px] font-black text-yellow-500 flex items-center gap-0.5">
+                            <Zap size={10} className="fill-yellow-500" /> {reward.cost}
+                          </span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => data.isPro ? setFormRewards(formRewards.filter(r => r.id !== reward.id)) : setShowProModal(true)}
+                        className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 active:scale-90 rounded-lg transition-all"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs font-bold ${tc.textMuted} shrink-0`}>{t.pointsRequired}</span>
-                      <input 
-                        type="number" 
-                        value={reward.cost}
-                        disabled={!data.isPro}
-                        onClick={() => !data.isPro && setShowProModal(true)}
-                        onChange={(e) => {
-                          const newRewards = [...formRewards];
-                          newRewards[index].cost = e.target.value;
-                          setFormRewards(newRewards);
-                        }}
-                        className={`flex-1 min-w-0 ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  ))
+                }
               </div>
             </div>
 
@@ -3658,6 +3733,7 @@ export default function App() {
       {HistoryDetailModal()} {/* ✨ 新增：挂载日历快照弹窗 */}
       {RecordManagementModal()} {/* ✨ 新增：挂载成绩管理弹窗 */}
       {RaceManagementModal()} {/* 🌟 新增：挂载比赛目标管理弹窗 */}
+      {ShopItemManagementModal()} {/* 🛍️ 新增：挂载商店商品管理弹窗 */}
       {RewardHistoryModal()}
       {ProfileModal()}
       {AuthModal()}
