@@ -945,6 +945,9 @@ export default function App() {
   const [selectedHistoryDate, setSelectedHistoryDate] = useState(null); // 新增：控制日历快照弹窗
   const [celebration, setCelebration] = useState(null);
   const [showRecordModal, setShowRecordModal] = useState(false); // ✨ 新增：成绩管理弹窗开关
+  const [showRaceModal, setShowRaceModal] = useState(false); // 🌟 新增：比赛管理弹窗开关
+  const [newRaceNameInput, setNewRaceNameInput] = useState(''); // 🌟 新增：新比赛名称暂存
+  const [newRaceDateInput, setNewRaceDateInput] = useState(''); // 🌟 新增：新比赛日期暂存
 
   const [carouselCounter, setCarouselCounter] = useState(0);
   const [pbCarouselCounter, setPbCarouselCounter] = useState(0);
@@ -2228,6 +2231,72 @@ export default function App() {
     );
   };
 
+  // 🌟 新增：比赛目标专属管理弹窗 (Modal)
+  const RaceManagementModal = () => {
+    if (!showRaceModal) return null;
+
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={() => setShowRaceModal(false)}>
+        <div className={`${tc.cardBg} w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col`} onClick={e => e.stopPropagation()}>
+          
+          {/* 头部 */}
+          <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
+            <h3 className={`font-black ${tc.textHeading} flex items-center gap-2`}>
+              <Trophy size={18} className={tc.textPrimary} />
+              {data.language === 'en' ? 'Add Race Target' : '添加比赛目标'}
+            </h3>
+            <button onClick={() => setShowRaceModal(false)} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* 表单输入区 */}
+          <div className="p-5 space-y-4 text-left">
+            <div className="space-y-3">
+              <div>
+                <label className={`text-xs font-bold ${tc.textMuted} ml-1 mb-1 block`}>{t.raceName}</label>
+                <input 
+                  type="text" 
+                  value={newRaceNameInput}
+                  onChange={(e) => setNewRaceNameInput(e.target.value)}
+                  placeholder={data.language === 'en' ? 'e.g. 2027 MASA ST Championship' : '例如：2027 MASA 短道锦标赛'}
+                  className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
+              </div>
+              <div>
+                <label className={`text-xs font-bold ${tc.textMuted} ml-1 mb-1 block`}>{data.language === 'en' ? 'Race Date' : '比赛日期'}</label>
+                <input 
+                  type="date" 
+                  value={newRaceDateInput}
+                  onChange={(e) => setNewRaceDateInput(e.target.value)}
+                  className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => {
+                if (newRaceNameInput.trim() && newRaceDateInput) {
+                  // 将新比赛追加进 formRaces 临时列表中
+                  setFormRaces([...formRaces, { id: Date.now(), name: newRaceNameInput.trim(), date: newRaceDateInput }]);
+                  setNewRaceNameInput('');
+                  setNewRaceDateInput('');
+                  setShowRaceModal(false);
+                } else {
+                  alert(data.language === 'en' ? 'Please fill in both name and date!' : '请完整填写比赛名称和日期！');
+                }
+              }}
+              className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
+            >
+              {t.save}
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  };
+
   const DataView = () => {
     return (
       <div className="space-y-10">
@@ -2592,52 +2661,51 @@ export default function App() {
             </div>
 
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
+              {/* 头部：标题 + 呼出比赛弹窗按钮 */}
               <div className="flex justify-between items-center">
                 <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
                   <Trophy size={18} className={tc.textMuted} /> {t.raceDate}
                 </h3>
                 <button 
-                  onClick={() => setFormRaces([...formRaces, { id: Date.now(), name: '', date: '' }])}
+                  onClick={() => setShowRaceModal(true)}
                   className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
                 >
                   <Plus size={16} />
                 </button>
               </div>
               
-              <div className="space-y-3">
-                {formRaces.map((race, index) => (
-                  <div key={race.id} className={`flex flex-col gap-2 p-3 ${tc.inputBg} rounded-xl relative`}>
-                    <button 
-                      onClick={() => setFormRaces(formRaces.filter(r => r.id !== race.id))}
-                      className={`absolute top-3 right-3 ${tc.textMuted} hover:text-red-500 transition-colors`}
-                    >
-                      <X size={16} />
-                    </button>
-                    <div className="pr-6">
-                      <input 
-                        type="text" 
-                        value={race.name}
-                        onChange={(e) => {
-                          const newRaces = [...formRaces];
-                          newRaces[index].name = e.target.value;
-                          setFormRaces(newRaces);
+              {/* 真实时间轴【升序排列】的历史记录风列表 */}
+              <div className="space-y-2">
+                {[...formRaces]
+                  .sort((a, b) => {
+                    const timeA = new Date((a.date || '').replace(/-/g, '/')).getTime() || 0;
+                    const timeB = new Date((b.date || '').replace(/-/g, '/')).getTime() || 0;
+                    return timeA - timeB; // 升序排列：日期越早越靠前
+                  })
+                  .map((race) => (
+                    <div key={race.id} className={`flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-100/60 hover:bg-gray-50 transition-colors`}>
+                      <div className="flex flex-col min-w-0 flex-1 pr-2 text-left">
+                        <span className={`font-bold text-sm ${tc.textHeading} truncate`}>{race.name || t.raceName}</span>
+                        <span className={`text-[10px] font-bold ${tc.textMuted} mt-0.5`}>{(race.date || '').replace(/-/g, '/')}</span>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          if (window.confirm(data.language === 'en' ? 'Delete this race goal?' : '确定要删除这个比赛目标吗？')) {
+                            setFormRaces(formRaces.filter(r => r.id !== race.id));
+                          }
                         }}
-                        placeholder={String(t.raceName || '')}
-                        className={`w-full ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing} mb-2`}
-                      />
-                      <input 
-                        type="date" 
-                        value={race.date}
-                        onChange={(e) => {
-                          const newRaces = [...formRaces];
-                          newRaces[index].date = e.target.value;
-                          setFormRaces(newRaces);
-                        }}
-                        className={`w-full ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
-                      />
+                        className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 active:scale-90 rounded-lg transition-all"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
+                  ))
+                }
+                {formRaces.length === 0 && (
+                  <div className={`text-xs ${tc.textMuted} py-4 text-center font-medium`}>
+                    {data.language === 'en' ? 'No scheduled races' : '暂无规划中的比赛目标 🏁'}
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -3582,6 +3650,7 @@ export default function App() {
       {/* 弹窗组件挂载区 */}
       {HistoryDetailModal()} {/* ✨ 新增：挂载日历快照弹窗 */}
       {RecordManagementModal()} {/* ✨ 新增：挂载成绩管理弹窗 */}
+      {RaceManagementModal()} {/* 🌟 新增：挂载比赛目标管理弹窗 */}
       {RewardHistoryModal()}
       {ProfileModal()}
       {AuthModal()}
