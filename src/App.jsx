@@ -1408,7 +1408,7 @@ const [carouselCounter, setCarouselCounter] = useState(0);
       }
     }
 
-    // 3. 计算当前轮播索引 (处理负数余数的安全机制)
+    // 3. 计算当前轮播索引
     const raceCount = upcomingRaces.length || 1;
     const currentRaceIdx = ((carouselCounter % raceCount) + raceCount) % raceCount;
 
@@ -1509,7 +1509,7 @@ const [carouselCounter, setCarouselCounter] = useState(0);
           </div>
         )}
 
-        {/* 3. 🎯 核心大卡片改造：MUJI 风格单屏滑动轮播图 */}
+        {/* 3. 🎯 核心大卡片：MUJI 风格单屏滑动轮播图 */}
         <div 
           className="relative w-full overflow-hidden rounded-3xl shadow-lg"
           onTouchStart={handleTouchStart}
@@ -1530,7 +1530,6 @@ const [carouselCounter, setCarouselCounter] = useState(0);
                     <div className="absolute -right-4 -top-4 opacity-10 pointer-events-none">
                       <Trophy size={110} />
                     </div>
-                    {/* 底部留出 pb-5 空间给小圆点 */}
                     <div className="relative z-10 flex justify-between items-end pb-5">
                       <div className="min-w-0 flex-1 pr-2">
                         <div className="text-white/80 font-bold text-xs mb-1">{race.date.replace(/-/g, '/')}</div>
@@ -1610,25 +1609,7 @@ const [carouselCounter, setCarouselCounter] = useState(0);
           </div>
         </div>
 
-        {/* 6. 双列核心数据快报 */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className={`${tc.cardBg} rounded-3xl p-5 flex flex-col justify-center items-center shadow-sm border ${tc.borderLight}`}>
-            <Flame size={28} className={tc.textPrimary} />
-            <div className={`text-2xl font-black mt-2 ${tc.textHeading}`}>
-              {data.tasks ? data.tasks.filter(t => t.completed).length : 0} 
-              <span className={`text-sm ${tc.textMuted} font-bold ml-1`}>/ {data.tasks ? data.tasks.length : 0}</span>
-            </div>
-            <div className={`text-xs font-bold ${tc.textMuted} mt-1`}>{t.todayTaskCard || '今日任务'}</div>
-          </div>
-          
-          <div className={`${tc.cardBg} rounded-3xl p-5 flex flex-col justify-center items-center shadow-sm border ${tc.borderLight}`}>
-            <Award size={28} className="text-yellow-500" />
-            <div className={`text-2xl font-black mt-2 text-yellow-500`}>{data.points}</div>
-            <div className={`text-xs font-bold ${tc.textMuted} mt-1`}>{t.blazePointsCard || '冰焰积分'}</div>
-          </div>
-        </div>
-
-        {/* 7. 最新高光里程碑 */}
+        {/* 6. 最新高光里程碑 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <div className={`flex items-center gap-2 mb-3 ${tc.textMuted}`}>
             <Award size={18} className="text-yellow-500" />
