@@ -897,6 +897,16 @@ export default function App() {
   const [selectedHistoryDate, setSelectedHistoryDate] = useState(null); // 新增：控制日历快照弹窗
   const [celebration, setCelebration] = useState(null);
 
+const [carouselCounter, setCarouselCounter] = useState(0);
+  const touchStartX = useRef(null);
+
+  useEffect(() => {
+    // 只有停留在概览页面时，才开启每5秒自动轮播
+    if (activeTab !== 'dashboard') return;
+    const timer = setInterval(() => setCarouselCounter(prev => prev + 1), 5000);
+    return () => clearInterval(timer);
+  }, [activeTab]);
+
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
   const [showPaymentInfo, setShowPaymentInfo] = useState(false); 
@@ -1375,17 +1385,17 @@ export default function App() {
   };
 
   const DashboardView = () => {
-    // 1. 抓取所有未来的比赛，并按时间先后顺序排列
-    const upcomingRaces = [...(data.races || [])]
+    // 1. 抓取所有未来的比赛
+    let upcomingRaces = [...(data.races || [])]
       .filter(r => {
         if (!r.date) return false;
-        const raceDate = new Date(r.date.replace(/-/g, '/')); // 兼容 iOS 日期格式
+        const raceDate = new Date(r.date.replace(/-/g, '/')); 
         const today = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
         return raceDate >= today;
       })
       .sort((a, b) => new Date(a.date.replace(/-/g, '/')) - new Date(b.date.replace(/-/g, '/')));
 
-    // 2. 如果新比赛数组空了但存在老版本的单一比赛目标，将其作为兜底放入数组中
+    // 2. 兜底逻辑
     if (upcomingRaces.length === 0 && data.raceDate) {
       const legacyDate = new Date(data.raceDate.replace(/-/g, '/'));
       const today = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
@@ -1393,6 +1403,28 @@ export default function App() {
         upcomingRaces.push({ id: 'legacy', name: t.raceDate, date: data.raceDate });
       }
     }
+
+    // 3. 计算当前轮播索引 (处理负数余数的安全机制)
+    const raceCount = upcomingRaces.length || 1;
+    const currentRaceIdx = ((carouselCounter % raceCount) + raceCount) % raceCount;
+
+    // 4. 滑动手势监听
+    const handleTouchStart = (e) => {
+      touchStartX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = (e) => {
+      if (touchStartX.current === null || upcomingRaces.length <= 1) return;
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartX.current - touchEndX;
+
+      if (diff > 50) { // 向左划，看下一场
+        setCarouselCounter(prev => prev + 1);
+      } else if (diff < -50) { // 向右划，看上一场
+        setCarouselCounter(prev => prev - 1);
+      }
+      touchStartX.current = null;
+    };
 
     const totalTasks = data.tasks?.length || 0;
     const completedTasks = (data.tasks || []).filter(t => t.completed).length;
@@ -1408,11 +1440,9 @@ export default function App() {
       d.setDate(startOfWeek.getDate() + i);
       const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const isCompleted = (data.completedDays || []).includes(dateStr);
-      
       const dDateOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
       const todayDateOnly = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate()).getTime();
       const isFuture = dDateOnly > todayDateOnly;
-      
       const dayNameBase = t.daysNames?.[i] || '';
       
       currentWeek.push({
@@ -1452,7 +1482,7 @@ export default function App() {
 
     return (
       <div className="space-y-4">
-        {/* 1. 顶部时间与问候语卡片 */}
+        {/* 1. 顶部时间与问候语 */}
         <div className={`${tc.cardBg} p-6 rounded-2xl shadow-sm`}>
           <h2 className={`${tc.textPrimary} opacity-80 text-sm font-semibold flex items-center gap-2`}>
             <Calendar size={16} /> 
@@ -1461,7 +1491,7 @@ export default function App() {
           <h1 className={`text-2xl font-black ${tc.textHeading} mt-2 tracking-tight leading-snug`}>{t.greetings?.[greetingIndex] || ''}</h1>
         </div>
 
-        {/* 2. 训练锦囊金句 */}
+        {/* 2. 训练锦囊 */}
         {safeTips.length > 0 && (
           <div className={`bg-gradient-to-br ${tc.navActive} border ${tc.borderLight} p-5 rounded-2xl shadow-sm relative overflow-hidden`}>
             <Quote size={80} className={`absolute -right-2 -bottom-2 opacity-5 ${tc.textPrimary} -rotate-12`} />
@@ -1475,48 +1505,69 @@ export default function App() {
           </div>
         )}
 
-        {/* 3. 核心大卡片改造：多比赛横向滑动倒计时卡片区 */}
+        {/* 3. 🎯 核心大卡片改造：MUJI 风格单屏滑动轮播图 */}
         <div 
-          className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 -mx-5 px-5 no-scrollbar" 
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} // 彻底隐藏横向原生滚动条
+          className="relative w-full overflow-hidden rounded-3xl shadow-lg"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
-          {upcomingRaces.length > 0 ? (
-            upcomingRaces.map((race, idx) => {
-              const raceDate = new Date(race.date.replace(/-/g, '/'));
-              const today = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
-              const daysLeft = Math.ceil((raceDate - today) / (1000 * 60 * 60 * 24));
-              
-              return (
-                <div key={race.id || idx} className={`shrink-0 w-[91%] snap-center relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br ${tc.gradientCard} text-white shadow-lg`}>
-                  <div className="absolute -right-4 -top-4 opacity-10">
-                    <Trophy size={110} />
-                  </div>
-                  <div className="relative z-10 flex justify-between items-end">
-                    <div className="min-w-0 flex-1 pr-2">
-                      <div className="text-white/80 font-bold text-xs mb-1">{race.date.replace(/-/g, '/')}</div>
-                      <div className="font-black text-xl tracking-tight leading-tight mb-1 truncate">{race.name || t.raceName}</div>
-                      <div className="text-white/90 text-xs font-medium opacity-80 truncate">{t.keepGoing}</div>
+          <div 
+            className="flex transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
+            style={{ transform: `translateX(-${currentRaceIdx * 100}%)` }}
+          >
+            {upcomingRaces.length > 0 ? (
+              upcomingRaces.map((race, idx) => {
+                const raceDate = new Date(race.date.replace(/-/g, '/'));
+                const today = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
+                const daysLeft = Math.ceil((raceDate - today) / (1000 * 60 * 60 * 24));
+                
+                return (
+                  <div key={race.id || idx} className={`w-full shrink-0 p-6 bg-gradient-to-br ${tc.gradientCard} text-white relative`}>
+                    <div className="absolute -right-4 -top-4 opacity-10 pointer-events-none">
+                      <Trophy size={110} />
                     </div>
-                    <div className="text-right shrink-0">
-                      <div className="text-[10px] text-white/80 font-bold uppercase tracking-widest mb-0.5">{t.daysToRace}</div>
-                      <div className="flex items-baseline gap-0.5 justify-end">
-                        <span className="font-black text-4xl">{Math.max(0, daysLeft)}</span>
-                        <span className="text-white/80 text-xs font-bold">{t.days}</span>
+                    {/* 底部留出 pb-5 空间给小圆点 */}
+                    <div className="relative z-10 flex justify-between items-end pb-5">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <div className="text-white/80 font-bold text-xs mb-1">{race.date.replace(/-/g, '/')}</div>
+                        <div className="font-black text-xl tracking-tight leading-tight mb-1 truncate">{race.name || t.raceName}</div>
+                        <div className="text-white/90 text-xs font-medium opacity-80 truncate">{t.keepGoing}</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-[10px] text-white/80 font-bold uppercase tracking-widest mb-0.5">{t.daysToRace}</div>
+                        <div className="flex items-baseline gap-0.5 justify-end">
+                          <span className="font-black text-4xl">{Math.max(0, daysLeft)}</span>
+                          <span className="text-white/80 text-xs font-bold">{t.days}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
+                );
+              })
+            ) : (
+              <div className={`w-full shrink-0 p-6 bg-gradient-to-br ${tc.gradientCard} text-white relative flex items-center justify-between`}>
+                <div className="absolute -right-4 -top-4 opacity-10 pointer-events-none"><Trophy size={110} /></div>
+                <div className="relative z-10 pb-5">
+                  <div className="font-black text-lg mb-1">暂无下场赛事安排</div>
+                  <div className="text-white/80 text-xs">可前往“数据”页面规划下一个里程碑目标</div>
                 </div>
-              );
-            })
-          ) : (
-            // 无赛事时的优雅等宽占位卡片
-            <div className={`shrink-0 w-[91%] mx-auto snap-center relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br ${tc.gradientCard} text-white shadow-lg flex items-center justify-between`}>
-              <div className="absolute -right-4 -top-4 opacity-10"><Trophy size={110} /></div>
-              <div className="relative z-10">
-                <div className="font-black text-lg mb-1">暂无下场赛事安排</div>
-                <div className="text-white/80 text-xs">可前往“数据”页面规划下一个里程碑目标</div>
+                <Trophy size={32} className="text-white/40 relative z-10 shrink-0 mb-5" />
               </div>
-              <Trophy size={32} className="text-white/40 relative z-10 shrink-0" />
+            )}
+          </div>
+
+          {/* 🌟 底部小圆点指示器 */}
+          {upcomingRaces.length > 1 && (
+            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-20">
+              {upcomingRaces.map((_, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => setCarouselCounter(idx)}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    idx === currentRaceIdx ? 'w-4 bg-white shadow-sm' : 'w-1.5 bg-white/40 hover:bg-white/60'
+                  }`}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -1555,7 +1606,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* 6. 双列核心数据快报卡片 */}
+        {/* 6. 双列核心数据快报 */}
         <div className="grid grid-cols-2 gap-4">
           <div className={`${tc.cardBg} rounded-3xl p-5 flex flex-col justify-center items-center shadow-sm border ${tc.borderLight}`}>
             <Flame size={28} className={tc.textPrimary} />
@@ -1573,7 +1624,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* 7. 最新高光里程碑数据卡片 */}
+        {/* 7. 最新高光里程碑 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <div className={`flex items-center gap-2 mb-3 ${tc.textMuted}`}>
             <Award size={18} className="text-yellow-500" />
@@ -1593,8 +1644,6 @@ export default function App() {
             <div className={`text-sm ${tc.textMuted} py-2`}>{t.noRecentRecord}</div>
           )}
         </div>
-
-        {/* 注：此处已按照设计策略，完美抹除原本最底部的“其他即将到来的比赛列表” */}
       </div>
     );
   };
