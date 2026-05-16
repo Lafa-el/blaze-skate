@@ -903,6 +903,8 @@ export default function App() {
   const [showRecordModal, setShowRecordModal] = useState(false); // ✨ 新增：成绩管理弹窗开关
 
   const [carouselCounter, setCarouselCounter] = useState(0);
+  const [pbCarouselCounter, setPbCarouselCounter] = useState(0);
+  const pbTouchStartX = useRef(null);
   const touchStartX = useRef(null);
 
   useEffect(() => {
@@ -1445,19 +1447,31 @@ export default function App() {
       });
     }
 
-    const allRecords = currentDistNames.flatMap(dist => {
-      const key = getRecordsKey(dist);
-      return (data[key] || []).map(r => ({ ...r, distance: dist }));
+    // 🏆 抓取所有设置项目中的 PB (个人最好成绩)
+    const pbCards = currentDistNames.map(dist => {
+      const records = data[getRecordsKey(dist)] || [];
+      let bestRecord = null;
+      if (records.length > 0) {
+        // 核心逻辑：遍历该项目所有成绩，提取时间最小（最快）的那一次
+        bestRecord = records.reduce((min, curr) => curr.time < min.time ? curr : min, records[0]);
+      }
+      return { distance: dist, bestRecord };
     });
-    
-    allRecords.sort((a, b) => {
-      const dA = a.date || '';
-      const dB = b.date || '';
-      const dateA = dA.includes('-') ? dA : (dA ? `${currentTime.getFullYear()}-${dA.replace('/', '-')}` : '');
-      const dateB = dB.includes('-') ? dB : (dB ? `${currentTime.getFullYear()}-${dB.replace('/', '-')}` : '');
-      return dateB.localeCompare(dateA);
-    });
-    const latestRecord = allRecords.length > 0 ? allRecords[0] : null;
+
+    const pbCount = pbCards.length || 1;
+    const currentPbIdx = ((pbCarouselCounter % pbCount) + pbCount) % pbCount;
+
+    // 滑动手势监听
+    const handlePbTouchStart = (e) => {
+      pbTouchStartX.current = e.touches[0].clientX;
+    };
+    const handlePbTouchEnd = (e) => {
+      if (pbTouchStartX.current === null || pbCards.length <= 1) return;
+      const diff = pbTouchStartX.current - e.changedTouches[0].clientX;
+      if (diff > 40) setPbCarouselCounter(prev => prev + 1); // 左滑看下一个项目
+      else if (diff < -40) setPbCarouselCounter(prev => prev - 1); // 右滑看上一个项目
+      pbTouchStartX.current = null;
+    };
 
     const hour = currentTime.getHours();
     let greetingIndex = 0;
@@ -1596,25 +1610,71 @@ export default function App() {
           </div>
         </div>
 
-        {/* 6. 最新高光里程碑 */}
-        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
-          <div className={`flex items-center gap-2 mb-3 ${tc.textMuted}`}>
+        {/* 6. 🏆 全项目 PB 荣誉墙 (MUJI风单屏滑动) */}
+        <div className={`${tc.cardBg} px-5 pt-5 pb-3 rounded-2xl shadow-sm space-y-3`}>
+          <div className={`flex items-center gap-2 ${tc.textMuted}`}>
             <Award size={18} className="text-yellow-500" />
-            <span className="text-sm font-bold">{t.recentHighlight}</span>
+            <span className="text-sm font-bold">{data.language === 'en' ? 'Personal Bests' : '个人最好成绩 (PB)'}</span>
           </div>
-          {latestRecord ? (
-            <div className="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl">
-              <div>
-                <div className={`text-2xl font-black ${tc.textPrimary}`}>{latestRecord.time}s</div>
-                <div className={`text-xs ${tc.textMuted} mt-1 font-medium`}>{(latestRecord.date || '').replace(/-/g, '/')} • {latestRecord.distance}</div>
-              </div>
-              <div className={`px-3 py-1.5 ${tc.badgeYellow} rounded-lg text-xs font-bold shadow-sm`}>
-                {t.keepItUp}
-              </div>
+
+          <div 
+            className="relative w-full overflow-hidden"
+            onTouchStart={handlePbTouchStart}
+            onTouchEnd={handlePbTouchEnd}
+          >
+            <div 
+              className="flex transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
+              style={{ transform: `translateX(-${currentPbIdx * 100}%)` }}
+            >
+              {pbCards.map((card, idx) => (
+                <div key={idx} className="w-full shrink-0 relative pb-5"> {/* pb-5 留出底部胶囊指示器的空间 */}
+                  <div className="p-4 rounded-xl bg-gray-50/80 border border-gray-100 flex justify-between items-center h-20 transition-all">
+                    
+                    {/* 左侧：距离与最佳成绩 */}
+                    <div className="flex flex-col justify-center">
+                      <span className="text-[11px] font-black text-gray-400 tracking-wider mb-0.5 uppercase">{card.distance} PB</span>
+                      {card.bestRecord ? (
+                        <span className={`text-2xl font-black ${tc.textPrimary} leading-none`}>
+                          {card.bestRecord.time}<span className="text-xs ml-0.5 opacity-60">s</span>
+                        </span>
+                      ) : (
+                        <span className="text-xl font-black text-gray-300 leading-none">-- <span className="text-xs">s</span></span>
+                      )}
+                    </div>
+                    
+                    {/* 右侧：创造日期或空状态引导 */}
+                    <div className="flex flex-col items-end justify-center">
+                      {card.bestRecord ? (
+                        <div className="bg-white text-gray-500 text-[11px] font-bold px-2.5 py-1.5 rounded-lg border border-gray-100 shadow-sm">
+                           {(card.bestRecord.date || '').replace(/-/g, '/')}
+                        </div>
+                      ) : (
+                        <div className={`text-[10px] font-bold ${tc.textPrimary} bg-white px-2.5 py-1.5 rounded-lg border border-gray-100 shadow-sm`}>
+                          {data.language === 'en' ? 'Go set a record!' : '快去创造记录吧'}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+              ))}
             </div>
-          ) : (
-            <div className={`text-sm ${tc.textMuted} py-2`}>{t.noRecentRecord}</div>
-          )}
+
+            {/* 🌟 极简 MUJI 风指示器 */}
+            {pbCards.length > 1 && (
+              <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1.5 z-20">
+                {pbCards.map((_, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => setPbCarouselCounter(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      idx === currentPbIdx ? `w-4 bg-gray-400 shadow-sm` : 'w-1.5 bg-gray-200 hover:bg-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
