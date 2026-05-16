@@ -836,6 +836,37 @@ const defaultData = {
   recordsLap: []
 };
 
+// ==========================================
+// ⏱️ 专业计时转换系统 (新增)
+// ==========================================
+const formatTimeInput = (value) => {
+  // 1. 过滤掉所有非数字字符，限制最多 7 位数
+  let digits = value.replace(/\D/g, '').slice(0, 7);
+  // 2. 智能补全冒号和小数点
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return digits.slice(0, 2) + ':' + digits.slice(2);
+  return digits.slice(0, 2) + ':' + digits.slice(2, 4) + '.' + digits.slice(4);
+};
+
+const parseTimeToSeconds = (formattedStr) => {
+  if (!formattedStr) return 0;
+  const parts = formattedStr.split(':');
+  if (parts.length === 2) {
+    return parseInt(parts[0] || 0, 10) * 60 + parseFloat(parts[1] || 0);
+  }
+  return parseFloat(parts[0] || 0);
+};
+
+const formatDisplayTime = (totalSeconds) => {
+  if (typeof totalSeconds !== 'number' || isNaN(totalSeconds)) return '--:--.---';
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  const mStr = String(m).padStart(2, '0');
+  const sStr = s.toFixed(3).padStart(6, '0');
+  return `${mStr}:${sStr}`;
+};
+// ==========================================
+
 const getPrevDayStr = (dateStr) => {
   const [y, m, d] = dateStr.split('-').map(Number);
   const date = new Date(y, m - 1, d - 1);
@@ -1302,8 +1333,10 @@ export default function App() {
   };
 
   const addRecord = () => {
-    const time = parseFloat(newRecordTime);
-    if (!isNaN(time) && time > 0) {
+    // 使用新的转换器：把 "00:49.543" 转换为 49.543 秒存入数据库
+    const time = parseTimeToSeconds(newRecordTime);
+    
+    if (time > 0) {
       let dateStr = newRecordDate || `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, '0')}-${String(currentTime.getDate()).padStart(2, '0')}`;
       const newRecord = { date: dateStr, time: time };
       
@@ -1634,11 +1667,12 @@ export default function App() {
                     <div className="flex flex-col justify-center">
                       <span className="text-[11px] font-black text-gray-400 tracking-wider mb-0.5 uppercase">{card.distance} PB</span>
                       {card.bestRecord ? (
-                        <span className={`text-2xl font-black ${tc.textPrimary} leading-none`}>
-                          {card.bestRecord.time}<span className="text-xs ml-0.5 opacity-60">s</span>
+                        {/* ▼ 替换这行 ▼ */}
+                        <span className={`text-xl font-black tracking-tighter ${tc.textPrimary} leading-none`}>
+                          {formatDisplayTime(card.bestRecord.time)}
                         </span>
                       ) : (
-                        <span className="text-xl font-black text-gray-300 leading-none">-- <span className="text-xs">s</span></span>
+                        <span className="text-xl font-black text-gray-300 leading-none">--:--.---</span>
                       )}
                     </div>
                     
@@ -2019,7 +2053,8 @@ export default function App() {
             return (
               <g key={index}>
                 <circle cx={x} cy={y} r="5" fill={tc.svgLine} stroke={data.theme==='black'?'#0f172a':'#ffffff'} strokeWidth="2" />
-                <text x={x} y={y - 12} fill={tc.svgLine} fontSize="10" fontWeight="bold" textAnchor="middle">{r.time}s</text>
+                {/* ▼ 替换这行 ▼ */}
+                <text x={x} y={y - 12} fill={tc.svgLine} fontSize="10" fontWeight="bold" textAnchor="middle">{formatDisplayTime(r.time)}</text>
                 <text x={x} y={height} fill={data.theme==='black'?'#94a3b8':'#9ca3af'} fontSize="10" textAnchor="middle">{displayDate}</text>
               </g>
             );
@@ -2063,7 +2098,7 @@ export default function App() {
             <h3 className={`${tc.textHeading} font-bold`}>{activeDistance} {t.recentRecords}</h3>
             <div className="flex items-center gap-2">
               <span className={`text-xs font-bold ${tc.badgeBg} ${tc.textPrimary} px-2 py-1 rounded-md`}>
-                {t.latest}: {chartRecords.length > 0 ? chartRecords[chartRecords.length - 1].time : '--'}s
+                {t.latest}: {chartRecords.length > 0 ? formatDisplayTime(chartRecords[chartRecords.length - 1].time) : '--'}
               </span>
               {/* ✨ 呼出弹窗的精美小按钮 */}
               {isParentMode && (
@@ -2125,14 +2160,15 @@ export default function App() {
                     onChange={(e) => setNewRecordDate(e.target.value)}
                     className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
                   />
-                  <input 
-                    type="number" 
-                    step="0.1"
-                    value={newRecordTime}
-                    onChange={(e) => setNewRecordTime(e.target.value)}
-                    placeholder={t.inputTime}
-                    className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-                  />
+                  {/* 替换这里的 input */}
+                <input 
+                  type="text" 
+                  inputMode="numeric"
+                  value={newRecordTime}
+                  onChange={(e) => setNewRecordTime(formatTimeInput(e.target.value))}
+                  placeholder="00:00.000"
+                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold tracking-wider ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
                 </div>
                 <button 
                   onClick={addRecord}
@@ -2153,7 +2189,8 @@ export default function App() {
                   {listRecords.map((r, idx) => (
                     <div key={idx} className={`flex justify-between items-center ${tc.badgeBg} bg-opacity-30 p-3 rounded-xl border ${tc.borderLight}`}>
                       <div className="flex flex-col">
-                        <span className={`font-black text-lg ${tc.textPrimary}`}>{r.time}s</span>
+                        {/* 替换这行 */}
+                        <span className={`font-black text-lg tracking-tight ${tc.textPrimary}`}>{formatDisplayTime(r.time)}</span>
                         <span className={`text-[10px] font-bold ${tc.textMuted}`}>{(r.date || '').replace(/-/g, '/')}</span>
                       </div>
                       <button 
