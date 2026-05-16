@@ -1375,16 +1375,24 @@ export default function App() {
   };
 
   const DashboardView = () => {
-    const activeRaces = (data.races || (data.raceDate ? [{ id: 1, name: t.raceDate, date: data.raceDate }] : []))
-      .map(r => ({
-        ...r,
-        days: Math.ceil((new Date(r.date) - currentTime) / (1000 * 60 * 60 * 24))
-      }))
-      .filter(r => r.days >= -1)
-      .sort((a, b) => a.days - b.days);
+    // 1. 抓取所有未来的比赛，并按时间先后顺序排列
+    const upcomingRaces = [...(data.races || [])]
+      .filter(r => {
+        if (!r.date) return false;
+        const raceDate = new Date(r.date.replace(/-/g, '/')); // 兼容 iOS 日期格式
+        const today = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
+        return raceDate >= today;
+      })
+      .sort((a, b) => new Date(a.date.replace(/-/g, '/')) - new Date(b.date.replace(/-/g, '/')));
 
-    const nearestRace = activeRaces.length > 0 ? activeRaces[0] : null;
-    const otherRaces = activeRaces.slice(1);
+    // 2. 如果新比赛数组空了但存在老版本的单一比赛目标，将其作为兜底放入数组中
+    if (upcomingRaces.length === 0 && data.raceDate) {
+      const legacyDate = new Date(data.raceDate.replace(/-/g, '/'));
+      const today = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
+      if (legacyDate >= today) {
+        upcomingRaces.push({ id: 'legacy', name: t.raceDate, date: data.raceDate });
+      }
+    }
 
     const totalTasks = data.tasks?.length || 0;
     const completedTasks = (data.tasks || []).filter(t => t.completed).length;
@@ -1444,7 +1452,7 @@ export default function App() {
 
     return (
       <div className="space-y-4">
-        
+        {/* 1. 顶部时间与问候语卡片 */}
         <div className={`${tc.cardBg} p-6 rounded-2xl shadow-sm`}>
           <h2 className={`${tc.textPrimary} opacity-80 text-sm font-semibold flex items-center gap-2`}>
             <Calendar size={16} /> 
@@ -1453,6 +1461,7 @@ export default function App() {
           <h1 className={`text-2xl font-black ${tc.textHeading} mt-2 tracking-tight leading-snug`}>{t.greetings?.[greetingIndex] || ''}</h1>
         </div>
 
+        {/* 2. 训练锦囊金句 */}
         {safeTips.length > 0 && (
           <div className={`bg-gradient-to-br ${tc.navActive} border ${tc.borderLight} p-5 rounded-2xl shadow-sm relative overflow-hidden`}>
             <Quote size={80} className={`absolute -right-2 -bottom-2 opacity-5 ${tc.textPrimary} -rotate-12`} />
@@ -1466,6 +1475,53 @@ export default function App() {
           </div>
         )}
 
+        {/* 3. 核心大卡片改造：多比赛横向滑动倒计时卡片区 */}
+        <div 
+          className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 -mx-5 px-5 no-scrollbar" 
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} // 彻底隐藏横向原生滚动条
+        >
+          {upcomingRaces.length > 0 ? (
+            upcomingRaces.map((race, idx) => {
+              const raceDate = new Date(race.date.replace(/-/g, '/'));
+              const today = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
+              const daysLeft = Math.ceil((raceDate - today) / (1000 * 60 * 60 * 24));
+              
+              return (
+                <div key={race.id || idx} className={`shrink-0 w-[91%] snap-center relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br ${tc.gradientCard} text-white shadow-lg`}>
+                  <div className="absolute -right-4 -top-4 opacity-10">
+                    <Trophy size={110} />
+                  </div>
+                  <div className="relative z-10 flex justify-between items-end">
+                    <div className="min-w-0 flex-1 pr-2">
+                      <div className="text-white/80 font-bold text-xs mb-1">{race.date.replace(/-/g, '/')}</div>
+                      <div className="font-black text-xl tracking-tight leading-tight mb-1 truncate">{race.name || t.raceName}</div>
+                      <div className="text-white/90 text-xs font-medium opacity-80 truncate">{t.keepGoing}</div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-[10px] text-white/80 font-bold uppercase tracking-widest mb-0.5">{t.daysToRace}</div>
+                      <div className="flex items-baseline gap-0.5 justify-end">
+                        <span className="font-black text-4xl">{Math.max(0, daysLeft)}</span>
+                        <span className="text-white/80 text-xs font-bold">{t.days}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            // 无赛事时的优雅等宽占位卡片
+            <div className={`shrink-0 w-[91%] mx-auto snap-center relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br ${tc.gradientCard} text-white shadow-lg flex items-center justify-between`}>
+              <div className="absolute -right-4 -top-4 opacity-10"><Trophy size={110} /></div>
+              <div className="relative z-10">
+                <div className="font-black text-lg mb-1">暂无下场赛事安排</div>
+                <div className="text-white/80 text-xs">可前往“数据”页面规划下一个里程碑目标</div>
+              </div>
+              <Trophy size={32} className="text-white/40 relative z-10 shrink-0" />
+            </div>
+          )}
+        </div>
+
+        {/* 4. 今日任务进度条 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <div className="flex justify-between items-end mb-3">
             <h3 className={`text-sm font-bold ${tc.textHeading} flex items-center gap-2`}><CheckCircle2 size={18} className={tc.textPrimary} /> {t.dailyProgress}</h3>
@@ -1479,6 +1535,7 @@ export default function App() {
           </div>
         </div>
 
+        {/* 5. 本周活跃星图 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <h3 className={`text-sm font-bold ${tc.textHeading} mb-4 flex items-center gap-2`}><Flame size={18} className="text-orange-500" /> {t.weeklyActivity}</h3>
           <div className="flex justify-between items-center px-1">
@@ -1498,29 +1555,25 @@ export default function App() {
           </div>
         </div>
 
+        {/* 6. 双列核心数据快报卡片 */}
         <div className="grid grid-cols-2 gap-4">
-          <div className={`bg-gradient-to-br ${tc.gradientCard} p-5 rounded-2xl shadow-md flex flex-col justify-between`}>
-            <div className="flex items-center gap-2 mb-2 opacity-90">
-              <Trophy size={18} className="shrink-0" />
-              <span className="text-sm font-medium line-clamp-1 break-all">
-                {nearestRace ? nearestRace.name : t.daysToRace}
-              </span>
+          <div className={`${tc.cardBg} rounded-3xl p-5 flex flex-col justify-center items-center shadow-sm border ${tc.borderLight}`}>
+            <Flame size={28} className={tc.textPrimary} />
+            <div className={`text-2xl font-black mt-2 ${tc.textHeading}`}>
+              {data.tasks ? data.tasks.filter(t => t.completed).length : 0} 
+              <span className={`text-sm ${tc.textMuted} font-bold ml-1`}>/ {data.tasks ? data.tasks.length : 0}</span>
             </div>
-            <div className="text-3xl font-black mt-1">
-              {nearestRace ? Math.max(0, nearestRace.days) : '--'} <span className="text-lg font-normal opacity-80">{t.days}</span>
-            </div>
-            <div className="text-xs mt-1 opacity-80">{t.keepGoing}</div>
+            <div className={`text-xs font-bold ${tc.textMuted} mt-1`}>今日任务完成</div>
           </div>
           
-          <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
-            <div className={`flex items-center gap-2 mb-2 ${tc.textMuted}`}>
-              <Zap size={18} className="text-orange-400" />
-              <span className="text-sm font-medium">{t.todayFocus}</span>
-            </div>
-            <div className={`text-xl font-bold ${tc.textPrimary} leading-tight`}>{todayTrainingType || 'Rest'}</div>
+          <div className={`${tc.cardBg} rounded-3xl p-5 flex flex-col justify-center items-center shadow-sm border ${tc.borderLight}`}>
+            <Award size={28} className="text-yellow-500" />
+            <div className={`text-2xl font-black mt-2 text-yellow-500`}>{data.points}</div>
+            <div className={`text-xs font-bold ${tc.textMuted} mt-1`}>可用燃烧积分</div>
           </div>
         </div>
 
+        {/* 7. 最新高光里程碑数据卡片 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
           <div className={`flex items-center gap-2 mb-3 ${tc.textMuted}`}>
             <Award size={18} className="text-yellow-500" />
@@ -1541,19 +1594,7 @@ export default function App() {
           )}
         </div>
 
-        {otherRaces.length > 0 && (
-          <div className="space-y-2 mt-4">
-            <h3 className={`text-sm font-bold ${tc.textHeading} px-1 mb-2`}>{t.upcomingRaces}</h3>
-            {otherRaces.map(r => (
-              <div key={r.id} className={`${tc.cardBg} p-3 rounded-xl shadow-sm flex justify-between items-center`}>
-                <span className={`font-medium ${tc.appText} text-sm truncate pr-2`}>{r.name}</span>
-                <div className={`${tc.textPrimary} font-black text-sm whitespace-nowrap ${tc.badgeBg} px-2 py-1 rounded`}>
-                  {Math.max(0, r.days)} {t.days}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* 注：此处已按照设计策略，完美抹除原本最底部的“其他即将到来的比赛列表” */}
       </div>
     );
   };
@@ -2405,24 +2446,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
-              <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                <Calendar size={18} className={tc.textMuted} /> {t.weeklyTemplate}
-              </h3>
-              <div className="space-y-3">
-                {(t.daysNames || []).map((day, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <span className={`w-10 text-sm font-bold ${tc.textMuted} shrink-0`}>{day}</span>
-                    <input 
-                      type="text" 
-                      value={formTemplate[index] || ''}
-                      onChange={(e) => setFormTemplate({...formTemplate, [index]: e.target.value})}
-                      className={`flex-1 min-w-0 ${tc.inputBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* 一周训练模板后台输入项已移除 */}
 
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
