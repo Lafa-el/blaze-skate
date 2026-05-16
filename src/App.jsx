@@ -954,6 +954,7 @@ export default function App() {
   const [newItemName, setNewItemName] = useState('');
   const [newItemCost, setNewItemCost] = useState('');
   const [selectedEmoji, setSelectedEmoji] = useState('🎁'); // 默认初始图标
+    const [expandedSettingSection, setExpandedSettingSection] = useState(null); // 🌟 新增：高级设置页面折叠面板大脑
 
   const [carouselCounter, setCarouselCounter] = useState(0);
   const [pbCarouselCounter, setPbCarouselCounter] = useState(0);
@@ -2518,390 +2519,504 @@ export default function App() {
       await updateData({ language: targetLang });
     };
 
-    const renderThemeSelector = () => (
-      <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
-        <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-          <Palette size={18} className={tc.textMuted} /> {t.themeSettingTitle}
-        </h3>
-        <div className="grid grid-cols-4 gap-3">
-          {Object.keys(THEMES).map(key => {
-            const theme = THEMES[key];
-            const isActive = (data.theme || 'purple') === key;
-            const isFreeTheme = FREE_THEMES.includes(key);
-            const isLocked = !data.isPro && !isFreeTheme;
+    // 🌟 控制折叠面板展开与锁定的高级逻辑
+    const toggleSection = (section, isLocked) => {
+      if (isLocked) {
+        setExpandedSettingSection('security'); // 如果被锁，强制展开密码面板让家长解锁
+        return;
+      }
+      setExpandedSettingSection(prev => prev === section ? null : section);
+    };
 
-            return (
-              <button
-                key={key}
-                onClick={() => {
-                  if (isLocked) setShowProModal(true);
-                  else updateData({ theme: key });
-                }}
-                className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all relative ${
-                  isActive ? tc.badgeBg + ' ring-2 ' + tc.focusRing : 'hover:opacity-70 ' + tc.calEmpty.split(' ')[0]
-                }`}
-              >
-                {isLocked && (
-                  <div className="absolute -top-1 -right-1 bg-slate-800 rounded-full p-0.5 shadow-md z-10">
-                    <Crown size={12} className="text-yellow-400" />
-                  </div>
-                )}
-                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${theme.gradientIcon} shadow-sm border border-white/20 ${isLocked ? 'opacity-50 grayscale' : ''}`}></div>
-                <span className={`text-[10px] font-bold ${isActive ? tc.textPrimary : tc.textMuted}`}>
-                  {data.language === 'en' ? theme.enName : theme.name}
-                </span>
-              </button>
-            )
-          })}
+    // 统一定义：极简折叠标题栏组件
+    const AccordionHeader = ({ id, icon: Icon, title, summary, hasError, isLocked }) => (
+      <button 
+        onClick={() => toggleSection(id, isLocked)}
+        className={`w-full flex items-center justify-between p-4 ${tc.cardBg} rounded-2xl shadow-sm border transition-all ${expandedSettingSection === id ? tc.borderLight + ' ring-2 ' + tc.focusRing : (hasError ? 'border-orange-300 bg-orange-50/30' : tc.borderLight + ' hover:opacity-80')}`}
+      >
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-xl ${tc.badgeBg} ${hasError ? 'text-orange-500' : tc.textPrimary}`}>
+            <Icon size={20} />
+          </div>
+          <span className={`font-bold ${tc.textHeading}`}>{title}</span>
         </div>
+        <div className="flex items-center gap-3">
+          <span className={`text-xs font-bold ${hasError || isLocked ? 'text-orange-500' : tc.textMuted}`}>{summary}</span>
+          {expandedSettingSection === id ? <ChevronUp size={18} className={tc.textMuted} /> : <ChevronDown size={18} className={tc.textMuted} />}
+        </div>
+      </button>
+    );
+
+    const renderThemeSelector = () => (
+      <div className="grid grid-cols-4 gap-3">
+        {Object.keys(THEMES).map(key => {
+          const theme = THEMES[key];
+          const isActive = (data.theme || 'purple') === key;
+          const isFreeTheme = FREE_THEMES.includes(key);
+          const isLocked = !data.isPro && !isFreeTheme;
+
+          return (
+            <button
+              key={key}
+              onClick={() => {
+                if (isLocked) setShowProModal(true);
+                else updateData({ theme: key });
+              }}
+              className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all relative ${
+                isActive ? tc.badgeBg + ' ring-2 ' + tc.focusRing : 'hover:opacity-70 ' + tc.calEmpty.split(' ')[0]
+              }`}
+            >
+              {isLocked && (
+                <div className="absolute -top-1 -right-1 bg-slate-800 rounded-full p-0.5 shadow-md z-10">
+                  <Crown size={12} className="text-yellow-400" />
+                </div>
+              )}
+              <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${theme.gradientIcon} shadow-sm border border-white/20 ${isLocked ? 'opacity-50 grayscale' : ''}`}></div>
+              <span className={`text-[10px] font-bold ${isActive ? tc.textPrimary : tc.textMuted}`}>
+                {data.language === 'en' ? theme.enName : theme.name}
+              </span>
+            </button>
+          )
+        })}
       </div>
     );
 
     return (
-      <div className="space-y-8">
-        <section className="space-y-4">
-          
-          <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
-            <h3 className={`${tc.textHeading} font-bold flex items-center gap-2 shrink-0`}>
-              <Globe size={18} className={tc.textMuted} /> {t.language}
-            </h3>
-            <button 
-              onClick={toggleLanguage}
-              className={`${tc.badgeBg} ${tc.textPrimary} px-4 py-2 rounded-lg font-bold text-sm hover:opacity-80 transition-colors flex items-center gap-2 shrink-0 whitespace-nowrap`}
-            >
-              {data.language === 'en' ? '🇨🇳 中文' : '🇬🇧 English'}
-            </button>
-          </div>
-
-          {renderThemeSelector()}
-        </section>
-
-        <section className="space-y-4">
-
-          <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm border-2 ${data.parentPin && !isUnlocked ? 'border-orange-300 bg-orange-50/30' : tc.borderLight}`}>
-            <div className="flex justify-between items-center mb-3">
-              <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                {data.parentPin && !isUnlocked ? <Lock size={18} className="text-orange-500" /> : <ShieldCheck size={18} className="text-green-500" />}
-                {t.parentMode}
-                {!data.isPro && <Crown size={14} className="text-yellow-500" />}
-              </h3>
-              {data.parentPin && isUnlocked && (
-                <button onClick={() => setIsUnlocked(false)} className={`text-xs font-bold ${tc.btnCancel} px-3 py-1.5 rounded-lg shrink-0 whitespace-nowrap`}>
-                  {t.lockNow}
-                </button>
+      <div className="space-y-3 pb-4">
+        {/* =========================================
+            1. 账号安全与同步
+        =========================================== */}
+        <div className="space-y-2">
+          <AccordionHeader 
+            id="account" 
+            icon={Cloud} 
+            title={t.accountStatus} 
+            summary={user?.isAnonymous ? (data.language === 'en' ? 'Guest ⚠️' : '游客模式 ⚠️') : (data.username || user?.email?.split('@')[0] || (data.language === 'en' ? 'Logged In 🟢' : '已登录 🟢'))} 
+            hasError={user?.isAnonymous}
+          />
+          {expandedSettingSection === 'account' && (
+            <div className={`p-5 rounded-2xl border ${tc.borderLight} ${tc.cardBg} animate-in fade-in slide-in-from-top-2 duration-200 space-y-4`}>
+              {user?.isAnonymous ? (
+                <div className="space-y-4">
+                  <p className={`text-xs ${tc.textMuted} leading-relaxed bg-orange-50/50 p-3 rounded-xl border border-orange-100/50`}>
+                    {t.guestWarning}
+                  </p>
+                  <button 
+                    onClick={() => setShowAuthModal(true)}
+                    className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95`}
+                  >
+                    {t.bindAccountBtn}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className={`flex items-center gap-3 ${tc.badgeBg} bg-opacity-30 p-3.5 rounded-xl border ${tc.borderLight}`}>
+                    <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary} shrink-0`}>
+                      <UserCircle size={24} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className={`font-bold ${tc.textHeading} truncate`}>{data.username || user?.email || (data.language === 'en' ? 'Official Account' : '已绑定正式账号')}</div>
+                      <div className={`text-xs ${tc.textPrimary} truncate`}>{user?.email || (data.language === 'en' ? 'Phone linked' : '手机号绑定用户')}</div>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowAccountModal(true)}
+                    className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95`}
+                  >
+                    {t.manageAccountBtn}
+                  </button>
+                </div>
               )}
             </div>
-            
-            {!data.parentPin && (
-              <div className="space-y-3">
-                <p className={`text-xs ${tc.textMuted}`}>
-                  {data.language === 'en' ? 'Set a 4-digit PIN to lock data entry' : '设置4位数字密码以锁定数据录入'}
-                </p>
-                <div className="flex gap-2">
-                  <input 
-                    type="password" 
-                    maxLength={4}
-                    value={pinInput}
-                    disabled={!data.isPro}
-                    onClick={() => !data.isPro && setShowProModal(true)}
-                    onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
-                    placeholder={t.pinPlaceholder}
-                    className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold disabled:opacity-50`}
-                  />
-                  <button onClick={data.isPro ? handleSetPin : () => setShowProModal(true)} className={`${tc.btnPrimary} px-4 py-2 rounded-xl font-bold text-sm shadow-sm shrink-0 whitespace-nowrap ${!data.isPro ? 'opacity-90' : ''}`}>
-                    {data.isPro ? String(t.setPin) : <span className="flex items-center"><Crown size={14} className="inline mr-1 -mt-0.5"/>PRO</span>}
-                  </button>
-                </div>
-              </div>
-            )}
+          )}
+        </div>
 
-            {data.parentPin && !isUnlocked && (
-              <div className="space-y-3">
-                <p className={`text-xs text-orange-600 font-medium`}>{t.unlockPrompt}</p>
-                <div className="flex gap-2">
-                  <input 
-                    type="password" 
-                    maxLength={4}
-                    value={pinInput}
-                    onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
-                    placeholder="****"
-                    className={`flex-1 min-w-0 bg-white border border-orange-200 focus:ring-orange-400 rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold text-gray-800`}
-                  />
-                  <button onClick={handleUnlock} className={`bg-orange-500 hover:bg-orange-400 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center gap-1 shrink-0 whitespace-nowrap`}>
-                    <Unlock size={16} /> {t.unlock}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {data.parentPin && isUnlocked && (
-              <div className="flex justify-between items-center bg-green-50 p-3 rounded-xl border border-green-100">
-                <span className="text-sm font-bold text-green-700">{t.unlockedStatus}</span>
-                <button onClick={handleRemovePin} className="text-xs font-bold text-red-500 hover:bg-red-50 px-2 py-1 rounded shrink-0 whitespace-nowrap">
-                  {t.removePin}
-                </button>
-              </div>
-            )}
-
-            {pinError && <div className={`text-xs ${pinError.includes('✅') ? 'text-green-600' : 'text-red-500'} font-bold mt-2 ${pinError.includes('✅') ? '' : 'animate-pulse'}`}>{pinError}</div>}
-          </div>
-        </section>
-
-        {isParentMode && (
-          <section className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
-
-            <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
-              <div className="flex justify-between items-center">
-                <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                  <LineChart size={18} className={tc.textMuted} /> {t.distanceManagement}
-                  {!data.isPro && <Crown size={14} className="text-yellow-500" />}
-                </h3>
-                <button 
-                  onClick={() => data.isPro ? setFormDistances([...formDistances, String(t.newDistance)]) : setShowProModal(true)}
-                  className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
-                >
-                  {data.isPro ? <Plus size={16} /> : <Crown size={16} className="text-yellow-500" />}
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {formDistances.map((dist, index) => (
-                  <div key={index} className={`flex items-center gap-1 ${tc.inputBg} pl-3 pr-1 py-1.5 rounded-xl border border-transparent focus-within:${tc.borderLight} ${!data.isPro && 'opacity-60 grayscale'}`}>
-                    <input 
-                      type="text" 
-                      value={dist}
-                      disabled={!data.isPro}
-                      onClick={() => !data.isPro && setShowProModal(true)}
-                      onChange={(e) => {
-                        const newDists = [...formDistances];
-                        newDists[index] = e.target.value;
-                        setFormDistances(newDists);
-                      }}
-                      className={`w-16 bg-transparent text-sm font-bold ${tc.appText} focus:outline-none`}
-                    />
-                    <button 
-                      onClick={() => data.isPro ? setFormDistances(formDistances.filter((_, i) => i !== index)) : setShowProModal(true)}
-                      className={`p-1 ${tc.textMuted} hover:text-red-500 transition-colors rounded-lg`}
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            
-
-            <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
-              {/* 头部：标题 + 呼出比赛弹窗按钮 */}
-              <div className="flex justify-between items-center">
-                <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                  <Trophy size={18} className={tc.textMuted} /> {t.raceDate}
-                </h3>
-                <button 
-                  onClick={() => setShowRaceModal(true)}
-                  className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
-                >
-                  <Plus size={16} />
-                </button>
+        {/* =========================================
+            2. 家长/教练模式
+        =========================================== */}
+        <div className="space-y-2">
+          <AccordionHeader 
+            id="security" 
+            icon={ShieldCheck} 
+            title={t.parentMode} 
+            summary={data.parentPin ? (isUnlocked ? (data.language==='en'?'Unlocked 🟢':'已解锁 🟢') : (data.language==='en'?'Locked 🔒':'已锁定 🔒')) : (data.language==='en'?'Not Set':'未设置')}
+            hasError={data.parentPin && !isUnlocked}
+          />
+          {expandedSettingSection === 'security' && (
+            <div className={`p-5 rounded-2xl border ${tc.borderLight} ${tc.cardBg} animate-in fade-in slide-in-from-top-2 duration-200`}>
+              <div className="flex justify-between items-center mb-4">
+                <span className={`text-sm font-bold ${tc.textHeading}`}>{data.language === 'en' ? 'Access Control' : '权限控制'}</span>
+                {!data.isPro && <Crown size={14} className="text-yellow-500" />}
               </div>
               
-              {/* 真实时间轴【升序排列】的历史记录风列表 */}
-              <div className="space-y-2">
-                {[...formRaces]
-                  .sort((a, b) => {
-                    const timeA = new Date((a.date || '').replace(/-/g, '/')).getTime() || 0;
-                    const timeB = new Date((b.date || '').replace(/-/g, '/')).getTime() || 0;
-                    return timeA - timeB; // 升序排列：日期越早越靠前
-                  })
-                  .map((race) => (
-                    <div key={race.id} className={`flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-100/60 hover:bg-gray-50 transition-colors`}>
-                      <div className="flex flex-col min-w-0 flex-1 pr-2 text-left">
-                        <span className={`font-bold text-sm ${tc.textHeading} truncate`}>{race.name || t.raceName}</span>
-                        <span className={`text-[10px] font-bold ${tc.textMuted} mt-0.5`}>{(race.date || '').replace(/-/g, '/')}</span>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          if (window.confirm(data.language === 'en' ? 'Delete this race goal?' : '确定要删除这个比赛目标吗？')) {
-                            setFormRaces(formRaces.filter(r => r.id !== race.id));
-                          }
-                        }}
-                        className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 active:scale-90 rounded-lg transition-all"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))
-                }
-                {formRaces.length === 0 && (
-                  <div className={`text-xs ${tc.textMuted} py-4 text-center font-medium`}>
-                    {data.language === 'en' ? 'No scheduled races' : '暂无规划中的比赛目标 🏁'}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 一周训练模板后台输入项已移除 */}
-
-            <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
-              {/* 头部：标题 + 🧹 一键清空积分按钮 */}
-              <div className="flex justify-between items-center">
-                <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                  <Award size={18} className={tc.textMuted} /> {t.pointsSettingTitle}
-                  {!data.isPro && <Crown size={14} className="text-yellow-500" />}
-                </h3>
-                <button 
-                  onClick={() => {
-                    if (window.confirm(data.language === 'en' ? 'Reset all points to 0?' : '确定要将所有可用积分清零吗？')) {
-                      updateData({ points: 0 });
-                    }
-                  }}
-                  className="text-[10px] font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors active:scale-95 shadow-sm"
-                >
-                  {data.language === 'en' ? 'Reset Points' : '清空积分'}
-                </button>
-              </div>
-
-              <div className={`space-y-3 ${!data.isPro && 'opacity-60 grayscale'}`}>
-                {/* 原本的完成任务积分设置 */}
-                <div className={`flex items-center justify-between gap-3 ${tc.inputBg} p-3 rounded-xl`}>
-                  <span className={`text-sm font-bold ${tc.appText} shrink-0`}>{t.pointsPerTask}</span>
-                  <input 
-                    type="number" 
-                    value={formPointsPerTask}
-                    disabled={!data.isPro}
-                    onClick={() => !data.isPro && setShowProModal(true)}
-                    onChange={(e) => setFormPointsPerTask(e.target.value)}
-                    className={`w-24 shrink-0 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
-                  />
-                </div>
-                <div className={`flex items-center justify-between gap-3 ${tc.inputBg} p-3 rounded-xl`}>
-                  <span className={`text-sm font-bold ${tc.appText} shrink-0`}>{t.dailyBonusPoints}</span>
-                  <input 
-                    type="number" 
-                    value={formDailyBonus}
-                    disabled={!data.isPro}
-                    onClick={() => !data.isPro && setShowProModal(true)}
-                    onChange={(e) => setFormDailyBonus(e.target.value)}
-                    className={`w-24 shrink-0 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
-                  />
-                </div>
-
-                {/* ✨ 新增：家长手动调整积分特权控制台 */}
-                <div className="mt-4 pt-4 border-t border-gray-100/60 space-y-2 text-left">
-                  <label className={`text-xs font-bold ${tc.textMuted} flex items-center gap-1.5`}>
-                    <Sparkles size={12} className="text-yellow-500" />
-                    {data.language === 'en' ? 'Manual Performance Rewards' : '表现分手动调整 (家长特权)'}
-                  </label>
+              {!data.parentPin && (
+                <div className="space-y-3">
+                  <p className={`text-xs ${tc.textMuted}`}>
+                    {data.language === 'en' ? 'Set a 4-digit PIN to lock data entry' : '设置4位数字密码以锁定数据录入'}
+                  </p>
                   <div className="flex gap-2">
                     <input 
-                      type="text"
-                      inputMode="numeric"
-                      value={adjustAmount}
-                      onChange={(e) => setAdjustAmount(e.target.value.replace(/\D/g, ''))}
-                      placeholder={data.language === 'en' ? 'Score' : '输入分值 (如: 50)'}
-                      className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-3 py-2 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                      type="password" 
+                      maxLength={4}
+                      value={pinInput}
+                      disabled={!data.isPro}
+                      onClick={() => !data.isPro && setShowProModal(true)}
+                      onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
+                      placeholder={t.pinPlaceholder}
+                      className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold disabled:opacity-50`}
                     />
-                    <button
-                      onClick={() => {
-                        const amt = parseInt(adjustAmount, 10);
-                        if (!isNaN(amt) && amt > 0) {
-                          updateData({ points: data.points + amt });
-                          setAdjustAmount('');
-                          alert(data.language === 'en' ? `Successfully added ${amt} points!` : `已成功奖励 ${amt} 积分！`);
-                        }
-                      }}
-                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black shadow-sm active:scale-95 transition-all whitespace-nowrap"
-                    >
-                      {data.language === 'en' ? 'Add (+)' : '奖励 (+)'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        const amt = parseInt(adjustAmount, 10);
-                        if (!isNaN(amt) && amt > 0) {
-                          updateData({ points: Math.max(0, data.points - amt) });
-                          setAdjustAmount('');
-                          alert(data.language === 'en' ? `Successfully deducted ${amt} points!` : `已成功扣除 ${amt} 积分！`);
-                        }
-                      }}
-                      className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black shadow-sm active:scale-95 transition-all whitespace-nowrap"
-                    >
-                      {data.language === 'en' ? 'Deduct (-)' : '扣除 (-)'}
+                    <button onClick={data.isPro ? handleSetPin : () => setShowProModal(true)} className={`${tc.btnPrimary} px-4 py-2 rounded-xl font-bold text-sm shadow-sm shrink-0 whitespace-nowrap ${!data.isPro ? 'opacity-90' : ''}`}>
+                      {data.isPro ? String(t.setPin) : <span className="flex items-center"><Crown size={14} className="inline mr-1 -mt-0.5"/>PRO</span>}
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
+              )}
 
-            {/* 从这里开始粘贴：全新安家的【商店商品管理】卡片 */}
-            <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4 mt-4`}>
-              {/* 头部：标题 + 呼出弹窗按钮 */}
+              {data.parentPin && !isUnlocked && (
+                <div className="space-y-3">
+                  <p className={`text-xs text-orange-600 font-medium`}>{t.unlockPrompt}</p>
+                  <div className="flex gap-2">
+                    <input 
+                      type="password" 
+                      maxLength={4}
+                      value={pinInput}
+                      onChange={(e) => { setPinInput(e.target.value); setPinError(''); }}
+                      placeholder="****"
+                      className={`flex-1 min-w-0 bg-white border border-orange-200 focus:ring-orange-400 rounded-xl px-4 py-2 text-center tracking-[0.5em] font-bold text-gray-800`}
+                    />
+                    <button onClick={handleUnlock} className={`bg-orange-500 hover:bg-orange-400 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center gap-1 shrink-0 whitespace-nowrap`}>
+                      <Unlock size={16} /> {t.unlock}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {data.parentPin && isUnlocked && (
+                <div className="flex justify-between items-center bg-green-50 p-3 rounded-xl border border-green-100">
+                  <span className="text-sm font-bold text-green-700">{t.unlockedStatus}</span>
+                  <div className="flex gap-2">
+                    <button onClick={() => setIsUnlocked(false)} className={`text-xs font-bold ${tc.btnCancel} px-3 py-1.5 rounded-lg shrink-0`}>
+                      {t.lockNow}
+                    </button>
+                    <button onClick={handleRemovePin} className="text-xs font-bold text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg shrink-0">
+                      {t.removePin}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {pinError && <div className={`text-xs ${pinError.includes('✅') ? 'text-green-600' : 'text-red-500'} font-bold mt-2 ${pinError.includes('✅') ? '' : 'animate-pulse'}`}>{pinError}</div>}
+            </div>
+          )}
+        </div>
+
+        {/* =========================================
+            3. 应用偏好
+        =========================================== */}
+        <div className="space-y-2">
+          <AccordionHeader 
+            id="preferences" 
+            icon={SlidersHorizontal} 
+            title={t.appPreferences} 
+            summary={`${data.language === 'en' ? 'EN' : '中文'} · ${data.language === 'en' ? THEMES[data.theme]?.enName : THEMES[data.theme]?.name}`}
+          />
+          {expandedSettingSection === 'preferences' && (
+            <div className={`p-5 rounded-2xl border ${tc.borderLight} ${tc.cardBg} animate-in fade-in slide-in-from-top-2 duration-200 space-y-6`}>
               <div className="flex justify-between items-center">
-                <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                  <ShoppingCart size={18} className={tc.textMuted} /> {t.shopManagement}
-                  {!data.isPro && <Crown size={14} className="text-yellow-500" />}
-                </h3>
+                <span className={`text-sm font-bold ${tc.textHeading} flex items-center gap-2`}><Globe size={16} className={tc.textMuted}/> {t.language}</span>
                 <button 
-                  onClick={() => data.isPro ? setShowShopItemModal(true) : setShowProModal(true)}
-                  className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
+                  onClick={toggleLanguage}
+                  className={`${tc.badgeBg} ${tc.textPrimary} px-4 py-2 rounded-lg font-bold text-sm hover:opacity-80 transition-colors flex items-center gap-2 shrink-0 whitespace-nowrap`}
                 >
-                  {data.isPro ? <Plus size={16} /> : <Crown size={16} className="text-yellow-500" />}
+                  {data.language === 'en' ? '🇨🇳 中文' : '🇬🇧 English'}
                 </button>
               </div>
-              
-              {/* 商品列表：按照所需积分【升序排列】 */}
-              <div className={`space-y-2 ${!data.isPro && 'opacity-60 grayscale'}`}>
-                {[...formRewards]
-                  .sort((a, b) => a.cost - b.cost) // 升序排列
-                  .map((reward) => (
-                    <div key={reward.id} className={`flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-100/60 hover:bg-gray-50 transition-colors`}>
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <span className="text-2xl bg-white w-10 h-10 flex items-center justify-center rounded-lg shadow-sm shrink-0">{reward.icon}</span>
-                        <div className="flex flex-col min-w-0">
-                          <span className={`font-bold text-sm ${tc.textHeading} truncate`}>{reward.name}</span>
-                          <span className="text-[10px] font-black text-yellow-500 flex items-center gap-0.5">
-                            <Zap size={10} className="fill-yellow-500" /> {reward.cost}
-                          </span>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => data.isPro ? setFormRewards(formRewards.filter(r => r.id !== reward.id)) : setShowProModal(true)}
-                        className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 active:scale-90 rounded-lg transition-all"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))
-                }
+              <div className="pt-4 border-t border-gray-100/60">
+                <span className={`text-sm font-bold ${tc.textHeading} flex items-center gap-2 mb-4`}><Palette size={16} className={tc.textMuted}/> {t.themeSettingTitle}</span>
+                {renderThemeSelector()}
               </div>
             </div>
+          )}
+        </div>
 
-            {/* 💡 下一行紧接着就是保存设置的主按钮 */}
-            <button 
-              onClick={handleSaveSettings}
-              disabled={saveSuccess}
-              className={`w-full py-4 rounded-xl font-bold shadow-md flex items-center justify-center gap-2 transition-all duration-300 ${
-                saveSuccess 
-                  ? 'bg-green-500 hover:bg-green-500 text-white scale-[0.98]' 
-                  : tc.btnPrimary
-              }`}
-            >
-              {saveSuccess ? (
-                <>
-                  <CheckCircle2 size={20} className="animate-bounce" /> 
-                  {t.savedSuccessfully}
-                </>
-              ) : (
-                <>
-                  <Save size={20} /> 
-                  {t.saveSettings}
-                </>
-              )}
-            </button>
-          </section>
-        )}
+        {/* =========================================
+            4. 训练与核心数据
+        =========================================== */}
+        <div className="space-y-2">
+          <AccordionHeader 
+            id="training" 
+            icon={LineChart} 
+            title={t.trainingConfig} 
+            summary={isParentMode ? `${formDistances.length} ${data.language==='en'?'Dists':'项目'} · ${formRaces.length} ${data.language==='en'?'Races':'比赛'}` : (data.language==='en'?'🔒 Unlock required':'🔒 请先解锁')}
+            isLocked={!isParentMode}
+          />
+          {expandedSettingSection === 'training' && isParentMode && (
+            <div className={`p-5 rounded-2xl border ${tc.borderLight} ${tc.cardBg} animate-in fade-in slide-in-from-top-2 duration-200 space-y-6`}>
+              {/* 成绩项目距离管理 */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
+                    <Dumbbell size={18} className={tc.textMuted} /> {t.distanceManagement}
+                    {!data.isPro && <Crown size={14} className="text-yellow-500" />}
+                  </h3>
+                  <button 
+                    onClick={() => data.isPro ? setFormDistances([...formDistances, String(t.newDistance)]) : setShowProModal(true)}
+                    className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
+                  >
+                    {data.isPro ? <Plus size={16} /> : <Crown size={16} className="text-yellow-500" />}
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {formDistances.map((dist, index) => (
+                    <div key={index} className={`flex items-center gap-1 ${tc.inputBg} pl-3 pr-1 py-1.5 rounded-xl border border-transparent focus-within:${tc.borderLight} ${!data.isPro && 'opacity-60 grayscale'}`}>
+                      <input 
+                        type="text" 
+                        value={dist}
+                        disabled={!data.isPro}
+                        onClick={() => !data.isPro && setShowProModal(true)}
+                        onChange={(e) => {
+                          const newDists = [...formDistances];
+                          newDists[index] = e.target.value;
+                          setFormDistances(newDists);
+                        }}
+                        className={`w-16 bg-transparent text-sm font-bold ${tc.appText} focus:outline-none`}
+                      />
+                      <button 
+                        onClick={() => data.isPro ? setFormDistances(formDistances.filter((_, i) => i !== index)) : setShowProModal(true)}
+                        className={`p-1 ${tc.textMuted} hover:text-red-500 transition-colors rounded-lg`}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="w-full h-px bg-gray-100/60"></div>
+
+              {/* 比赛日期管理 */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
+                    <Trophy size={18} className={tc.textMuted} /> {t.raceDate}
+                  </h3>
+                  <button 
+                    onClick={() => setShowRaceModal(true)}
+                    className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {[...formRaces]
+                    .sort((a, b) => {
+                      const timeA = new Date((a.date || '').replace(/-/g, '/')).getTime() || 0;
+                      const timeB = new Date((b.date || '').replace(/-/g, '/')).getTime() || 0;
+                      return timeA - timeB;
+                    })
+                    .map((race) => (
+                      <div key={race.id} className={`flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-100/60 hover:bg-gray-50 transition-colors`}>
+                        <div className="flex flex-col min-w-0 flex-1 pr-2 text-left">
+                          <span className={`font-bold text-sm ${tc.textHeading} truncate`}>{race.name || t.raceName}</span>
+                          <span className={`text-[10px] font-bold ${tc.textMuted} mt-0.5`}>{(race.date || '').replace(/-/g, '/')}</span>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            if (window.confirm(data.language === 'en' ? 'Delete this race goal?' : '确定要删除这个比赛目标吗？')) {
+                              setFormRaces(formRaces.filter(r => r.id !== race.id));
+                            }
+                          }}
+                          className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 active:scale-90 rounded-lg transition-all"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))
+                  }
+                  {formRaces.length === 0 && (
+                    <div className={`text-xs ${tc.textMuted} py-2 text-center font-medium`}>
+                      {data.language === 'en' ? 'No scheduled races' : '暂无规划中的比赛目标 🏁'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* =========================================
+            5. 积分与商店管理
+        =========================================== */}
+        <div className="space-y-2">
+          <AccordionHeader 
+            id="rewards" 
+            icon={Award} 
+            title={data.language==='en'?'Points & Shop':'积分与商店管理'} 
+            summary={isParentMode ? `+${formPointsPerTask} ${t.points} · ${formRewards.length} ${data.language==='en'?'Items':'商品'}` : (data.language==='en'?'🔒 Unlock required':'🔒 请先解锁')}
+            isLocked={!isParentMode}
+          />
+          {expandedSettingSection === 'rewards' && isParentMode && (
+            <div className={`p-5 rounded-2xl border ${tc.borderLight} ${tc.cardBg} animate-in fade-in slide-in-from-top-2 duration-200 space-y-6`}>
+              {/* 积分奖励规则设定 */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
+                    <Flame size={18} className={tc.textMuted} /> {t.pointsSettingTitle}
+                    {!data.isPro && <Crown size={14} className="text-yellow-500" />}
+                  </h3>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm(data.language === 'en' ? 'Reset all points to 0?' : '确定要将所有可用积分清零吗？')) {
+                        updateData({ points: 0 });
+                      }
+                    }}
+                    className="text-[10px] font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors active:scale-95 shadow-sm"
+                  >
+                    {data.language === 'en' ? 'Reset Points' : '清空积分'}
+                  </button>
+                </div>
+                <div className={`space-y-3 ${!data.isPro && 'opacity-60 grayscale'}`}>
+                  <div className={`flex items-center justify-between gap-3 ${tc.inputBg} p-3 rounded-xl`}>
+                    <span className={`text-sm font-bold ${tc.appText} shrink-0`}>{t.pointsPerTask}</span>
+                    <input 
+                      type="number" 
+                      value={formPointsPerTask}
+                      disabled={!data.isPro}
+                      onClick={() => !data.isPro && setShowProModal(true)}
+                      onChange={(e) => setFormPointsPerTask(e.target.value)}
+                      className={`w-24 shrink-0 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                    />
+                  </div>
+                  <div className={`flex items-center justify-between gap-3 ${tc.inputBg} p-3 rounded-xl`}>
+                    <span className={`text-sm font-bold ${tc.appText} shrink-0`}>{t.dailyBonusPoints}</span>
+                    <input 
+                      type="number" 
+                      value={formDailyBonus}
+                      disabled={!data.isPro}
+                      onClick={() => !data.isPro && setShowProModal(true)}
+                      onChange={(e) => setFormDailyBonus(e.target.value)}
+                      className={`w-24 shrink-0 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                    />
+                  </div>
+
+                  {/* 家长手动干预特权 */}
+                  <div className="mt-4 pt-4 border-t border-gray-100/60 space-y-2 text-left">
+                    <label className={`text-xs font-bold ${tc.textMuted} flex items-center gap-1.5`}>
+                      <Sparkles size={12} className="text-yellow-500" />
+                      {data.language === 'en' ? 'Manual Performance Rewards' : '表现分手动调整 (家长特权)'}
+                    </label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text"
+                        inputMode="numeric"
+                        value={adjustAmount}
+                        onChange={(e) => setAdjustAmount(e.target.value.replace(/\D/g, ''))}
+                        placeholder={data.language === 'en' ? 'Score' : '输入分值 (如: 50)'}
+                        className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-3 py-2 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                      />
+                      <button
+                        onClick={() => {
+                          const amt = parseInt(adjustAmount, 10);
+                          if (!isNaN(amt) && amt > 0) {
+                            updateData({ points: data.points + amt });
+                            setAdjustAmount('');
+                            alert(data.language === 'en' ? `Successfully added ${amt} points!` : `已成功奖励 ${amt} 积分！`);
+                          }
+                        }}
+                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black shadow-sm active:scale-95 transition-all whitespace-nowrap"
+                      >
+                        {data.language === 'en' ? 'Add (+)' : '奖励 (+)'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          const amt = parseInt(adjustAmount, 10);
+                          if (!isNaN(amt) && amt > 0) {
+                            updateData({ points: Math.max(0, data.points - amt) });
+                            setAdjustAmount('');
+                            alert(data.language === 'en' ? `Successfully deducted ${amt} points!` : `已成功扣除 ${amt} 积分！`);
+                          }
+                        }}
+                        className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black shadow-sm active:scale-95 transition-all whitespace-nowrap"
+                      >
+                        {data.language === 'en' ? 'Deduct (-)' : '扣除 (-)'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full h-px bg-gray-100/60"></div>
+
+              {/* 商店商品列表 */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
+                    <ShoppingCart size={18} className={tc.textMuted} /> {t.shopManagement}
+                    {!data.isPro && <Crown size={14} className="text-yellow-500" />}
+                  </h3>
+                  <button 
+                    onClick={() => data.isPro ? setShowShopItemModal(true) : setShowProModal(true)}
+                    className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
+                  >
+                    {data.isPro ? <Plus size={16} /> : <Crown size={16} className="text-yellow-500" />}
+                  </button>
+                </div>
+                
+                <div className={`space-y-2 ${!data.isPro && 'opacity-60 grayscale'}`}>
+                  {[...formRewards]
+                    .sort((a, b) => a.cost - b.cost)
+                    .map((reward) => (
+                      <div key={reward.id} className={`flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-100/60 hover:bg-gray-50 transition-colors`}>
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <span className="text-2xl bg-white w-10 h-10 flex items-center justify-center rounded-lg shadow-sm shrink-0">{reward.icon}</span>
+                          <div className="flex flex-col min-w-0">
+                            <span className={`font-bold text-sm ${tc.textHeading} truncate`}>{reward.name}</span>
+                            <span className="text-[10px] font-black text-yellow-500 flex items-center gap-0.5">
+                              <Zap size={10} className="fill-yellow-500" /> {reward.cost}
+                            </span>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => data.isPro ? setFormRewards(formRewards.filter(r => r.id !== reward.id)) : setShowProModal(true)}
+                          className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 active:scale-90 rounded-lg transition-all"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))
+                  }
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* =========================================
+            6. 底部保存按钮 (雷打不动)
+        =========================================== */}
+        <button 
+          onClick={handleSaveSettings}
+          disabled={saveSuccess}
+          className={`w-full py-4 rounded-xl font-bold shadow-md flex items-center justify-center gap-2 transition-all duration-300 mt-6 ${
+            saveSuccess 
+              ? 'bg-green-500 hover:bg-green-500 text-white scale-[0.98]' 
+              : tc.btnPrimary
+          }`}
+        >
+          {saveSuccess ? (
+            <>
+              <CheckCircle2 size={20} className="animate-bounce" /> 
+              {t.savedSuccessfully}
+            </>
+          ) : (
+            <>
+              <Save size={20} /> 
+              {t.saveSettings}
+            </>
+          )}
+        </button>
       </div>
     );
-  };
+  }; // 💡 这是刚才 SettingsView 的闭合括号
 
   const ProfileModal = () => {
     if (!showProfileModal) return null;
@@ -2967,51 +3082,7 @@ export default function App() {
             </div>
           )}
 
-          <div className={`${tc.cardBg} p-5 rounded-3xl shadow-sm border-2 ${user?.isAnonymous ? 'border-orange-300' : tc.borderLight}`}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                <Cloud size={20} className={user?.isAnonymous ? 'text-orange-500' : tc.textPrimary} />
-                {t.accountStatus}
-              </h3>
-              {user?.isAnonymous ? (
-                <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">{t.guestMode}</span>
-              ) : (
-                <span className={`text-[10px] font-bold ${tc.textPrimary} ${tc.badgeBg} px-2 py-1 rounded`}>{t.officialAccount}</span>
-              )}
-            </div>
-            
-            {user?.isAnonymous ? (
-              <div className="space-y-4">
-                <p className={`text-xs ${tc.textMuted} leading-relaxed bg-orange-50/50 p-3 rounded-xl border border-orange-100/50`}>
-                  {t.guestWarning}
-                </p>
-                <button 
-                  onClick={() => setShowAuthModal(true)}
-                  className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95`}
-                >
-                  {t.bindAccountBtn}
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className={`flex items-center gap-3 ${tc.badgeBg} bg-opacity-30 p-3.5 rounded-xl border ${tc.borderLight}`}>
-                  <div className={`w-10 h-10 rounded-full ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary} shrink-0`}>
-                    <UserCircle size={24} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className={`font-bold ${tc.textHeading} truncate`}>{data.username || user?.email || '已绑定正式账号'}</div>
-                    <div className={`text-xs ${tc.textPrimary} truncate`}>{user?.email || '手机号绑定用户'}</div>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setShowAccountModal(true)}
-                  className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95`}
-                >
-                  {t.manageAccountBtn}
-                </button>
-              </div>
-            )}
-          </div>
+          
 
           <div className="w-full h-px bg-slate-200 dark:bg-slate-700/50 my-8"></div>
           
