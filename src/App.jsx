@@ -1806,16 +1806,13 @@ export default function App() {
     );
   };
 
-// 新增：历史任务快照弹窗组件
+  // 新增：历史任务快照弹窗组件 (完美双语支持版)
   const HistoryDetailModal = () => {
-    if (!selectedHistoryDate) return null; // 如果没有选中日期，就不渲染弹窗
+    if (!selectedHistoryDate) return null; 
     
-    // 从快照保险柜中提取当天的任务数据
     const historyTasks = (data.taskHistory || {})[selectedHistoryDate] || [];
-    // 检查那天是否达成了“全天完成”成就
     const isCompletedDay = (data.completedDays || []).includes(selectedHistoryDate);
     
-    // 计算完成度
     const completedCount = historyTasks.filter(t => t.completed).length;
     const totalCount = historyTasks.length;
 
@@ -1826,7 +1823,7 @@ export default function App() {
           <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
             <h3 className={`font-black ${tc.textHeading} flex items-center gap-2`}>
               <CalendarDays size={18} className={tc.textPrimary} />
-              {selectedHistoryDate.replace(/-/g, '/')} 训练快照
+              {selectedHistoryDate.replace(/-/g, '/')} {data.language === 'en' ? 'Snapshot' : '训练快照'}
             </h3>
             <button onClick={() => setSelectedHistoryDate(null)} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
               <X size={20} />
@@ -1836,13 +1833,17 @@ export default function App() {
           {/* 弹窗内容区 */}
           <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
             {totalCount === 0 ? (
-              <div className={`text-center py-8 text-sm ${tc.textMuted} font-medium`}>当天没有排课或未留下记录 📭</div>
+              <div className={`text-center py-8 text-sm ${tc.textMuted} font-medium`}>
+                {data.language === 'en' ? 'No tasks or records for this day 📭' : '当天没有排课或未留下记录 📭'}
+              </div>
             ) : (
               <>
                 {/* 完成度统计卡片 */}
                 <div className="flex justify-between items-center bg-gray-50/50 border border-gray-100 p-4 rounded-2xl">
                   <div className="flex flex-col">
-                    <span className="text-xs text-gray-500 font-bold mb-1">单日完成度</span>
+                    <span className="text-xs text-gray-500 font-bold mb-1">
+                      {data.language === 'en' ? 'Daily Completion' : '单日完成度'}
+                    </span>
                     <span className={`text-xl font-black ${isCompletedDay ? 'text-green-500' : tc.textHeading}`}>
                       {completedCount} / {totalCount}
                     </span>
@@ -1856,7 +1857,9 @@ export default function App() {
                 
                 {/* 任务明细列表 */}
                 <div className="space-y-2 mt-4">
-                  <div className={`text-[10px] font-black uppercase text-gray-400 tracking-wider mb-2 ml-1`}>任务明细</div>
+                  <div className={`text-[10px] font-black uppercase text-gray-400 tracking-wider mb-2 ml-1`}>
+                    {data.language === 'en' ? 'Task Details' : '任务明细'}
+                  </div>
                   {historyTasks.map((task, idx) => (
                     <div key={idx} className={`p-3 rounded-xl flex items-center gap-3 border ${tc.borderLight} ${task.completed ? 'bg-gray-50/50' : 'bg-white'}`}>
                       {task.completed ? (
