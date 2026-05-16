@@ -2591,77 +2591,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
-              <div className="flex justify-between items-center">
-                <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                  <ShoppingCart size={18} className={tc.textMuted} /> {t.shopManagement}
-                  {!data.isPro && <Crown size={14} className="text-yellow-500" />}
-                </h3>
-                <button 
-                  onClick={() => data.isPro ? setFormRewards([...formRewards, { id: Date.now(), name: '', cost: 100, icon: '🎁' }]) : setShowProModal(true)}
-                  className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
-                >
-                  {data.isPro ? <Plus size={16} /> : <Crown size={16} className="text-yellow-500" />}
-                </button>
-              </div>
-              
-              <div className="space-y-3">
-                {formRewards.map((reward, index) => (
-                  <div key={reward.id} className={`flex flex-col gap-2 p-3 ${tc.inputBg} rounded-xl relative pr-10 ${!data.isPro && 'opacity-60 grayscale'}`}>
-                    <button 
-                      onClick={() => data.isPro ? setFormRewards(formRewards.filter(r => r.id !== reward.id)) : setShowProModal(true)}
-                      className={`absolute top-1/2 -translate-y-1/2 right-3 ${tc.textMuted} hover:text-red-500 transition-colors`}
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                    
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        value={reward.icon}
-                        disabled={!data.isPro}
-                        onClick={() => !data.isPro && setShowProModal(true)}
-                        onChange={(e) => {
-                          const newRewards = [...formRewards];
-                          newRewards[index].icon = e.target.value;
-                          setFormRewards(newRewards);
-                        }}
-                        placeholder={String(t.emojiPlaceholder || '')}
-                        className={`w-14 shrink-0 text-center ${tc.cardBg} rounded-lg px-2 py-2 text-xl focus:outline-none focus:ring-1 ${tc.focusRing}`}
-                      />
-                      <input 
-                        type="text" 
-                        value={reward.name}
-                        disabled={!data.isPro}
-                        onClick={() => !data.isPro && setShowProModal(true)}
-                        onChange={(e) => {
-                          const newRewards = [...formRewards];
-                          newRewards[index].name = e.target.value;
-                          setFormRewards(newRewards);
-                        }}
-                        placeholder={String(t.itemNamePlaceholder || '')}
-                        className={`flex-1 min-w-0 ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs font-bold ${tc.textMuted} shrink-0`}>{t.pointsRequired}</span>
-                      <input 
-                        type="number" 
-                        value={reward.cost}
-                        disabled={!data.isPro}
-                        onClick={() => !data.isPro && setShowProModal(true)}
-                        onChange={(e) => {
-                          const newRewards = [...formRewards];
-                          newRewards[index].cost = e.target.value;
-                          setFormRewards(newRewards);
-                        }}
-                        className={`flex-1 min-w-0 ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            
 
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               {/* 头部：标题 + 呼出比赛弹窗按钮 */}
@@ -2804,6 +2734,80 @@ export default function App() {
               </div>
             </div>
 
+            {/* 从这里开始粘贴：全新安家的【商店商品管理】卡片 */}
+            <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
+              <div className="flex justify-between items-center">
+                <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
+                  <ShoppingCart size={18} className={tc.textMuted} /> {t.shopManagement}
+                  {!data.isPro && <Crown size={14} className="text-yellow-500" />}
+                </h3>
+                <button 
+                  onClick={() => data.isPro ? setFormRewards([...formRewards, { id: Date.now(), name: '', cost: 100, icon: '🎁' }]) : setShowProModal(true)}
+                  className={`${tc.textPrimary} ${tc.badgeBg} p-1.5 rounded-lg hover:opacity-80 transition-colors shrink-0`}
+                >
+                  {data.isPro ? <Plus size={16} /> : <Crown size={16} className="text-yellow-500" />}
+                </button>
+              </div>
+              
+              <div className="space-y-3">
+                {formRewards.map((reward, index) => (
+                  <div key={reward.id} className={`flex flex-col gap-2 p-3 ${tc.inputBg} rounded-xl relative pr-10 ${!data.isPro && 'opacity-60 grayscale'}`}>
+                    <button 
+                      onClick={() => data.isPro ? setFormRewards(formRewards.filter(r => r.id !== reward.id)) : setShowProModal(true)}
+                      className={`absolute top-1/2 -translate-y-1/2 right-3 ${tc.textMuted} hover:text-red-500 transition-colors`}
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                    
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={reward.icon}
+                        disabled={!data.isPro}
+                        onClick={() => !data.isPro && setShowProModal(true)}
+                        onChange={(e) => {
+                          const newRewards = [...formRewards];
+                          newRewards[index].icon = e.target.value;
+                          setFormRewards(newRewards);
+                        }}
+                        placeholder={String(t.emojiPlaceholder || '')}
+                        className={`w-14 shrink-0 text-center ${tc.cardBg} rounded-lg px-2 py-2 text-xl focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                      />
+                      <input 
+                        type="text" 
+                        value={reward.name}
+                        disabled={!data.isPro}
+                        onClick={() => !data.isPro && setShowProModal(true)}
+                        onChange={(e) => {
+                          const newRewards = [...formRewards];
+                          newRewards[index].name = e.target.value;
+                          setFormRewards(newRewards);
+                        }}
+                        placeholder={String(t.itemNamePlaceholder || '')}
+                        className={`flex-1 min-w-0 ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-bold ${tc.textMuted} shrink-0`}>{t.pointsRequired}</span>
+                      <input 
+                        type="number" 
+                        value={reward.cost}
+                        disabled={!data.isPro}
+                        onClick={() => !data.isPro && setShowProModal(true)}
+                        onChange={(e) => {
+                          const newRewards = [...formRewards];
+                          newRewards[index].cost = e.target.value;
+                          setFormRewards(newRewards);
+                        }}
+                        className={`flex-1 min-w-0 ${tc.cardBg} rounded-lg px-3 py-2 text-sm ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 💡 下一行紧接着就是保存设置的主按钮 */}
             <button 
               onClick={handleSaveSettings}
               disabled={saveSuccess}
