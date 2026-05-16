@@ -2036,31 +2036,67 @@ const [carouselCounter, setCarouselCounter] = useState(0);
 
         {isParentMode && (
           <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
-            <h3 className={`${tc.textHeading} font-bold mb-3`}>{t.recordNew}</h3>
+            <h3 className={`${tc.textHeading} font-bold mb-4`}>{t.recordNew || '成绩管理中心'}</h3>
+            
+            {/* 1. 全新网格录入区：完美解决日期选择框溢出问题 */}
             <div className="flex flex-col gap-3">
-              <input 
-                type="date" 
-                value={newRecordDate}
-                onChange={(e) => setNewRecordDate(e.target.value)}
-                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
-              />
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-3">
+                <input 
+                  type="date" 
+                  value={newRecordDate}
+                  onChange={(e) => setNewRecordDate(e.target.value)}
+                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3.5 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
                 <input 
                   type="number" 
                   step="0.1"
                   value={newRecordTime}
                   onChange={(e) => setNewRecordTime(e.target.value)}
                   placeholder={t.inputTime}
-                  className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-3 ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3.5 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
                 />
-                <button 
-                  onClick={addRecord}
-                  className={`${tc.btnPrimary} px-6 py-3 rounded-xl font-bold shadow-md transition-colors shrink-0 whitespace-nowrap`}
-                >
-                  {t.save}
-                </button>
               </div>
+              <button 
+                onClick={addRecord}
+                className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
+              >
+                {t.save}
+              </button>
             </div>
+
+            {/* 2. 成绩管理列表：支持误录入删除 */}
+            {currentRecords.length > 0 && (
+              <div className="mt-6 pt-5 border-t border-gray-100/60">
+                <div className={`text-xs font-bold ${tc.textMuted} mb-3 flex justify-between items-center px-1`}>
+                  <span>{data.language === 'en' ? 'Manage Records' : '历史记录管理'} ({activeDistance})</span>
+                  <span className="opacity-60">{data.language === 'en' ? 'Delete' : '可删除'}</span>
+                </div>
+                
+                <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
+                  {currentRecords.map((r, idx) => (
+                    <div key={idx} className={`flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-100/60 hover:bg-gray-50 transition-colors`}>
+                      <div className="flex flex-col">
+                        <span className={`font-black text-lg ${tc.textPrimary}`}>{r.time}s</span>
+                        <span className={`text-[10px] font-bold ${tc.textMuted}`}>{(r.date || '').replace(/-/g, '/')}</span>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          const confirmMsg = data.language === 'en' ? 'Delete this record?' : '确定要删除这条成绩吗？';
+                          if (window.confirm(confirmMsg)) {
+                            const key = getRecordsKey(activeDistance);
+                            const updatedRecords = currentRecords.filter((_, i) => i !== idx);
+                            updateData({ [key]: updatedRecords });
+                          }
+                        }}
+                        className={`p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 active:scale-90 rounded-lg transition-all`}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
