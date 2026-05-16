@@ -923,6 +923,7 @@ export default function App() {
   const [formDailyBonus, setFormDailyBonus] = useState(defaultData.dailyBonusPoints);
   const [formRewards, setFormRewards] = useState(defaultData.customRewards);
   const [formDistances, setFormDistances] = useState(currentDistNames);
+  const [adjustAmount, setAdjustAmount] = useState(''); // ✨ 新增：家长手动调整积分的输入框状态
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pinInput, setPinInput] = useState('');
@@ -1354,9 +1355,9 @@ export default function App() {
       const key = getRecordsKey(activeDistance);
       const updatedRecords = [...(data[key] || []), newRecord];
       
+      // 🚀 修正：录入成绩不再赠送积分
       updateData({ 
-        [key]: updatedRecords,
-        points: data.points + 50 
+        [key]: updatedRecords
       });
       setNewRecordTime('');
     }
@@ -2643,11 +2644,26 @@ export default function App() {
             {/* 一周训练模板后台输入项已移除 */}
 
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
-              <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
-                <Award size={18} className={tc.textMuted} /> {t.pointsSettingTitle}
-                {!data.isPro && <Crown size={14} className="text-yellow-500" />}
-              </h3>
+              {/* 头部：标题 + 🧹 一键清空积分按钮 */}
+              <div className="flex justify-between items-center">
+                <h3 className={`${tc.textHeading} font-bold flex items-center gap-2`}>
+                  <Award size={18} className={tc.textMuted} /> {t.pointsSettingTitle}
+                  {!data.isPro && <Crown size={14} className="text-yellow-500" />}
+                </h3>
+                <button 
+                  onClick={() => {
+                    if (window.confirm(data.language === 'en' ? 'Reset all points to 0?' : '确定要将所有可用积分清零吗？')) {
+                      updateData({ points: 0 });
+                    }
+                  }}
+                  className="text-[10px] font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors active:scale-95 shadow-sm"
+                >
+                  {data.language === 'en' ? 'Reset Points' : '清空积分'}
+                </button>
+              </div>
+
               <div className={`space-y-3 ${!data.isPro && 'opacity-60 grayscale'}`}>
+                {/* 原本的完成任务积分设置 */}
                 <div className={`flex items-center justify-between gap-3 ${tc.inputBg} p-3 rounded-xl`}>
                   <span className={`text-sm font-bold ${tc.appText} shrink-0`}>{t.pointsPerTask}</span>
                   <input 
@@ -2669,6 +2685,50 @@ export default function App() {
                     onChange={(e) => setFormDailyBonus(e.target.value)}
                     className={`w-24 shrink-0 ${tc.cardBg} rounded-lg px-3 py-1.5 text-sm ${tc.appText} text-center focus:outline-none focus:ring-1 ${tc.focusRing}`}
                   />
+                </div>
+
+                {/* ✨ 新增：家长手动调整积分特权控制台 */}
+                <div className="mt-4 pt-4 border-t border-gray-100/60 space-y-2 text-left">
+                  <label className={`text-xs font-bold ${tc.textMuted} flex items-center gap-1.5`}>
+                    <Sparkles size={12} className="text-yellow-500" />
+                    {data.language === 'en' ? 'Manual Performance Rewards' : '表现分手动调整 (家长特权)'}
+                  </label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text"
+                      inputMode="numeric"
+                      value={adjustAmount}
+                      onChange={(e) => setAdjustAmount(e.target.value.replace(/\D/g, ''))}
+                      placeholder={data.language === 'en' ? 'Score' : '输入分值 (如: 50)'}
+                      className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-3 py-2 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-1 ${tc.focusRing}`}
+                    />
+                    <button
+                      onClick={() => {
+                        const amt = parseInt(adjustAmount, 10);
+                        if (!isNaN(amt) && amt > 0) {
+                          updateData({ points: data.points + amt });
+                          setAdjustAmount('');
+                          alert(data.language === 'en' ? `Successfully added ${amt} points!` : `已成功奖励 ${amt} 积分！`);
+                        }
+                      }}
+                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black shadow-sm active:scale-95 transition-all whitespace-nowrap"
+                    >
+                      {data.language === 'en' ? 'Add (+)' : '奖励 (+)'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        const amt = parseInt(adjustAmount, 10);
+                        if (!isNaN(amt) && amt > 0) {
+                          updateData({ points: Math.max(0, data.points - amt) });
+                          setAdjustAmount('');
+                          alert(data.language === 'en' ? `Successfully deducted ${amt} points!` : `已成功扣除 ${amt} 积分！`);
+                        }
+                      }}
+                      className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black shadow-sm active:scale-95 transition-all whitespace-nowrap"
+                    >
+                      {data.language === 'en' ? 'Deduct (-)' : '扣除 (-)'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
