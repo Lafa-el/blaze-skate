@@ -2560,9 +2560,6 @@ export default function App() {
     return (
       <div className="space-y-8">
         <section className="space-y-4">
-          <h3 className={`text-xs font-black tracking-wider uppercase ${tc.textPrimary} pl-1 flex items-center gap-2`}>
-            <SlidersHorizontal size={14} /> {t.appPreferences}
-          </h3>
           
           <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm flex justify-between items-center`}>
             <h3 className={`${tc.textHeading} font-bold flex items-center gap-2 shrink-0`}>
@@ -2580,9 +2577,6 @@ export default function App() {
         </section>
 
         <section className="space-y-4">
-          <h3 className={`text-xs font-black tracking-wider uppercase ${tc.textPrimary} pl-1 flex items-center gap-2`}>
-            <ShieldAlert size={14} /> {t.securityAndAccess}
-          </h3>
 
           <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm border-2 ${data.parentPin && !isUnlocked ? 'border-orange-300 bg-orange-50/30' : tc.borderLight}`}>
             <div className="flex justify-between items-center mb-3">
@@ -2600,7 +2594,9 @@ export default function App() {
             
             {!data.parentPin && (
               <div className="space-y-3">
-                <p className={`text-xs ${tc.textMuted}`}>{t.setPinPrompt}</p>
+                <p className={`text-xs ${tc.textMuted}`}>
+                  {data.language === 'en' ? 'Set a 4-digit PIN to lock data entry' : '设置4位数字密码以锁定数据录入'}
+                </p>
                 <div className="flex gap-2">
                   <input 
                     type="password" 
@@ -2653,9 +2649,6 @@ export default function App() {
 
         {isParentMode && (
           <section className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
-            <h3 className={`text-xs font-black tracking-wider uppercase ${tc.textPrimary} pl-1 flex items-center gap-2`}>
-              <Settings size={14} /> {t.trainingConfig}
-            </h3>
 
             <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm space-y-4`}>
               <div className="flex justify-between items-center">
