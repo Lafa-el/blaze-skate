@@ -52,7 +52,7 @@ import {
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, EmailAuthProvider, linkWithCredential, signOut, signInWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 // --- Firebase 初始化 ---
 const firebaseConfig = {
@@ -66,6 +66,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// 🌟 核心引擎启动：开启 Firebase 本地离线持久化缓存
+try {
+  enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.warn('离线缓存开启警告：可能开了多个相同网页标签。');
+    } else if (err.code === 'unimplemented') {
+      console.warn('离线缓存开启失败：当前浏览器内核不支持。');
+    }
+  });
+} catch (e) {
+  console.error('离线缓存初始化异常', e);
+}
 
 const safeAppId = 'blaze-skate-production';
 
