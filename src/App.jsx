@@ -900,8 +900,9 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [selectedHistoryDate, setSelectedHistoryDate] = useState(null); // 新增：控制日历快照弹窗
   const [celebration, setCelebration] = useState(null);
+  const [showRecordModal, setShowRecordModal] = useState(false); // ✨ 新增：成绩管理弹窗开关
 
-const [carouselCounter, setCarouselCounter] = useState(0);
+  const [carouselCounter, setCarouselCounter] = useState(0);
   const touchStartX = useRef(null);
 
   useEffect(() => {
@@ -1301,30 +1302,16 @@ const [carouselCounter, setCarouselCounter] = useState(0);
   const addRecord = () => {
     const time = parseFloat(newRecordTime);
     if (!isNaN(time) && time > 0) {
-      let dateStr = '';
-      if (newRecordDate) {
-        dateStr = newRecordDate;
-      } else {
-        dateStr = `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, '0')}-${String(currentTime.getDate()).padStart(2, '0')}`;
-      }
+      let dateStr = newRecordDate || `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, '0')}-${String(currentTime.getDate()).padStart(2, '0')}`;
       const newRecord = { date: dateStr, time: time };
       
-      let updateObj = {};
       const key = getRecordsKey(activeDistance);
-      
       const updatedRecords = [...(data[key] || []), newRecord];
-      updatedRecords.sort((a, b) => {
-        const dA = a.date || '';
-        const dB = b.date || '';
-        const dateA = dA.includes('-') ? dA : (dA ? `${currentTime.getFullYear()}-${dA.replace('/', '-')}` : '');
-        const dateB = dB.includes('-') ? dB : (dB ? `${currentTime.getFullYear()}-${dB.replace('/', '-')}` : '');
-        return dateB.localeCompare(dateA);
+      
+      updateData({ 
+        [key]: updatedRecords,
+        points: data.points + 50 
       });
-      
-      updateObj[key] = updatedRecords;
-      updateObj.points = data.points + 50;
-      
-      updateData(updateObj);
       setNewRecordTime('');
     }
   };
@@ -1931,20 +1918,27 @@ const [carouselCounter, setCarouselCounter] = useState(0);
       return data[key] || [];
     };
 
-    const currentRecords = getRecords();
+    const rawRecords = getRecords();
+
+    // 🚀 核心修复 1：图表数据严格按照时间戳【正序】排列（老 -> 新）
+    const chartRecords = [...rawRecords].sort((a, b) => {
+      const timeA = new Date((a.date || '').replace(/-/g, '/')).getTime() || 0;
+      const timeB = new Date((b.date || '').replace(/-/g, '/')).getTime() || 0;
+      return timeA - timeB; 
+    });
 
     const renderChart = () => {
-      if (currentRecords.length === 0) return <div className={`py-6 text-center text-sm ${tc.textMuted}`}>{t.noData}</div>;
+      if (chartRecords.length === 0) return <div className={`py-6 text-center text-sm ${tc.textMuted}`}>{t.noData}</div>;
       
-      const minTime = Math.min(...currentRecords.map(r => r.time)) - 1;
-      const maxTime = Math.max(...currentRecords.map(r => r.time)) + 1;
+      const minTime = Math.min(...chartRecords.map(r => r.time)) - 1;
+      const maxTime = Math.max(...chartRecords.map(r => r.time)) + 1;
       const range = maxTime - minTime || 1;
       const height = 160;
       const width = 300;
       const padding = 20;
 
-      const pointsStr = currentRecords.map((r, index) => {
-        const x = padding + (index * ((width - padding * 2) / (currentRecords.length - 1 || 1)));
+      const pointsStr = chartRecords.map((r, index) => {
+        const x = padding + (index * ((width - padding * 2) / (chartRecords.length - 1 || 1)));
         const y = height - padding - ((r.time - minTime) / range) * (height - padding * 2);
         return `${x},${y}`;
       }).join(' ');
@@ -1957,10 +1951,9 @@ const [carouselCounter, setCarouselCounter] = useState(0);
           
           <polyline points={pointsStr} fill="none" stroke={tc.svgLine} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
           
-          {currentRecords.map((r, index) => {
-            const x = padding + (index * ((width - padding * 2) / (currentRecords.length - 1 || 1)));
+          {chartRecords.map((r, index) => {
+            const x = padding + (index * ((width - padding * 2) / (chartRecords.length - 1 || 1)));
             const y = height - padding - ((r.time - minTime) / range) * (height - padding * 2);
-            
             const displayDate = (r.date || '').includes('-') ? (r.date || '').substring(5).replace('-', '/') : (r.date || '');
             
             return (
@@ -1984,97 +1977,121 @@ const [carouselCounter, setCarouselCounter] = useState(0);
 
         <div className="relative flex items-center -mx-1 px-1 py-1">
           {statsCanScroll.left && (
-            <button
-              onClick={() => statsScrollRef.current?.scrollBy({ left: -150, behavior: 'smooth' })}
-              className={`absolute left-0 z-10 p-1.5 rounded-full shadow-md border ${tc.borderLight} ${tc.cardBg} ${tc.textPrimary} hover:opacity-80 transition-all`}
-            >
+            <button onClick={() => statsScrollRef.current?.scrollBy({ left: -150, behavior: 'smooth' })} className={`absolute left-0 z-10 p-1.5 rounded-full shadow-md border ${tc.borderLight} ${tc.cardBg} ${tc.textPrimary} hover:opacity-80 transition-all`}>
               <ChevronLeft size={16} />
             </button>
           )}
 
-          <div 
-            ref={statsScrollRef}
-            onScroll={handleStatsScroll}
-            className="flex gap-2 overflow-x-auto py-1 no-scrollbar w-full scroll-smooth"
-          >
-            {currentDistNames.map((dist, idx) => {
-              return (
-                <button
-                  key={idx}
-                  onClick={() => setActiveDistance(dist)}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                    (activeDistance === dist)
-                      ? tc.btnPrimary + ' shadow-md' 
-                      : tc.cardBg + ' ' + tc.textPrimary + ' hover:opacity-80'
-                  }`}
-                >
-                  {dist}
-                </button>
-              )
-            })}
+          <div ref={statsScrollRef} onScroll={handleStatsScroll} className="flex gap-2 overflow-x-auto py-1 no-scrollbar w-full scroll-smooth">
+            {currentDistNames.map((dist, idx) => (
+              <button key={idx} onClick={() => setActiveDistance(dist)} className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${(activeDistance === dist) ? tc.btnPrimary + ' shadow-md' : tc.cardBg + ' ' + tc.textPrimary + ' hover:opacity-80'}`}>
+                {dist}
+              </button>
+            ))}
           </div>
 
           {statsCanScroll.right && (
-            <button
-              onClick={() => statsScrollRef.current?.scrollBy({ left: 150, behavior: 'smooth' })}
-              className={`absolute right-0 z-10 p-1.5 rounded-full shadow-md border ${tc.borderLight} ${tc.cardBg} ${tc.textPrimary} hover:opacity-80 animate-pulse transition-all`}
-            >
+            <button onClick={() => statsScrollRef.current?.scrollBy({ left: 150, behavior: 'smooth' })} className={`absolute right-0 z-10 p-1.5 rounded-full shadow-md border ${tc.borderLight} ${tc.cardBg} ${tc.textPrimary} hover:opacity-80 animate-pulse transition-all`}>
               <ChevronRight size={16} />
             </button>
           )}
         </div>
 
-        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
+        {/* 净化后的图表展示卡片 */}
+        <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm relative`}>
           <div className="flex justify-between items-center mb-2">
             <h3 className={`${tc.textHeading} font-bold`}>{activeDistance} {t.recentRecords}</h3>
-            <span className={`text-xs font-bold ${tc.badgeBg} ${tc.textPrimary} px-2 py-1 rounded-md`}>
-              {t.latest}: {currentRecords.length > 0 ? currentRecords[currentRecords.length - 1].time : '--'}s
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-bold ${tc.badgeBg} ${tc.textPrimary} px-2 py-1 rounded-md`}>
+                {t.latest}: {chartRecords.length > 0 ? chartRecords[chartRecords.length - 1].time : '--'}s
+              </span>
+              {/* ✨ 呼出弹窗的精美小按钮 */}
+              {isParentMode && (
+                <button 
+                  onClick={() => setShowRecordModal(true)}
+                  className={`p-1.5 ${tc.btnPrimary} rounded-lg shadow-sm hover:opacity-80 active:scale-95 transition-all flex items-center justify-center`}
+                >
+                  <Plus size={16} />
+                </button>
+              )}
+            </div>
           </div>
           {renderChart()}
         </div>
+        
+        {/* 注：原本底部臃肿的成绩输入框已经被彻底移除！转移到了专属弹窗中 */}
+      </div>
+    );
+  };
 
-        {isParentMode && (
-          <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm`}>
-            <h3 className={`${tc.textHeading} font-bold mb-4`}>{t.recordNew || '成绩管理中心'}</h3>
-            
-            {/* 1. 全新网格录入区：完美解决日期选择框溢出问题 */}
-            <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-2 gap-3">
-                <input 
-                  type="date" 
-                  value={newRecordDate}
-                  onChange={(e) => setNewRecordDate(e.target.value)}
-                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3.5 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-                />
-                <input 
-                  type="number" 
-                  step="0.1"
-                  value={newRecordTime}
-                  onChange={(e) => setNewRecordTime(e.target.value)}
-                  placeholder={t.inputTime}
-                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3.5 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-                />
+  // ✨ 新增：成绩管理专属弹窗 (Modal)
+  const RecordManagementModal = () => {
+    if (!showRecordModal) return null;
+
+    const key = getRecordsKey(activeDistance);
+    const rawRecords = data[key] || [];
+
+    // 🚀 核心修复 2：管理列表严格按照时间戳【倒序】排列（新 -> 老），方便查看和删除最新录入
+    const listRecords = [...rawRecords].sort((a, b) => {
+      const timeA = new Date((a.date || '').replace(/-/g, '/')).getTime() || 0;
+      const timeB = new Date((b.date || '').replace(/-/g, '/')).getTime() || 0;
+      return timeB - timeA; 
+    });
+
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={() => setShowRecordModal(false)}>
+        <div className={`${tc.cardBg} w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]`} onClick={e => e.stopPropagation()}>
+          
+          {/* 头部 */}
+          <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
+            <h3 className={`font-black ${tc.textHeading} flex items-center gap-2`}>
+              <LineChart size={18} className={tc.textPrimary} />
+              {activeDistance} {data.language === 'en' ? 'Records' : '成绩管理'}
+            </h3>
+            <button onClick={() => setShowRecordModal(false)} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-5 overflow-y-auto space-y-6">
+            {/* 录入区：完美网格布局，解决溢出 */}
+            <div>
+              <h4 className={`text-xs font-bold ${tc.textMuted} mb-2 ml-1`}>{data.language === 'en' ? 'Add New Record' : '录入新成绩'}</h4>
+              <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <input 
+                    type="date" 
+                    value={newRecordDate}
+                    onChange={(e) => setNewRecordDate(e.target.value)}
+                    className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                  />
+                  <input 
+                    type="number" 
+                    step="0.1"
+                    value={newRecordTime}
+                    onChange={(e) => setNewRecordTime(e.target.value)}
+                    placeholder={t.inputTime}
+                    className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                  />
+                </div>
+                <button 
+                  onClick={addRecord}
+                  className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
+                >
+                  {t.save}
+                </button>
               </div>
-              <button 
-                onClick={addRecord}
-                className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
-              >
-                {t.save}
-              </button>
             </div>
 
-            {/* 2. 成绩管理列表：支持误录入删除 */}
-            {currentRecords.length > 0 && (
-              <div className="mt-6 pt-5 border-t border-gray-100/60">
-                <div className={`text-xs font-bold ${tc.textMuted} mb-3 flex justify-between items-center px-1`}>
-                  <span>{data.language === 'en' ? 'Manage Records' : '历史记录管理'} ({activeDistance})</span>
-                  <span className="opacity-60">{data.language === 'en' ? 'Delete' : '可删除'}</span>
+            {/* 列表区：倒序展示，支持删除 */}
+            {listRecords.length > 0 && (
+              <div className="pt-2">
+                <div className={`text-xs font-bold ${tc.textMuted} mb-2 flex justify-between items-center px-1`}>
+                  <span>{data.language === 'en' ? 'History' : '历史记录'}</span>
                 </div>
-                
-                <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
-                  {currentRecords.map((r, idx) => (
-                    <div key={idx} className={`flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-100/60 hover:bg-gray-50 transition-colors`}>
+                <div className="space-y-2">
+                  {listRecords.map((r, idx) => (
+                    <div key={idx} className={`flex justify-between items-center ${tc.badgeBg} bg-opacity-30 p-3 rounded-xl border ${tc.borderLight}`}>
                       <div className="flex flex-col">
                         <span className={`font-black text-lg ${tc.textPrimary}`}>{r.time}s</span>
                         <span className={`text-[10px] font-bold ${tc.textMuted}`}>{(r.date || '').replace(/-/g, '/')}</span>
@@ -2084,11 +2101,14 @@ const [carouselCounter, setCarouselCounter] = useState(0);
                           const confirmMsg = data.language === 'en' ? 'Delete this record?' : '确定要删除这条成绩吗？';
                           if (window.confirm(confirmMsg)) {
                             const key = getRecordsKey(activeDistance);
-                            const updatedRecords = currentRecords.filter((_, i) => i !== idx);
+                            // 用时间戳和分数精准定位删除项，防止误删同分数据
+                            const updatedRecords = rawRecords.filter(item => 
+                              item.time !== r.time || item.date !== r.date
+                            );
                             updateData({ [key]: updatedRecords });
                           }
                         }}
-                        className={`p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 active:scale-90 rounded-lg transition-all`}
+                        className={`p-2.5 bg-white text-gray-400 hover:text-red-500 shadow-sm border ${tc.borderLight} active:scale-90 rounded-xl transition-all`}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -2098,7 +2118,7 @@ const [carouselCounter, setCarouselCounter] = useState(0);
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
     );
   };
@@ -3397,6 +3417,7 @@ const [carouselCounter, setCarouselCounter] = useState(0);
 
       {/* 弹窗组件挂载区 */}
       {HistoryDetailModal()} {/* ✨ 新增：挂载日历快照弹窗 */}
+      {RecordManagementModal()} {/* ✨ 新增：挂载成绩管理弹窗 */}
       {RewardHistoryModal()}
       {ProfileModal()}
       {AuthModal()}
