@@ -3725,14 +3725,23 @@ export default function App() {
         </div>
         
         <div className="flex gap-2 items-center shrink-0">
-          <div className={`flex items-center gap-1 ${tc.badgeOrange} px-3 py-1.5 rounded-full`}>
+          {/* 🔥 点击火焰 -> 跳转到 数据 (data) */}
+          <button 
+            onClick={() => setActiveTab('data')}
+            className={`flex items-center gap-1 ${tc.badgeOrange} px-3 py-1.5 rounded-full hover:opacity-80 active:scale-95 transition-all`}
+          >
             <Flame size={16} />
             <span className="font-bold text-sm">{computedStreak}</span>
-          </div>
-          <div className={`flex items-center gap-1 ${tc.badgeYellow} px-3 py-1.5 rounded-full`}>
+          </button>
+          
+          {/* 🏆 点击奖杯 -> 跳转到 商店 (shop) */}
+          <button 
+            onClick={() => setActiveTab('shop')}
+            className={`flex items-center gap-1 ${tc.badgeYellow} px-3 py-1.5 rounded-full hover:opacity-80 active:scale-95 transition-all`}
+          >
             <Trophy size={16} />
             <span className="font-bold text-sm">{data.points}</span>
-          </div>
+          </button>
           
           <button onClick={() => setShowProfileModal(true)} className="relative shrink-0 active:scale-95 transition-transform">
             {data.avatar ? (
