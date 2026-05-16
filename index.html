@@ -22,7 +22,71 @@
     <title>Blaze Skate 冰焰速滑</title>
   </head>
   <body>
-    <div id="root"></div>
+
+    <div id="root">
+      <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; position: fixed; inset: 0; z-index: 9999;">
+        <div style="display: flex; flex-direction: column; align-items: center; animation: fadeIn 0.4s ease-out;">
+          
+          <div style="height: 96px; width: 96px; border-radius: 2rem; background: linear-gradient(135deg, #ecfeff, #eff6ff, #dbeafe); display: flex; align-items: center; justify-content: center; border: 2px solid #ffffff; box-shadow: 0 10px 30px rgba(59,130,246,0.08); margin-bottom: 24px; position: relative;">
+            <span style="font-size: 44px; animation: pulseBadge 1.5s infinite ease-in-out;">🔥</span>
+          </div>
+
+          <div style="display: flex; align-items: center; margin-bottom: 4px;">
+            <span style="font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: -0.05em; color: #1e293b;">BLAZE</span>
+            <span style="font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: -0.05em; color: #a855f7; margin-left: 2px;">SKATE</span>
+          </div>
+          
+          <span id="static-subtitle-text" style="font-size: 8px; font-weight: bold; text-transform: uppercase; color: #94a3b8; margin-bottom: 48px;">
+            冰焰速滑训练系统
+          </span>
+
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+              <div style="width: 9px; height: 9px; border-radius: 50%; background-color: #f97316; animation: dotBounce 1.4s infinite ease-in-out both; animation-delay: -0.32s;"></div>
+              <div style="width: 9px; height: 9px; border-radius: 50%; background-color: #f43f5e; animation: dotBounce 1.4s infinite ease-in-out both; animation-delay: -0.16s;"></div>
+              <div style="width: 9px; height: 9px; border-radius: 50%; background-color: #a855f7; animation: dotBounce 1.4s infinite ease-in-out both;"></div>
+            </div>
+            <p id="static-loading-text" style="font-size: 12px; font-weight: bold; color: #94a3b8; letter-spacing: 0.05em; animation: pulseText 1.5s infinite; margin: 0; min-height: 18px; text-transform: uppercase;"></p>
+          </div>
+
+        </div>
+      </div>
+
+      <script>
+        (function() {
+          try {
+            // 读取本地缓存语言
+            var cachedLang = localStorage.getItem('blaze_lang');
+            var browserLang = navigator.language || navigator.userLanguage || '';
+            var isEnglish = cachedLang === 'en' || (!cachedLang && browserLang.toLowerCase().indexOf('en') === 0);
+            
+            // 1. 替换 Loading 提示语
+            var textEl = document.getElementById('static-loading-text');
+            if (textEl) {
+              textEl.innerText = isEnglish ? 'LOADING CLOUD DATA...' : '加载云端数据中...';
+            }
+
+            // 2. 替换 Logo 下方的副标题，并智能调整字间距
+            var subEl = document.getElementById('static-subtitle-text');
+            if (subEl) {
+              subEl.innerText = isEnglish ? 'SPEED SKATING TRAINING PLATFORM' : '冰焰速滑训练系统';
+              // 英文单词多，间距拉大显得高级；中文间距小一点才不松散
+              subEl.style.letterSpacing = isEnglish ? '0.15em' : '0.1em'; 
+            }
+          } catch (e) {
+            document.getElementById('static-loading-text').innerText = '加载云端数据中...';
+          }
+        })();
+      </script>
+
+      <style>
+        @keyframes dotBounce { 0%, 80%, 100% { transform: scale(0); opacity: 0.3; } 40% { transform: scale(1.1); opacity: 1; } }
+        @keyframes pulseBadge { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(249,115,22,0)); } 50% { transform: scale(1.05); filter: drop-shadow(0 4px 10px rgba(249,115,22,0.3)); } }
+        @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+      </style>
+    </div>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

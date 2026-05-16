@@ -800,7 +800,7 @@ const defaultData = {
   lastLoginDate: '',  
   taskHistory: {},    
   points: 0,
-  language: 'zh',
+  language: typeof window !== 'undefined' ? (localStorage.getItem('blaze_lang') || 'zh') : 'zh',
   theme: 'purple',
   avatar: '', 
   parentPin: '',
@@ -1052,7 +1052,9 @@ export default function App() {
     const userRef = doc(db, 'artifacts', safeAppId, 'users', user.uid, 'profile', 'main');
     const unsub = onSnapshot(userRef, (docSnap) => {
       if (docSnap.exists()) {
-        setData({ ...defaultData, ...docSnap.data() });
+        const cloudData = docSnap.data();
+        setData({ ...defaultData, ...cloudData });
+        if (cloudData.language) localStorage.setItem('blaze_lang', cloudData.language); // ✨ 缓存云端语言
       } else {
         setData(defaultData);
       }
@@ -2500,6 +2502,7 @@ export default function App() {
 
     const toggleLanguage = async () => {
       const targetLang = data.language === 'en' ? 'zh' : 'en';
+      localStorage.setItem('blaze_lang', targetLang); // ✨ 切换时立写本地
       await updateData({ language: targetLang });
     };
 
