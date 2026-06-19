@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { 
   Home, 
   ListTodo, 
@@ -10,12 +10,8 @@ import {
   Plus, 
   CheckCircle2, 
   Circle,
-  Bell,
-  Settings,
   User,
-  Save,
   Zap,
-  Snowflake,
   Globe,
   Loader2,
   Trash2,
@@ -30,7 +26,6 @@ import {
   ArrowLeft,
   Check,
   Camera,
-  Lock,
   Unlock,
   ShieldCheck,
   Clock,
@@ -44,43 +39,19 @@ import {
   UserCircle,
   LogOut,
   SlidersHorizontal,
-  ShieldAlert,
   ChevronDown,
   ChevronUp,
   Download,
   LockKeyhole
 } from 'lucide-react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, EmailAuthProvider, linkWithCredential, signOut, signInWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { signInAnonymously, onAuthStateChanged, EmailAuthProvider, linkWithCredential, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 
-// --- Firebase 初始化 ---
-const firebaseConfig = {
-  apiKey: "AIzaSyDQqXcEB-nNP9l3WIuBmUFjzLuzBEwggc8",
-  authDomain: "blaze-skate-training-platform.firebaseapp.com",
-  projectId: "blaze-skate-training-platform",
-  storageBucket: "blaze-skate-training-platform.firebasestorage.app",
-  messagingSenderId: "1003517327944",
-  appId: "1:1003517327944:web:2992e05c141e822777767d"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { DEFAULT_LANGUAGE, DEFAULT_THEME, TABS } from './constants/app';
+import { auth, db } from './firebase/firebaseApp';
+import { initializeFirestorePersistence } from './firebase/firestore';
+import { saveProfilePatch, subscribeToProfile } from './services/profileRepository';
 
-// 🌟 核心引擎启动：开启 Firebase 本地离线持久化缓存
-try {
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('离线缓存开启警告：可能开了多个相同网页标签。');
-    } else if (err.code === 'unimplemented') {
-      console.warn('离线缓存开启失败：当前浏览器内核不支持。');
-    }
-  });
-} catch (e) {
-  console.error('离线缓存初始化异常', e);
-}
-
-const safeAppId = 'blaze-skate-production';
+initializeFirestorePersistence();
 
 // --- 主题配置 ---
 const THEMES = {
@@ -813,8 +784,8 @@ const defaultData = {
   lastLoginDate: '',  
   taskHistory: {},    
   points: 0,
-  language: typeof window !== 'undefined' ? (localStorage.getItem('blaze_lang') || 'zh') : 'zh',
-  theme: 'purple',
+  language: typeof window !== 'undefined' ? (localStorage.getItem('blaze_lang') || DEFAULT_LANGUAGE) : DEFAULT_LANGUAGE,
+  theme: DEFAULT_THEME,
   avatar: '', 
   parentPin: '',
   isPro: false,
@@ -908,14 +879,21 @@ const getRecordsKey = (dist) => {
   return `records_${dist}`;
 };
 
+const createClientId = () => {
+  return Date.now() + Math.random();
+};
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard'); 
+  const [activeTab, setActiveTab] = useState(TABS.DASHBOARD); 
   const [data, setData] = useState(defaultData);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  const currentDistNames = data.customDistances || (data.language === 'en' ? ['Start', 'Lap', '500m', '777m', '1000m', '1500m'] : ['起跑', '单圈', '500m', '777m', '1000m', '1500m']);
+  const currentDistNames = useMemo(
+    () => data.customDistances || (data.language === 'en' ? ['Start', 'Lap', '500m', '777m', '1000m', '1500m'] : ['起跑', '单圈', '500m', '777m', '1000m', '1500m']),
+    [data.customDistances, data.language]
+  );
 
   const [newTaskText, setNewTaskText] = useState('');
   const [newTaskTarget, setNewTaskTarget] = useState('');
@@ -930,19 +908,15 @@ export default function App() {
   const [editTaskText, setEditTaskText] = useState('');
   const [editTaskTarget, setEditTaskTarget] = useState('');
 
-  const [formRaces, setFormRaces] = useState(defaultData.races);
-  const [formTemplate, setFormTemplate] = useState(defaultData.weeklyTemplate);
   const [formPointsPerTask, setFormPointsPerTask] = useState(defaultData.pointsPerTask);
   const [formDailyBonus, setFormDailyBonus] = useState(defaultData.dailyBonusPoints);
-  const [formRewards, setFormRewards] = useState(defaultData.customRewards);
   const [formDistances, setFormDistances] = useState(currentDistNames);
   const [adjustAmount, setAdjustAmount] = useState(''); // ✨ 新增：家长手动调整积分的输入框状态
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
-  
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [accountUsername, setAccountUsername] = useState('');
 
   const [viewDate, setViewDate] = useState(() => {
     const d = new Date();
@@ -994,6 +968,10 @@ export default function App() {
 
   const statsScrollRef = useRef(null);
   const [statsCanScroll, setStatsCanScroll] = useState({ left: false, right: true });
+  const t = translations[data.language || 'zh'];
+  const tc = THEMES[data.theme] || THEMES.purple;
+  const selectedDistance = currentDistNames.includes(activeDistance) ? activeDistance : currentDistNames[0];
+  const currentDateStr = `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, '0')}-${String(currentTime.getDate()).padStart(2, '0')}`;
 
   const handleStatsScroll = () => {
     if (statsScrollRef.current) {
@@ -1011,22 +989,21 @@ export default function App() {
       const timer = setTimeout(handleStatsScroll, 100);
       return () => clearTimeout(timer);
     }
-  }, [activeTab, data.language, activeDistance, currentDistNames]);
+  }, [activeTab, data.language, selectedDistance, currentDistNames]);
 
-  useEffect(() => {
-    if (currentDistNames.length > 0 && !currentDistNames.includes(activeDistance)) {
-      setActiveDistance(currentDistNames[0]);
-    }
-  }, [currentDistNames, activeDistance]);
-
-  const t = translations[data.language || 'zh'];
-  const tc = THEMES[data.theme] || THEMES.purple;
+  const updateData = useCallback(async (newData) => {
+    if (!user || !db) return;
+    const merged = { ...data, ...newData };
+    setData(merged);
+    const safeData = JSON.parse(JSON.stringify(merged));
+    await saveProfilePatch(db, user.uid, safeData);
+  }, [data, user]);
 
   const computedStreak = (() => {
     const days = data.completedDays || [];
     if (days.length === 0) return 0;
     
-    const todayStr = `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, '0')}-${String(currentTime.getDate()).padStart(2, '0')}`;
+    const todayStr = currentDateStr;
     const yesterdayStr = getPrevDayStr(todayStr);
 
     if (!days.includes(todayStr) && !days.includes(yesterdayStr)) return 0;
@@ -1062,10 +1039,8 @@ export default function App() {
 
   useEffect(() => {
     if (!user || !db) return;
-    const userRef = doc(db, 'artifacts', safeAppId, 'users', user.uid, 'profile', 'main');
-    const unsub = onSnapshot(userRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const cloudData = docSnap.data();
+    const unsub = subscribeToProfile(db, user.uid, (cloudData) => {
+      if (cloudData) {
         setData({ ...defaultData, ...cloudData });
         if (cloudData.language) localStorage.setItem('blaze_lang', cloudData.language); // ✨ 缓存云端语言
       } else {
@@ -1090,7 +1065,7 @@ export default function App() {
     if (loading || !user) return; 
     
     // 1. 获取今天的日期字符串 (格式：YYYY-MM-DD)
-    const todayStr = `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, '0')}-${String(currentTime.getDate()).padStart(2, '0')}`;
+    const todayStr = currentDateStr;
     
     // 2. 逻辑判断：如果记录的“最后登录日期”存在，且“今天”大于“最后登录日期”（防时间倒退/跨时区）
     if (data.lastLoginDate && todayStr > data.lastLoginDate) {
@@ -1104,40 +1079,32 @@ export default function App() {
       }
       
       // 4. 执行云端同步更新
-      updateData({
-        tasks: [],               // 清空首页任务列表
-        lastLoginDate: todayStr, // 更新最后登录日期为今天
-        taskHistory: updatedHistory // 保存历史快照
+      queueMicrotask(() => {
+        updateData({
+          tasks: [],               // 清空首页任务列表
+          lastLoginDate: todayStr, // 更新最后登录日期为今天
+          taskHistory: updatedHistory // 保存历史快照
+        });
       });
       
     } else if (!data.lastLoginDate) {
       // 5. 初始化逻辑：如果是第一次使用，记录下今天的日期
-      updateData({ lastLoginDate: todayStr });
+      queueMicrotask(() => updateData({ lastLoginDate: todayStr }));
     }
-  }, [currentTime.getDate(), loading, user]); // 关键：监听日期的天数变化
+  }, [currentDateStr, data.lastLoginDate, data.taskHistory, data.tasks, loading, updateData, user]); // 关键：监听日期变化
 
   useEffect(() => {
-    const currentRaces = data.races || (data.raceDate ? [{ id: 1, name: 'Main Target', date: data.raceDate }] : []);
-    setFormRaces(currentRaces);
-    setFormTemplate(data.weeklyTemplate);
-    setFormPointsPerTask(data.pointsPerTask ?? 20);
-    setFormDailyBonus(data.dailyBonusPoints ?? 50);
-    setFormRewards(data.customRewards || defaultData.customRewards);
-    
-    const initialDistances = data.customDistances || (data.language === 'en' ? ['Start', 'Lap', '500m', '777m', '1000m', '1500m'] : ['起跑', '单圈', '500m', '777m', '1000m', '1500m']);
-    setFormDistances(initialDistances);
-  }, [data.races, data.raceDate, data.weeklyTemplate, data.pointsPerTask, data.dailyBonusPoints, data.customRewards, data.customDistances, data.language]);
+    queueMicrotask(() => {
+      setFormPointsPerTask(data.pointsPerTask ?? 20);
+      setFormDailyBonus(data.dailyBonusPoints ?? 50);
+      setAccountUsername(data.username || '');
+      
+      const initialDistances = data.customDistances || (data.language === 'en' ? ['Start', 'Lap', '500m', '777m', '1000m', '1500m'] : ['起跑', '单圈', '500m', '777m', '1000m', '1500m']);
+      setFormDistances(initialDistances);
+    });
+  }, [data.pointsPerTask, data.dailyBonusPoints, data.customDistances, data.language, data.username]);
 
   const isParentMode = (!data.isPro || !data.parentPin) || isUnlocked;
-
-  const updateData = async (newData) => {
-    if (!user || !db) return;
-    const merged = { ...data, ...newData };
-    setData(merged); 
-    const userRef = doc(db, 'artifacts', safeAppId, 'users', user.uid, 'profile', 'main');
-    const safeData = JSON.parse(JSON.stringify(merged));
-    await setDoc(userRef, safeData, { merge: true });
-  };
 
   const handleLinkAccount = async () => {
     if (!authEmail || !authPassword || authPassword.length < 6) {
@@ -1238,7 +1205,7 @@ export default function App() {
     const newTasks = [
       ...data.tasks, 
       { 
-        id: Date.now() + Math.random(), 
+        id: createClientId(), 
         text: text.trim(), 
         target: target ? target.trim() : null,
         desc: desc, // 新增：保存动作方法说明
@@ -1287,7 +1254,7 @@ export default function App() {
           }
           
           // 2. 符号拆分匹配 (完美解决 "走胶带线/平衡木" 对应 "走平衡木 / 地板胶带线行走" 的颠倒问题)
-          const keywords = taskStr.split(/[\/\+、，()（）\s]/).filter(k => k.trim().length >= 2);
+          const keywords = taskStr.split(/[/+、，()（）\s]/).filter(k => k.trim().length >= 2);
           if (keywords.some(kw => item.name.includes(kw.trim()))) {
             matchedItem = item;
             break;
@@ -1306,7 +1273,7 @@ export default function App() {
       // 如果匹配成功，强制使用官方库里的名字、目标和说明！
       if (matchedItem) {
         return {
-          id: Date.now() + Math.random() + index, 
+          id: createClientId() + index, 
           text: matchedItem.name,
           target: matchedItem.target, 
           desc: matchedItem.desc,     
@@ -1319,7 +1286,7 @@ export default function App() {
         const target = parts.length > 1 ? parts.pop() : '';
         const name = parts.join(' ').trim();
         return {
-          id: Date.now() + Math.random() + index,
+          id: createClientId() + index,
           text: name,
           target: target || null,
           desc: null,
@@ -1336,6 +1303,22 @@ export default function App() {
     
     setTimeout(() => {
       setImportedWeeklyIds(prev => prev.filter(id => id !== idx));
+    }, 2000);
+  };
+
+  const importSingleTask = (event, item, uniqueItemId) => {
+    event.stopPropagation();
+    if (!data.isPro) {
+      setShowProModal(true);
+      return;
+    }
+
+    addSpecificTask(item.name, item.target, true, item.desc);
+    setImportedSingleItemIds(prev => [...prev, uniqueItemId]);
+    if (navigator.vibrate) navigator.vibrate(50);
+
+    setTimeout(() => {
+      setImportedSingleItemIds(prev => prev.filter(id => id !== uniqueItemId));
     }, 2000);
   };
 
@@ -1377,7 +1360,7 @@ export default function App() {
       let dateStr = newRecordDate || `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, '0')}-${String(currentTime.getDate()).padStart(2, '0')}`;
       const newRecord = { date: dateStr, time: time };
       
-      const key = getRecordsKey(activeDistance);
+      const key = getRecordsKey(selectedDistance);
       const updatedRecords = [...(data[key] || []), newRecord];
       
       // 🚀 修正：录入成绩不再赠送积分
@@ -1391,7 +1374,7 @@ export default function App() {
   const buyReward = (reward) => {
     if (data.points >= reward.cost) {
       const newHistoryItem = {
-        id: Date.now(),
+        id: createClientId(),
         name: reward.name,
         icon: reward.icon,
         cost: reward.cost,
@@ -1544,12 +1527,12 @@ export default function App() {
     };
 
     const hour = currentTime.getHours();
-    let greetingIndex = 0;
-    if (hour >= 5 && hour < 9) greetingIndex = 1; 
-    else if (hour >= 9 && hour < 12) greetingIndex = 2; 
-    else if (hour >= 12 && hour < 18) greetingIndex = 3; 
-    else if (hour >= 18 && hour < 23) greetingIndex = 4; 
-    else greetingIndex = 0; 
+    const greetingIndex =
+      hour >= 5 && hour < 9 ? 1 :
+      hour >= 9 && hour < 12 ? 2 :
+      hour >= 12 && hour < 18 ? 3 :
+      hour >= 18 && hour < 23 ? 4 :
+      0;
 
     const safeTips = t.tips || [];
     const dayOfYear = Math.floor((currentTime - new Date(currentTime.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
@@ -2047,7 +2030,7 @@ export default function App() {
 
   const StatsView = () => {
     const getRecords = () => {
-      const key = getRecordsKey(activeDistance);
+      const key = getRecordsKey(selectedDistance);
       return data[key] || [];
     };
 
@@ -2117,7 +2100,7 @@ export default function App() {
 
           <div ref={statsScrollRef} onScroll={handleStatsScroll} className="flex gap-2 overflow-x-auto py-1 no-scrollbar w-full scroll-smooth">
             {currentDistNames.map((dist, idx) => (
-              <button key={idx} onClick={() => setActiveDistance(dist)} className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${(activeDistance === dist) ? tc.btnPrimary + ' shadow-md' : tc.cardBg + ' ' + tc.textPrimary + ' hover:opacity-80'}`}>
+              <button key={idx} onClick={() => setActiveDistance(dist)} className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${(selectedDistance === dist) ? tc.btnPrimary + ' shadow-md' : tc.cardBg + ' ' + tc.textPrimary + ' hover:opacity-80'}`}>
                 {dist}
               </button>
             ))}
@@ -2133,7 +2116,7 @@ export default function App() {
         {/* 净化后的图表展示卡片 */}
         <div className={`${tc.cardBg} p-5 rounded-2xl shadow-sm relative`}>
           <div className="flex justify-between items-center mb-2">
-            <h3 className={`${tc.textHeading} font-bold`}>{activeDistance} {t.recentRecords}</h3>
+            <h3 className={`${tc.textHeading} font-bold`}>{selectedDistance} {t.recentRecords}</h3>
             <div className="flex items-center gap-2">
               <span className={`text-xs font-bold ${tc.badgeBg} ${tc.textPrimary} px-2 py-1 rounded-md`}>
                 {t.latest}: {chartRecords.length > 0 ? formatDisplayTime(chartRecords[chartRecords.length - 1].time) : '--:--.---'}
@@ -2161,7 +2144,7 @@ export default function App() {
   const RecordManagementModal = () => {
     if (!showRecordModal) return null;
 
-    const key = getRecordsKey(activeDistance);
+    const key = getRecordsKey(selectedDistance);
     const rawRecords = data[key] || [];
 
     // 🚀 核心修复 2：管理列表严格按照时间戳【倒序】排列（新 -> 老），方便查看和删除最新录入
@@ -2179,7 +2162,7 @@ export default function App() {
           <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
             <h3 className={`font-black ${tc.textHeading} flex items-center gap-2`}>
               <LineChart size={18} className={tc.textPrimary} />
-              {activeDistance} {data.language === 'en' ? 'Records' : '成绩管理'}
+              {selectedDistance} {data.language === 'en' ? 'Records' : '成绩管理'}
             </h3>
             <button onClick={() => setShowRecordModal(false)} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
               <X size={20} />
@@ -2233,7 +2216,7 @@ export default function App() {
                         onClick={() => {
                           const confirmMsg = data.language === 'en' ? 'Delete this record?' : '确定要删除这条成绩吗？';
                           if (window.confirm(confirmMsg)) {
-                            const key = getRecordsKey(activeDistance);
+                            const key = getRecordsKey(selectedDistance);
                             // 用时间戳和分数精准定位删除项，防止误删同分数据
                             const updatedRecords = rawRecords.filter(item => 
                               item.time !== r.time || item.date !== r.date
@@ -2301,7 +2284,7 @@ export default function App() {
                 if (newRaceNameInput.trim() && newRaceDateInput) {
                   // ✨ 核心变更：不再存入本地变量，直接追加并推送云端
                   const currentRaces = data.races || (data.raceDate ? [{ id: 'legacy', name: t.raceDate, date: data.raceDate }] : []);
-                  updateData({ races: [...currentRaces, { id: Date.now(), name: newRaceNameInput.trim(), date: newRaceDateInput }] });
+                  updateData({ races: [...currentRaces, { id: createClientId(), name: newRaceNameInput.trim(), date: newRaceDateInput }] });
                   setNewRaceNameInput('');
                   setNewRaceDateInput('');
                   setShowRaceModal(false);
@@ -2377,7 +2360,7 @@ export default function App() {
               onClick={() => {
                 if (newItemName.trim() && newItemCost) {
                   // ✨ 核心变更：不再存入本地变量，直接追加并推送云端
-                  updateData({ customRewards: [...(data.customRewards || []), { id: Date.now(), name: newItemName.trim(), cost: parseInt(newItemCost), icon: selectedEmoji }] });
+                  updateData({ customRewards: [...(data.customRewards || []), { id: createClientId(), name: newItemName.trim(), cost: parseInt(newItemCost), icon: selectedEmoji }] });
                   setNewItemName('');
                   setNewItemCost('');
                   setShowShopItemModal(false);
@@ -3525,8 +3508,13 @@ export default function App() {
             <div className="flex gap-2">
               <input 
                 type="text" 
-                value={data.username}
-                onChange={(e) => updateData({ username: e.target.value })}
+                value={accountUsername}
+                onChange={(e) => setAccountUsername(e.target.value)}
+                onBlur={() => {
+                  if ((data.username || '') !== accountUsername) {
+                    updateData({ username: accountUsername });
+                  }
+                }}
                 placeholder={data.language === 'en' ? "Your skater codename" : "给宝宝起个炫酷的滑冰代号"}
                 className={`flex-1 min-w-0 ${tc.inputBg} rounded-xl px-4 py-3 text-sm ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
               />
