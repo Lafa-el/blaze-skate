@@ -4,6 +4,8 @@ import {
   ListTodo, 
   ShoppingCart, 
   LineChart, 
+  Target,
+  Archive,
   Flame, 
   Trophy, 
   Calendar, 
@@ -50,6 +52,15 @@ import { DEFAULT_LANGUAGE, DEFAULT_THEME, TABS } from './constants/app';
 import { auth, db } from './firebase/firebaseApp';
 import { initializeFirestorePersistence } from './firebase/firestore';
 import { saveProfilePatch, subscribeToProfile } from './services/profileRepository';
+import {
+  archiveCompetitionGoal,
+  createCompetitionGoal,
+  getActiveCompetitionGoals,
+  getGoalGap,
+  getGoalProgress,
+  sortGoalsByPriorityAndDate,
+  updateCompetitionGoal,
+} from './features/trainingV1/goals.js';
 
 initializeFirestorePersistence();
 
@@ -505,7 +516,34 @@ const translations = {
     saveSettings: '保存设置',
     savedSuccessfully: '保存成功！',
     loggedIn: '已登录:',
-    nav: { dashboard: '概览', tasks: '任务', academy: '学院', data: '数据', shop: '商店' },
+    nav: { dashboard: '概览', tasks: '任务', academy: '学院', goals: '目标', data: '数据', shop: '商店' },
+    goalsTitle: '比赛目标',
+    goalsSubtitle: '用明确目标驱动每一次训练',
+    noGoals: '还没有比赛目标。',
+    addGoal: '添加目标',
+    editGoal: '编辑目标',
+    archiveGoal: '归档目标',
+    archivedGoals: '已归档目标',
+    showArchived: '查看归档',
+    hideArchived: '收起归档',
+    competitionName: '比赛名称',
+    competitionDate: '比赛日期',
+    eventName: '项目名称',
+    targetDistance: '目标距离',
+    currentTimeSeconds: '当前成绩 (秒)',
+    targetTimeSeconds: '目标成绩 (秒)',
+    priority: '优先级',
+    progress: '进度',
+    achieved: '已达标',
+    gap: '差距',
+    notes: '备注',
+    status: '状态',
+    goalTitleRequired: '请输入目标标题',
+    goalEventRequired: '请填写项目名称或目标距离',
+    goalInvalidTime: '成绩必须是有效数字',
+    goalInvalidPriority: '优先级必须是 A、B 或 C',
+    goalTitlePlaceholder: '例如：AGN 2027 500m',
+    goalNotesPlaceholder: '训练重点、策略或提醒...',
     daysNames: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
     language: '语言',
     optionalTarget: '目标/配速要求 (选填)',
@@ -659,7 +697,34 @@ const translations = {
     saveSettings: 'Save Settings',
     savedSuccessfully: 'Saved!',
     loggedIn: 'Logged in:',
-    nav: { dashboard: 'Home', tasks: 'Tasks', academy: 'Academy', data: 'Data', shop: 'Shop' },
+    nav: { dashboard: 'Home', tasks: 'Tasks', academy: 'Academy', goals: 'Goals', data: 'Data', shop: 'Shop' },
+    goalsTitle: 'Competition Goals',
+    goalsSubtitle: 'Use clear goals to drive every training session',
+    noGoals: 'No competition goals yet.',
+    addGoal: 'Add Goal',
+    editGoal: 'Edit Goal',
+    archiveGoal: 'Archive Goal',
+    archivedGoals: 'Archived Goals',
+    showArchived: 'Show Archived',
+    hideArchived: 'Hide Archived',
+    competitionName: 'Competition Name',
+    competitionDate: 'Competition Date',
+    eventName: 'Event Name',
+    targetDistance: 'Target Distance',
+    currentTimeSeconds: 'Current Time (seconds)',
+    targetTimeSeconds: 'Target Time (seconds)',
+    priority: 'Priority',
+    progress: 'Progress',
+    achieved: 'Achieved',
+    gap: 'Gap',
+    notes: 'Notes',
+    status: 'Status',
+    goalTitleRequired: 'Goal title is required',
+    goalEventRequired: 'Event name or target distance is required',
+    goalInvalidTime: 'Times must be valid numbers',
+    goalInvalidPriority: 'Priority must be A, B, or C',
+    goalTitlePlaceholder: 'Example: AGN 2027 500m',
+    goalNotesPlaceholder: 'Training focus, strategy, or reminders...',
     daysNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     language: 'Language',
     optionalTarget: 'Target/Pace (Optional)',
@@ -886,6 +951,47 @@ const createClientId = () => {
   return Date.now() + Math.random();
 };
 
+const createEmptyGoalForm = () => ({
+  title: '',
+  competitionName: '',
+  competitionDate: '',
+  eventName: '',
+  targetDistance: '',
+  currentTimeSeconds: '',
+  targetTimeSeconds: '',
+  priority: 'A',
+  notes: '',
+});
+
+const createGoalFormFromGoal = (goal) => ({
+  title: goal?.title || '',
+  competitionName: goal?.competitionName || '',
+  competitionDate: goal?.competitionDate || '',
+  eventName: goal?.eventName || '',
+  targetDistance: goal?.targetDistance || '',
+  currentTimeSeconds: typeof goal?.currentTimeSeconds === 'number' ? String(goal.currentTimeSeconds) : '',
+  targetTimeSeconds: typeof goal?.targetTimeSeconds === 'number' ? String(goal.targetTimeSeconds) : '',
+  priority: goal?.priority || 'A',
+  notes: goal?.notes || '',
+});
+
+const parseOptionalGoalSeconds = (value) => {
+  const trimmed = String(value ?? '').trim();
+  if (!trimmed) return { isValid: true, value: null };
+
+  const parsed = Number(trimmed);
+  return {
+    isValid: Number.isFinite(parsed) && parsed >= 0,
+    value: parsed,
+  };
+};
+
+const formatGoalSeconds = (value) => (
+  typeof value === 'number' && Number.isFinite(value)
+    ? `${Number(value.toFixed(3))}s`
+    : '--'
+);
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -938,6 +1044,11 @@ export default function App() {
   const [showRaceModal, setShowRaceModal] = useState(false); // 🌟 新增：比赛管理弹窗开关
   const [newRaceNameInput, setNewRaceNameInput] = useState(''); // 🌟 新增：新比赛名称暂存
   const [newRaceDateInput, setNewRaceDateInput] = useState(''); // 🌟 新增：新比赛日期暂存
+  const [showGoalModal, setShowGoalModal] = useState(false);
+  const [editingGoalId, setEditingGoalId] = useState(null);
+  const [goalForm, setGoalForm] = useState(createEmptyGoalForm);
+  const [goalFormError, setGoalFormError] = useState('');
+  const [showArchivedGoals, setShowArchivedGoals] = useState(false);
 
   // 🛍️ 新增：商店商品管理弹窗状态
   const [showShopItemModal, setShowShopItemModal] = useState(false);
@@ -1001,6 +1112,90 @@ export default function App() {
     const safeData = JSON.parse(JSON.stringify(merged));
     await saveProfilePatch(db, user.uid, safeData);
   }, [data, user]);
+
+  const openAddGoalModal = () => {
+    setEditingGoalId(null);
+    setGoalForm(createEmptyGoalForm());
+    setGoalFormError('');
+    setShowGoalModal(true);
+  };
+
+  const openEditGoalModal = (goal) => {
+    setEditingGoalId(goal.id);
+    setGoalForm(createGoalFormFromGoal(goal));
+    setGoalFormError('');
+    setShowGoalModal(true);
+  };
+
+  const closeGoalModal = () => {
+    setShowGoalModal(false);
+    setEditingGoalId(null);
+    setGoalForm(createEmptyGoalForm());
+    setGoalFormError('');
+  };
+
+  const handleGoalFormChange = (field, value) => {
+    setGoalForm(prev => ({ ...prev, [field]: value }));
+    setGoalFormError('');
+  };
+
+  const saveCompetitionGoal = () => {
+    const title = goalForm.title.trim();
+    const eventName = goalForm.eventName.trim();
+    const targetDistance = goalForm.targetDistance.trim();
+    const currentTime = parseOptionalGoalSeconds(goalForm.currentTimeSeconds);
+    const targetTime = parseOptionalGoalSeconds(goalForm.targetTimeSeconds);
+
+    if (!title) {
+      setGoalFormError(t.goalTitleRequired);
+      return;
+    }
+
+    if (!eventName && !targetDistance) {
+      setGoalFormError(t.goalEventRequired);
+      return;
+    }
+
+    if (!currentTime.isValid || !targetTime.isValid) {
+      setGoalFormError(t.goalInvalidTime);
+      return;
+    }
+
+    if (!['A', 'B', 'C'].includes(goalForm.priority)) {
+      setGoalFormError(t.goalInvalidPriority);
+      return;
+    }
+
+    const patch = {
+      title,
+      competitionName: goalForm.competitionName.trim(),
+      competitionDate: goalForm.competitionDate,
+      eventName,
+      targetDistance,
+      currentTimeSeconds: currentTime.value,
+      targetTimeSeconds: targetTime.value,
+      priority: goalForm.priority,
+      notes: goalForm.notes.trim(),
+    };
+
+    const goals = data.competitionGoalsV1 || [];
+    const updatedGoals = editingGoalId
+      ? goals.map(goal => (
+        goal.id === editingGoalId ? updateCompetitionGoal(goal, patch) : goal
+      ))
+      : [...goals, createCompetitionGoal({ ...patch, status: 'active' })];
+
+    updateData({ competitionGoalsV1: updatedGoals });
+    closeGoalModal();
+  };
+
+  const archiveGoal = (goal) => {
+    const updatedGoals = (data.competitionGoalsV1 || []).map(existingGoal => (
+      existingGoal.id === goal.id ? archiveCompetitionGoal(existingGoal) : existingGoal
+    ));
+
+    updateData({ competitionGoalsV1: updatedGoals });
+  };
 
   const computedStreak = (() => {
     const days = data.completedDays || [];
@@ -2372,6 +2567,283 @@ export default function App() {
               className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
             >
               {data.language === 'en' ? 'Add Item' : '添加商品'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const GoalsView = () => {
+    const goals = data.competitionGoalsV1 || [];
+    const activeGoals = sortGoalsByPriorityAndDate(getActiveCompetitionGoals(goals));
+    const archivedGoals = sortGoalsByPriorityAndDate(goals.filter(goal => goal?.status === 'archived'));
+
+    const GoalCard = ({ goal, isArchived = false }) => {
+      const progress = getGoalProgress(goal);
+      const gap = getGoalGap(goal);
+      const achieved = progress === 100;
+
+      return (
+        <div className={`${tc.cardBg} rounded-2xl shadow-sm border ${tc.borderLight} p-5 space-y-4 ${isArchived ? 'opacity-70' : ''}`}>
+          <div className="flex justify-between gap-3 items-start">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${goal.priority === 'A' ? 'bg-red-50 text-red-600 border border-red-100' : goal.priority === 'B' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+                  {t.priority} {goal.priority}
+                </span>
+                <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${achieved ? 'bg-green-50 text-green-600 border border-green-100' : tc.badgeBg + ' ' + tc.textPrimary}`}>
+                  {achieved ? t.achieved : goal.status}
+                </span>
+              </div>
+              <h2 className={`text-lg font-black ${tc.textHeading} leading-tight truncate`}>{goal.title}</h2>
+              <p className={`text-xs ${tc.textMuted} font-bold mt-1 truncate`}>
+                {goal.competitionName || '--'} · {(goal.competitionDate || '').replace(/-/g, '/') || '--'}
+              </p>
+            </div>
+            {!isArchived && (
+              <div className="flex gap-1 shrink-0">
+                <button
+                  onClick={() => openEditGoalModal(goal)}
+                  className={`p-2 ${tc.badgeBg} ${tc.textPrimary} rounded-xl active:scale-95 transition-all`}
+                  aria-label={t.editGoal}
+                >
+                  <Edit2 size={16} />
+                </button>
+                <button
+                  onClick={() => archiveGoal(goal)}
+                  className="p-2 bg-red-50 text-red-500 rounded-xl active:scale-95 transition-all"
+                  aria-label={t.archiveGoal}
+                >
+                  <Archive size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className={`${tc.badgeBg} bg-opacity-40 rounded-xl p-3`}>
+              <div className={`text-[10px] font-black uppercase ${tc.textMuted}`}>{t.eventName}</div>
+              <div className={`text-sm font-black ${tc.textHeading} mt-1 truncate`}>{goal.eventName || '--'}</div>
+            </div>
+            <div className={`${tc.badgeBg} bg-opacity-40 rounded-xl p-3`}>
+              <div className={`text-[10px] font-black uppercase ${tc.textMuted}`}>{t.targetDistance}</div>
+              <div className={`text-sm font-black ${tc.textHeading} mt-1 truncate`}>{goal.targetDistance || '--'}</div>
+            </div>
+            <div className="bg-gray-50/70 rounded-xl p-3 border border-gray-100">
+              <div className="text-[10px] font-black uppercase text-gray-400">{t.currentTimeSeconds}</div>
+              <div className={`text-sm font-black ${tc.textHeading} mt-1`}>{formatGoalSeconds(goal.currentTimeSeconds)}</div>
+            </div>
+            <div className="bg-gray-50/70 rounded-xl p-3 border border-gray-100">
+              <div className="text-[10px] font-black uppercase text-gray-400">{t.targetTimeSeconds}</div>
+              <div className={`text-sm font-black ${tc.textHeading} mt-1`}>{formatGoalSeconds(goal.targetTimeSeconds)}</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className={`${achieved ? 'bg-green-50 text-green-700 border-green-100' : 'bg-yellow-50 text-yellow-700 border-yellow-100'} rounded-xl p-3 border`}>
+              <div className="text-[10px] font-black uppercase opacity-70">{t.gap}</div>
+              <div className="text-lg font-black mt-0.5">
+                {typeof gap === 'number' ? `${gap > 0 ? '+' : ''}${Number(gap.toFixed(3))}s` : '--'}
+              </div>
+            </div>
+            <div className={`${tc.badgeBg} rounded-xl p-3`}>
+              <div className={`text-[10px] font-black uppercase ${tc.textMuted}`}>{t.progress}</div>
+              <div className={`text-lg font-black ${tc.textPrimary} mt-0.5`}>{progress === null ? '--' : `${progress}%`}</div>
+            </div>
+          </div>
+
+          {goal.notes && (
+            <div className="bg-white/60 border border-gray-100 rounded-xl p-3">
+              <div className={`text-[10px] font-black uppercase ${tc.textMuted} mb-1`}>{t.notes}</div>
+              <p className={`text-xs leading-relaxed ${tc.appText}`}>{goal.notes}</p>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    return (
+      <div className="space-y-6 pb-4">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h2 className={`text-2xl font-black ${tc.textHeading}`}>{t.goalsTitle}</h2>
+            <p className={`text-sm ${tc.textMuted} mt-1`}>{t.goalsSubtitle}</p>
+          </div>
+          <button
+            onClick={openAddGoalModal}
+            className={`${tc.btnPrimary} px-4 py-3 rounded-xl shadow-md font-bold text-sm flex items-center gap-2 shrink-0 active:scale-95 transition-all`}
+          >
+            <Plus size={18} /> {t.addGoal}
+          </button>
+        </div>
+
+        {activeGoals.length === 0 ? (
+          <div className={`${tc.cardBg} p-8 rounded-2xl shadow-sm border ${tc.borderLight} text-center space-y-4`}>
+            <div className={`w-16 h-16 mx-auto rounded-2xl ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary}`}>
+              <Target size={30} />
+            </div>
+            <div>
+              <h3 className={`font-black ${tc.textHeading}`}>{t.noGoals}</h3>
+              <p className={`text-sm ${tc.textMuted} mt-1`}>{t.goalsSubtitle}</p>
+            </div>
+            <button
+              onClick={openAddGoalModal}
+              className={`${tc.btnPrimary} px-5 py-3 rounded-xl shadow-md font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
+            >
+              <Plus size={18} /> {t.addGoal}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {activeGoals.map(goal => <GoalCard key={goal.id} goal={goal} />)}
+          </div>
+        )}
+
+        {archivedGoals.length > 0 && (
+          <div className="space-y-3 pt-2">
+            <button
+              onClick={() => setShowArchivedGoals(prev => !prev)}
+              className={`w-full flex items-center justify-between ${tc.cardBg} border ${tc.borderLight} rounded-2xl p-4 shadow-sm`}
+            >
+              <span className={`font-black ${tc.textHeading}`}>{t.archivedGoals} ({archivedGoals.length})</span>
+              <span className={`text-xs font-bold ${tc.textPrimary}`}>
+                {showArchivedGoals ? t.hideArchived : t.showArchived}
+              </span>
+            </button>
+            {showArchivedGoals && (
+              <div className="space-y-3">
+                {archivedGoals.map(goal => <GoalCard key={goal.id} goal={goal} isArchived />)}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const GoalManagementModal = () => {
+    if (!showGoalModal) return null;
+
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={closeGoalModal}>
+        <div className={`${tc.cardBg} w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]`} onClick={e => e.stopPropagation()}>
+          <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
+            <h3 className={`font-black ${tc.textHeading} flex items-center gap-2`}>
+              <Target size={18} className={tc.textPrimary} />
+              {editingGoalId ? t.editGoal : t.addGoal}
+            </h3>
+            <button onClick={closeGoalModal} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-5 overflow-y-auto space-y-4">
+            <input
+              type="text"
+              value={goalForm.title}
+              onChange={(e) => handleGoalFormChange('title', e.target.value)}
+              placeholder={t.goalTitlePlaceholder}
+              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+            />
+
+            <div className="grid grid-cols-1 gap-3">
+              <input
+                type="text"
+                value={goalForm.competitionName}
+                onChange={(e) => handleGoalFormChange('competitionName', e.target.value)}
+                placeholder={t.competitionName}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+              <input
+                type="date"
+                value={goalForm.competitionDate}
+                onChange={(e) => handleGoalFormChange('competitionDate', e.target.value)}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                value={goalForm.eventName}
+                onChange={(e) => handleGoalFormChange('eventName', e.target.value)}
+                placeholder={t.eventName}
+                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+              <div>
+                <input
+                  type="text"
+                  list="goal-distance-options"
+                  value={goalForm.targetDistance}
+                  onChange={(e) => handleGoalFormChange('targetDistance', e.target.value)}
+                  placeholder={t.targetDistance}
+                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
+                <datalist id="goal-distance-options">
+                  {currentDistNames.map(dist => <option key={dist} value={dist} />)}
+                </datalist>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="number"
+                min="0"
+                step="0.001"
+                value={goalForm.currentTimeSeconds}
+                onChange={(e) => handleGoalFormChange('currentTimeSeconds', e.target.value)}
+                placeholder={t.currentTimeSeconds}
+                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+              <input
+                type="number"
+                min="0"
+                step="0.001"
+                value={goalForm.targetTimeSeconds}
+                onChange={(e) => handleGoalFormChange('targetTimeSeconds', e.target.value)}
+                placeholder={t.targetTimeSeconds}
+                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+            </div>
+
+            <div>
+              <label className={`text-xs font-black ${tc.textMuted} ml-1 mb-2 block`}>{t.priority}</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['A', 'B', 'C'].map(priority => (
+                  <button
+                    key={priority}
+                    type="button"
+                    onClick={() => handleGoalFormChange('priority', priority)}
+                    className={`py-2.5 rounded-xl text-sm font-black transition-all ${goalForm.priority === priority ? tc.btnPrimary + ' shadow-md' : tc.badgeBg + ' ' + tc.textPrimary}`}
+                  >
+                    {priority}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <textarea
+              value={goalForm.notes}
+              onChange={(e) => handleGoalFormChange('notes', e.target.value)}
+              placeholder={t.goalNotesPlaceholder}
+              rows={3}
+              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-medium ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all resize-none`}
+            />
+
+            {goalFormError && (
+              <div className="text-xs font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl p-3">
+                {goalFormError}
+              </div>
+            )}
+          </div>
+
+          <div className={`p-5 border-t ${tc.borderLight} ${tc.appBg}`}>
+            <button
+              onClick={saveCompetitionGoal}
+              className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
+            >
+              {t.save}
             </button>
           </div>
         </div>
@@ -3766,6 +4238,7 @@ export default function App() {
         {activeTab === 'dashboard' && DashboardView()}
         {activeTab === 'tasks' && TasksView()}
         {activeTab === 'academy' && AcademyView()}
+        {activeTab === TABS.GOALS && GoalsView()}
         {activeTab === 'data' && DataView()}
         {activeTab === 'shop' && ShopView()}
       </main>
@@ -3776,6 +4249,7 @@ export default function App() {
             { id: 'dashboard', icon: Home, label: t.nav?.dashboard },
             { id: 'tasks', icon: ListTodo, label: t.nav?.tasks },
             { id: 'academy', icon: Dumbbell, label: t.nav?.academy },
+            { id: TABS.GOALS, icon: Target, label: t.nav?.goals },
             { id: 'data', icon: LineChart, label: t.nav?.data },
             { id: 'shop', icon: ShoppingCart, label: t.nav?.shop },
           ].map((item) => {
@@ -3801,6 +4275,7 @@ export default function App() {
       {HistoryDetailModal()} {/* ✨ 新增：挂载日历快照弹窗 */}
       {RecordManagementModal()} {/* ✨ 新增：挂载成绩管理弹窗 */}
       {RaceManagementModal()} {/* 🌟 新增：挂载比赛目标管理弹窗 */}
+      {GoalManagementModal()} {/* V1 Step 2：挂载比赛目标表单 */}
       {ShopItemManagementModal()} {/* 🛍️ 新增：挂载商店商品管理弹窗 */}
       {RewardHistoryModal()}
       {ProfileModal()}
