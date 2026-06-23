@@ -543,8 +543,9 @@ const translations = {
     loggedIn: '已登录:',
     nav: { dashboard: '概览', tasks: '任务', academy: '学院', goals: '目标', plans: '计划', data: '数据', shop: '商店' },
     goalsTitle: '比赛目标',
+    goalTitleLabel: '目标标题',
     goalsSubtitle: '用明确目标驱动每一次训练',
-    noGoals: '还没有比赛目标。',
+    noGoals: '还没有比赛目标。先添加一个目标，把训练和比赛结果连接起来。',
     addGoal: '添加目标',
     editGoal: '编辑目标',
     archiveGoal: '归档目标',
@@ -559,19 +560,24 @@ const translations = {
     targetTimeSeconds: '目标成绩 (秒)',
     priority: '优先级',
     progress: '进度',
-    achieved: '已达标',
-    gap: '差距',
+    achieved: '已达成',
+    gap: '目标差距',
     notes: '备注',
     status: '状态',
     goalTitleRequired: '请输入目标标题',
     goalEventRequired: '请填写项目名称或目标距离',
     goalInvalidTime: '成绩必须是有效数字',
     goalInvalidPriority: '优先级必须是 A、B 或 C',
-    goalTitlePlaceholder: '例如：AGN 2027 500m',
+    goalTitlePlaceholder: 'AGN 2027 500m',
+    goalCompetitionPlaceholder: 'Age Group Nationals 2027',
+    goalEventPlaceholder: '500m',
+    goalDistancePlaceholder: '500m',
+    goalCurrentTimePlaceholder: '49.8',
+    goalTargetTimePlaceholder: '48.0',
     goalNotesPlaceholder: '训练重点、策略或提醒...',
     plansTitle: '训练计划',
-    plansSubtitle: '把目标拆成每天可执行的训练安排',
-    noPlans: '还没有训练计划。',
+    plansSubtitle: '把目标拆成清晰的周训练计划',
+    noPlans: '还没有训练计划。创建一个周计划来安排每天的训练。',
     createPlan: '创建计划',
     editPlan: '编辑计划',
     archivePlan: '归档计划',
@@ -582,7 +588,8 @@ const translations = {
     planEndRequired: '请选择结束日期',
     planInvalidDateRange: '结束日期不能早于开始日期',
     planInvalidStatus: '计划状态必须是 draft 或 active',
-    planTitlePlaceholder: '例如：AGN 备赛周计划',
+    planTitlePlaceholder: 'Summer Training Week',
+    planFocusPlaceholder: 'Corner technique and starts',
     focus: '训练重点',
     linkedGoal: '关联目标',
     noLinkedGoal: '不关联目标',
@@ -593,12 +600,17 @@ const translations = {
     weeklyCompletion: '周完成度',
     addPlanTask: '添加计划任务',
     editPlanTask: '编辑计划任务',
+    planTaskDate: '任务日期',
     planTaskTextRequired: '请输入任务内容',
     planTaskDateRequired: '请选择任务日期',
     planTaskInvalidCategory: '任务分类不正确',
     planTaskInvalidDuration: '训练时长必须是正数',
     planTaskInvalidIntensity: '强度必须是 low、medium、high 或留空',
-    planTaskTextPlaceholder: '例如：弯道技术训练',
+    planTaskTextPlaceholder: 'Ice Training',
+    planTaskTargetPlaceholder: 'Corner entry and exit power',
+    planTaskDurationPlaceholder: '90',
+    planTasksTitle: '计划任务',
+    noPlanTasksInPlan: '这个计划里还没有任务。',
     category: '分类',
     durationMinutes: '时长(分钟)',
     intensity: '强度',
@@ -612,7 +624,7 @@ const translations = {
     topGoals: '重点比赛目标',
     todayPlanTasks: '今日计划任务',
     noPlanTasksToday: '今天没有计划任务。',
-    targetGapTitle: 'PB / 目标差距',
+    targetGapTitle: '目标差距',
     currentBest: '当前最好',
     planConsistency: '计划执行稳定性',
     completedPlanTasksThisWeek: '本周已完成计划任务',
@@ -782,8 +794,9 @@ const translations = {
     loggedIn: 'Logged in:',
     nav: { dashboard: 'Home', tasks: 'Tasks', academy: 'Academy', goals: 'Goals', plans: 'Plan', data: 'Data', shop: 'Shop' },
     goalsTitle: 'Competition Goals',
+    goalTitleLabel: 'Goal Title',
     goalsSubtitle: 'Use clear goals to drive every training session',
-    noGoals: 'No competition goals yet.',
+    noGoals: 'No competition goals yet. Add your first target to connect training with race outcomes.',
     addGoal: 'Add Goal',
     editGoal: 'Edit Goal',
     archiveGoal: 'Archive Goal',
@@ -806,11 +819,16 @@ const translations = {
     goalEventRequired: 'Event name or target distance is required',
     goalInvalidTime: 'Times must be valid numbers',
     goalInvalidPriority: 'Priority must be A, B, or C',
-    goalTitlePlaceholder: 'Example: AGN 2027 500m',
+    goalTitlePlaceholder: 'AGN 2027 500m',
+    goalCompetitionPlaceholder: 'Age Group Nationals 2027',
+    goalEventPlaceholder: '500m',
+    goalDistancePlaceholder: '500m',
+    goalCurrentTimePlaceholder: '49.8',
+    goalTargetTimePlaceholder: '48.0',
     goalNotesPlaceholder: 'Training focus, strategy, or reminders...',
     plansTitle: 'Training Plan',
-    plansSubtitle: 'Turn goals into daily training work',
-    noPlans: 'No training plan yet.',
+    plansSubtitle: 'Turn goals into a clear weekly training plan',
+    noPlans: 'No training plan yet. Create a weekly plan to organize daily work.',
     createPlan: 'Create Plan',
     editPlan: 'Edit Plan',
     archivePlan: 'Archive Plan',
@@ -821,7 +839,8 @@ const translations = {
     planEndRequired: 'End date is required',
     planInvalidDateRange: 'End date must not be before start date',
     planInvalidStatus: 'Plan status must be draft or active',
-    planTitlePlaceholder: 'Example: AGN prep weekly plan',
+    planTitlePlaceholder: 'Summer Training Week',
+    planFocusPlaceholder: 'Corner technique and starts',
     focus: 'Focus',
     linkedGoal: 'Linked Goal',
     noLinkedGoal: 'No linked goal',
@@ -832,12 +851,17 @@ const translations = {
     weeklyCompletion: 'Weekly Completion',
     addPlanTask: 'Add Plan Task',
     editPlanTask: 'Edit Plan Task',
+    planTaskDate: 'Task Date',
     planTaskTextRequired: 'Task text is required',
     planTaskDateRequired: 'Task date is required',
     planTaskInvalidCategory: 'Invalid task category',
     planTaskInvalidDuration: 'Duration must be a positive number',
     planTaskInvalidIntensity: 'Intensity must be low, medium, high, or blank',
-    planTaskTextPlaceholder: 'Example: Corner technique session',
+    planTaskTextPlaceholder: 'Ice Training',
+    planTaskTargetPlaceholder: 'Corner entry and exit power',
+    planTaskDurationPlaceholder: '90',
+    planTasksTitle: 'Plan Tasks',
+    noPlanTasksInPlan: 'No tasks in this plan yet.',
     category: 'Category',
     durationMinutes: 'Duration (min)',
     intensity: 'Intensity',
@@ -851,7 +875,7 @@ const translations = {
     topGoals: 'Top Competition Goals',
     todayPlanTasks: 'Today Plan Tasks',
     noPlanTasksToday: 'No plan tasks for today.',
-    targetGapTitle: 'PB / Target Gap',
+    targetGapTitle: 'Target Gap',
     currentBest: 'Current Best',
     planConsistency: 'Plan Consistency',
     completedPlanTasksThisWeek: 'Completed plan tasks this week',
@@ -2401,7 +2425,7 @@ export default function App() {
           </div>
 
           <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight}`}>
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <div className={`text-sm font-black ${tc.textHeading}`}>{t.lindsayDefaultsTitle}</div>
                 <p className={`text-[11px] font-bold ${tc.textMuted} mt-1 leading-relaxed`}>
@@ -2412,7 +2436,7 @@ export default function App() {
                 type="button"
                 onClick={initializeLindsayTrainingV1Defaults}
                 disabled={!canSeedLindsayDefaults}
-                className={`px-3 py-2 rounded-xl text-[11px] font-black shrink-0 active:scale-95 transition-all ${
+                className={`w-full sm:w-auto px-3 py-2 rounded-xl text-[11px] font-black shrink-0 active:scale-95 transition-all ${
                   canSeedLindsayDefaults
                     ? tc.btnPrimary
                     : `${tc.badgeBg} ${tc.textMuted} cursor-not-allowed opacity-70`
@@ -2435,7 +2459,7 @@ export default function App() {
             </div>
 
             {topActiveGoals.length === 0 ? (
-              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center`}>
+              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center leading-relaxed`}>
                 {t.noGoals}
               </div>
             ) : (
@@ -2459,15 +2483,15 @@ export default function App() {
                         </span>
                       </div>
                       <div className="grid grid-cols-3 gap-2 mt-3 text-[10px] font-bold">
-                        <div className="bg-white/70 rounded-lg p-2">
+                        <div className="bg-white/70 rounded-lg p-2 min-w-0">
                           <div className={tc.textMuted}>{t.currentTimeSeconds}</div>
                           <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(goal.currentTimeSeconds)}</div>
                         </div>
-                        <div className="bg-white/70 rounded-lg p-2">
+                        <div className="bg-white/70 rounded-lg p-2 min-w-0">
                           <div className={tc.textMuted}>{t.targetTimeSeconds}</div>
                           <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(goal.targetTimeSeconds)}</div>
                         </div>
-                        <div className="bg-white/70 rounded-lg p-2">
+                        <div className="bg-white/70 rounded-lg p-2 min-w-0">
                           <div className={tc.textMuted}>{t.gap}</div>
                           <div className={`${achieved ? 'text-green-600' : tc.textHeading} mt-0.5`}>
                             {gap === null ? '--' : formatGoalSeconds(gap)}
@@ -2493,7 +2517,7 @@ export default function App() {
             </div>
 
             {!selectedDashboardPlan ? (
-              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center`}>
+              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center leading-relaxed`}>
                 {t.noPlans}
               </div>
             ) : (
@@ -2539,7 +2563,7 @@ export default function App() {
             </div>
 
             {todayPlanTasks.length === 0 ? (
-              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center`}>
+              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center leading-relaxed`}>
                 {t.noPlanTasksToday}
               </div>
             ) : (
@@ -2593,15 +2617,15 @@ export default function App() {
                       </span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 mt-3 text-[10px] font-bold">
-                      <div className="bg-white/70 rounded-lg p-2">
+                      <div className="bg-white/70 rounded-lg p-2 min-w-0">
                         <div className={tc.textMuted}>{t.currentBest}</div>
                         <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(currentTimeSeconds)}</div>
                       </div>
-                      <div className="bg-white/70 rounded-lg p-2">
+                      <div className="bg-white/70 rounded-lg p-2 min-w-0">
                         <div className={tc.textMuted}>{t.targetTimeSeconds}</div>
                         <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(goal.targetTimeSeconds)}</div>
                       </div>
-                      <div className="bg-white/70 rounded-lg p-2">
+                      <div className="bg-white/70 rounded-lg p-2 min-w-0">
                         <div className={tc.textMuted}>{t.gap}</div>
                         <div className={`${achieved ? 'text-green-600' : tc.textHeading} mt-0.5`}>
                           {gap === null ? '--' : formatGoalSeconds(gap)}
@@ -3378,7 +3402,7 @@ export default function App() {
         <div className={`${tc.cardBg} rounded-2xl shadow-sm border ${tc.borderLight} p-5 space-y-4 ${isArchived ? 'opacity-70' : ''}`}>
           <div className="flex justify-between gap-3 items-start">
             <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${goal.priority === 'A' ? 'bg-red-50 text-red-600 border border-red-100' : goal.priority === 'B' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
                   {t.priority} {goal.priority}
                 </span>
@@ -3402,7 +3426,7 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => archiveGoal(goal)}
-                  className="p-2 bg-red-50 text-red-500 rounded-xl active:scale-95 transition-all"
+                  className="p-2 bg-red-50 text-red-500 border border-red-100 rounded-xl active:scale-95 transition-all"
                   aria-label={t.archiveGoal}
                 >
                   <Archive size={16} />
@@ -3455,14 +3479,14 @@ export default function App() {
 
     return (
       <div className="space-y-6 pb-4">
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className={`text-2xl font-black ${tc.textHeading}`}>{t.goalsTitle}</h2>
             <p className={`text-sm ${tc.textMuted} mt-1`}>{t.goalsSubtitle}</p>
           </div>
           <button
             onClick={openAddGoalModal}
-            className={`${tc.btnPrimary} px-4 py-3 rounded-xl shadow-md font-bold text-sm flex items-center gap-2 shrink-0 active:scale-95 transition-all`}
+            className={`${tc.btnPrimary} px-4 py-3 rounded-xl shadow-md font-bold text-sm flex items-center justify-center gap-2 shrink-0 active:scale-95 transition-all`}
           >
             <Plus size={18} /> {t.addGoal}
           </button>
@@ -3474,8 +3498,8 @@ export default function App() {
               <Target size={30} />
             </div>
             <div>
-              <h3 className={`font-black ${tc.textHeading}`}>{t.noGoals}</h3>
-              <p className={`text-sm ${tc.textMuted} mt-1`}>{t.goalsSubtitle}</p>
+              <h3 className={`font-black ${tc.textHeading}`}>{t.goalsTitle}</h3>
+              <p className={`text-sm ${tc.textMuted} mt-1 leading-relaxed`}>{t.noGoals}</p>
             </div>
             <button
               onClick={openAddGoalModal}
@@ -3529,72 +3553,91 @@ export default function App() {
           </div>
 
           <div className="p-5 overflow-y-auto space-y-4">
-            <input
-              type="text"
-              value={goalForm.title}
-              onChange={(e) => handleGoalFormChange('title', e.target.value)}
-              placeholder={t.goalTitlePlaceholder}
-              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-            />
-
-            <div className="grid grid-cols-1 gap-3">
+            <label className="block space-y-2">
+              <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.goalTitleLabel}</span>
               <input
                 type="text"
-                value={goalForm.competitionName}
-                onChange={(e) => handleGoalFormChange('competitionName', e.target.value)}
-                placeholder={t.competitionName}
+                value={goalForm.title}
+                onChange={(e) => handleGoalFormChange('title', e.target.value)}
+                placeholder={t.goalTitlePlaceholder}
                 className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
               />
-              <input
-                type="date"
-                value={goalForm.competitionDate}
-                onChange={(e) => handleGoalFormChange('competitionDate', e.target.value)}
-                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-              />
+            </label>
+
+            <div className="grid grid-cols-1 gap-3">
+              <label className="block space-y-2">
+                <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.competitionName}</span>
+                <input
+                  type="text"
+                  value={goalForm.competitionName}
+                  onChange={(e) => handleGoalFormChange('competitionName', e.target.value)}
+                  placeholder={t.goalCompetitionPlaceholder}
+                  className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
+              </label>
+              <label className="block space-y-2">
+                <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.competitionDate}</span>
+                <input
+                  type="date"
+                  value={goalForm.competitionDate}
+                  onChange={(e) => handleGoalFormChange('competitionDate', e.target.value)}
+                  className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
+              </label>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <input
-                type="text"
-                value={goalForm.eventName}
-                onChange={(e) => handleGoalFormChange('eventName', e.target.value)}
-                placeholder={t.eventName}
-                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-              />
-              <div>
+              <label className="block space-y-2">
+                <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.eventName}</span>
+                <input
+                  type="text"
+                  value={goalForm.eventName}
+                  onChange={(e) => handleGoalFormChange('eventName', e.target.value)}
+                  placeholder={t.goalEventPlaceholder}
+                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
+              </label>
+              <label className="block space-y-2">
+                <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.targetDistance}</span>
                 <input
                   type="text"
                   list="goal-distance-options"
                   value={goalForm.targetDistance}
                   onChange={(e) => handleGoalFormChange('targetDistance', e.target.value)}
-                  placeholder={t.targetDistance}
+                  placeholder={t.goalDistancePlaceholder}
                   className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
                 />
                 <datalist id="goal-distance-options">
                   {currentDistNames.map(dist => <option key={dist} value={dist} />)}
                 </datalist>
-              </div>
+              </label>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <input
-                type="number"
-                min="0"
-                step="0.001"
-                value={goalForm.currentTimeSeconds}
-                onChange={(e) => handleGoalFormChange('currentTimeSeconds', e.target.value)}
-                placeholder={t.currentTimeSeconds}
-                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-              />
-              <input
-                type="number"
-                min="0"
-                step="0.001"
-                value={goalForm.targetTimeSeconds}
-                onChange={(e) => handleGoalFormChange('targetTimeSeconds', e.target.value)}
-                placeholder={t.targetTimeSeconds}
-                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-              />
+              <label className="block space-y-2">
+                <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.currentTimeSeconds}</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.001"
+                  value={goalForm.currentTimeSeconds}
+                  onChange={(e) => handleGoalFormChange('currentTimeSeconds', e.target.value)}
+                  placeholder={t.goalCurrentTimePlaceholder}
+                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
+              </label>
+              <label className="block space-y-2">
+                <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.targetTimeSeconds}</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.001"
+                  value={goalForm.targetTimeSeconds}
+                  onChange={(e) => handleGoalFormChange('targetTimeSeconds', e.target.value)}
+                  placeholder={t.goalTargetTimePlaceholder}
+                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
+              </label>
             </div>
 
             <div>
@@ -3655,7 +3698,7 @@ export default function App() {
     const sortedDays = [...(selectedPlan?.days || [])].sort((a, b) => (a?.date || '').localeCompare(b?.date || ''));
 
     const PlanTaskCard = ({ plan, day, task }) => (
-      <div className={`${task.completed ? tc.badgeBg + ' opacity-70' : 'bg-white/80'} border ${tc.borderLight} rounded-xl p-3 space-y-3`}>
+      <div className={`${task.completed ? tc.badgeBg + ' opacity-75' : 'bg-white/80'} border ${tc.borderLight} rounded-xl p-3 space-y-3`}>
         <div className="flex items-start justify-between gap-3">
           <button
             onClick={() => togglePlanTaskCompletion(plan, task, !task.completed)}
@@ -3696,6 +3739,9 @@ export default function App() {
           <span className={`${tc.badgeBg} ${tc.textPrimary} px-2 py-1 rounded-lg`}>{task.category || 'other'}</span>
           {task.durationMinutes && <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg">{task.durationMinutes} min</span>}
           {task.intensity && <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-lg">{task.intensity}</span>}
+          {task.completed && !task.completedAt && (
+            <span className="bg-green-50 text-green-600 px-2 py-1 rounded-lg">{t.achieved}</span>
+          )}
           {task.completedAt && (
             <span className="bg-green-50 text-green-600 px-2 py-1 rounded-lg">
               {t.completedAt}: {new Date(task.completedAt).toLocaleDateString(data.language === 'en' ? 'en-US' : 'zh-CN')}
@@ -3704,26 +3750,28 @@ export default function App() {
         </div>
 
         {!task.completed && (
-          <button
-            onClick={() => addPlanTaskToToday(task)}
-            className={`w-full ${tc.btnCancel} py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 active:scale-95 transition-all`}
-          >
-            <Plus size={14} /> {t.addToToday}
-          </button>
+          <div className="flex justify-end">
+            <button
+              onClick={() => addPlanTaskToToday(task)}
+              className={`${tc.btnCancel} px-3 py-2 rounded-lg text-[11px] font-black inline-flex items-center justify-center gap-2 active:scale-95 transition-all`}
+            >
+              <Plus size={14} /> {t.addToToday}
+            </button>
+          </div>
         )}
       </div>
     );
 
     return (
       <div className="space-y-6 pb-4">
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className={`text-2xl font-black ${tc.textHeading}`}>{t.plansTitle}</h2>
             <p className={`text-sm ${tc.textMuted} mt-1`}>{t.plansSubtitle}</p>
           </div>
           <button
             onClick={openCreatePlanModal}
-            className={`${tc.btnPrimary} px-4 py-3 rounded-xl shadow-md font-bold text-sm flex items-center gap-2 shrink-0 active:scale-95 transition-all`}
+            className={`${tc.btnPrimary} px-4 py-3 rounded-xl shadow-md font-bold text-sm flex items-center justify-center gap-2 shrink-0 active:scale-95 transition-all`}
           >
             <Plus size={18} /> {t.createPlan}
           </button>
@@ -3735,8 +3783,8 @@ export default function App() {
               <CalendarDays size={30} />
             </div>
             <div>
-              <h3 className={`font-black ${tc.textHeading}`}>{t.noPlans}</h3>
-              <p className={`text-sm ${tc.textMuted} mt-1`}>{t.plansSubtitle}</p>
+              <h3 className={`font-black ${tc.textHeading}`}>{t.plansTitle}</h3>
+              <p className={`text-sm ${tc.textMuted} mt-1 leading-relaxed`}>{t.noPlans}</p>
             </div>
             <button
               onClick={openCreatePlanModal}
@@ -3771,8 +3819,8 @@ export default function App() {
                       <div className="text-[10px] font-black uppercase opacity-75 mb-1">
                         {t.activePlan} · {selectedPlan.status}
                       </div>
-                      <h3 className="text-2xl font-black leading-tight truncate">{selectedPlan.title}</h3>
-                      <p className="text-sm font-medium opacity-85 mt-1">{selectedPlan.focus || t.focus}</p>
+                      <h3 className="text-2xl font-black leading-tight break-words">{selectedPlan.title}</h3>
+                      <p className="text-sm font-medium opacity-85 mt-1 break-words">{selectedPlan.focus || t.focus}</p>
                     </div>
                     <div className="flex gap-1 shrink-0">
                       <button
@@ -3820,11 +3868,11 @@ export default function App() {
                   )}
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <h3 className={`font-black ${tc.textHeading}`}>{data.language === 'en' ? 'Plan Tasks' : '计划任务'}</h3>
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className={`font-black ${tc.textHeading}`}>{t.planTasksTitle}</h3>
                   <button
                     onClick={() => openAddPlanTaskModal(selectedPlan)}
-                    className={`${tc.btnPrimary} px-4 py-2.5 rounded-xl shadow-sm font-bold text-xs flex items-center gap-2 active:scale-95 transition-all`}
+                    className={`${tc.btnPrimary} px-4 py-2.5 rounded-xl shadow-sm font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all shrink-0`}
                   >
                     <Plus size={16} /> {t.addPlanTask}
                   </button>
@@ -3832,7 +3880,7 @@ export default function App() {
 
                 {sortedDays.length === 0 ? (
                   <div className={`${tc.cardBg} border ${tc.borderLight} rounded-2xl p-6 text-center`}>
-                    <p className={`text-sm font-bold ${tc.textMuted}`}>{data.language === 'en' ? 'No tasks in this plan yet.' : '这个计划里还没有任务。'}</p>
+                    <p className={`text-sm font-bold ${tc.textMuted}`}>{t.noPlanTasksInPlan}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -3884,46 +3932,61 @@ export default function App() {
           </div>
 
           <div className="p-5 overflow-y-auto space-y-4">
-            <input
-              type="text"
-              value={planForm.title}
-              onChange={(e) => handlePlanFormChange('title', e.target.value)}
-              placeholder={t.planTitlePlaceholder}
-              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-            />
-            <input
-              type="text"
-              value={planForm.focus}
-              onChange={(e) => handlePlanFormChange('focus', e.target.value)}
-              placeholder={t.focus}
-              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-            />
+            <label className="block space-y-2">
+              <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.plansTitle}</span>
+              <input
+                type="text"
+                value={planForm.title}
+                onChange={(e) => handlePlanFormChange('title', e.target.value)}
+                placeholder={t.planTitlePlaceholder}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.focus}</span>
+              <input
+                type="text"
+                value={planForm.focus}
+                onChange={(e) => handlePlanFormChange('focus', e.target.value)}
+                placeholder={t.planFocusPlaceholder}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+            </label>
 
             <div className="grid grid-cols-2 gap-3">
-              <input
-                type="date"
-                value={planForm.startDate}
-                onChange={(e) => handlePlanFormChange('startDate', e.target.value)}
-                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-              />
-              <input
-                type="date"
-                value={planForm.endDate}
-                onChange={(e) => handlePlanFormChange('endDate', e.target.value)}
-                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-              />
+              <label className="block space-y-2">
+                <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.startDate}</span>
+                <input
+                  type="date"
+                  value={planForm.startDate}
+                  onChange={(e) => handlePlanFormChange('startDate', e.target.value)}
+                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
+              </label>
+              <label className="block space-y-2">
+                <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.endDate}</span>
+                <input
+                  type="date"
+                  value={planForm.endDate}
+                  onChange={(e) => handlePlanFormChange('endDate', e.target.value)}
+                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
+              </label>
             </div>
 
-            <select
-              value={planForm.goalId}
-              onChange={(e) => handlePlanFormChange('goalId', e.target.value)}
-              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
-            >
-              <option value="">{t.noLinkedGoal}</option>
-              {activeGoals.map(goal => (
-                <option key={goal.id} value={goal.id}>{goal.title}</option>
-              ))}
-            </select>
+            <label className="block space-y-2">
+              <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.linkedGoal}</span>
+              <select
+                value={planForm.goalId}
+                onChange={(e) => handlePlanFormChange('goalId', e.target.value)}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+              >
+                <option value="">{t.noLinkedGoal}</option>
+                {activeGoals.map(goal => (
+                  <option key={goal.id} value={goal.id}>{goal.title}</option>
+                ))}
+              </select>
+            </label>
 
             <div>
               <label className={`text-xs font-black ${tc.textMuted} ml-1 mb-2 block`}>{t.status}</label>
@@ -3978,64 +4041,85 @@ export default function App() {
           </div>
 
           <div className="p-5 overflow-y-auto space-y-4">
-            <input
-              type="date"
-              value={planTaskForm.date}
-              onChange={(e) => handlePlanTaskFormChange('date', e.target.value)}
-              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-            />
-            <input
-              type="text"
-              value={planTaskForm.text}
-              onChange={(e) => handlePlanTaskFormChange('text', e.target.value)}
-              placeholder={t.planTaskTextPlaceholder}
-              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-            />
-            <input
-              type="text"
-              value={planTaskForm.target}
-              onChange={(e) => handlePlanTaskFormChange('target', e.target.value)}
-              placeholder={t.optionalTarget}
-              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-            />
-            <textarea
-              value={planTaskForm.desc}
-              onChange={(e) => handlePlanTaskFormChange('desc', e.target.value)}
-              placeholder={t.notes}
-              rows={3}
-              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-medium ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all resize-none`}
-            />
+            <label className="block space-y-2">
+              <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.planTaskDate}</span>
+              <input
+                type="date"
+                value={planTaskForm.date}
+                onChange={(e) => handlePlanTaskFormChange('date', e.target.value)}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.planTasksTitle}</span>
+              <input
+                type="text"
+                value={planTaskForm.text}
+                onChange={(e) => handlePlanTaskFormChange('text', e.target.value)}
+                placeholder={t.planTaskTextPlaceholder}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.targetLabel}</span>
+              <input
+                type="text"
+                value={planTaskForm.target}
+                onChange={(e) => handlePlanTaskFormChange('target', e.target.value)}
+                placeholder={t.planTaskTargetPlaceholder}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+            </label>
+            <label className="block space-y-2">
+              <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.notes}</span>
+              <textarea
+                value={planTaskForm.desc}
+                onChange={(e) => handlePlanTaskFormChange('desc', e.target.value)}
+                placeholder={t.notes}
+                rows={3}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-medium ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all resize-none`}
+              />
+            </label>
 
             <div className="grid grid-cols-2 gap-3">
-              <select
-                value={planTaskForm.category}
-                onChange={(e) => handlePlanTaskFormChange('category', e.target.value)}
-                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
-              >
-                {PLAN_TASK_CATEGORIES.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-              <input
-                type="number"
-                min="1"
-                value={planTaskForm.durationMinutes}
-                onChange={(e) => handlePlanTaskFormChange('durationMinutes', e.target.value)}
-                placeholder={t.durationMinutes}
-                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
-              />
+              <label className="block space-y-2">
+                <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.category}</span>
+                <select
+                  value={planTaskForm.category}
+                  onChange={(e) => handlePlanTaskFormChange('category', e.target.value)}
+                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+                >
+                  {PLAN_TASK_CATEGORIES.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block space-y-2">
+                <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.durationMinutes}</span>
+                <input
+                  type="number"
+                  min="1"
+                  value={planTaskForm.durationMinutes}
+                  onChange={(e) => handlePlanTaskFormChange('durationMinutes', e.target.value)}
+                  placeholder={t.planTaskDurationPlaceholder}
+                  className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+                />
+              </label>
             </div>
 
-            <select
-              value={planTaskForm.intensity}
-              onChange={(e) => handlePlanTaskFormChange('intensity', e.target.value)}
-              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
-            >
-              <option value="">{t.intensity}</option>
-              {PLAN_TASK_INTENSITIES.map(intensity => (
-                <option key={intensity} value={intensity}>{intensity}</option>
-              ))}
-            </select>
+            <label className="block space-y-2">
+              <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.intensity}</span>
+              <select
+                value={planTaskForm.intensity}
+                onChange={(e) => handlePlanTaskFormChange('intensity', e.target.value)}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+              >
+                <option value="">{t.intensity}</option>
+                {PLAN_TASK_INTENSITIES.map(intensity => (
+                  <option key={intensity} value={intensity}>{intensity}</option>
+                ))}
+              </select>
+            </label>
 
             {planTaskFormError && (
               <div className="text-xs font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl p-3">
