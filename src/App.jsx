@@ -61,6 +61,18 @@ import {
   sortGoalsByPriorityAndDate,
   updateCompetitionGoal,
 } from './features/trainingV1/goals.js';
+import {
+  archiveTrainingPlan,
+  completePlanTask,
+  convertPlanTaskToDailyTask,
+  createPlanTask,
+  createTrainingPlan,
+  getActiveTrainingPlan,
+  getActiveTrainingPlans,
+  getWeeklyPlanCompletion,
+  updatePlanTask,
+  updateTrainingPlan,
+} from './features/trainingV1/plans.js';
 
 initializeFirestorePersistence();
 
@@ -516,7 +528,7 @@ const translations = {
     saveSettings: '保存设置',
     savedSuccessfully: '保存成功！',
     loggedIn: '已登录:',
-    nav: { dashboard: '概览', tasks: '任务', academy: '学院', goals: '目标', data: '数据', shop: '商店' },
+    nav: { dashboard: '概览', tasks: '任务', academy: '学院', goals: '目标', plans: '计划', data: '数据', shop: '商店' },
     goalsTitle: '比赛目标',
     goalsSubtitle: '用明确目标驱动每一次训练',
     noGoals: '还没有比赛目标。',
@@ -544,6 +556,43 @@ const translations = {
     goalInvalidPriority: '优先级必须是 A、B 或 C',
     goalTitlePlaceholder: '例如：AGN 2027 500m',
     goalNotesPlaceholder: '训练重点、策略或提醒...',
+    plansTitle: '训练计划',
+    plansSubtitle: '把目标拆成每天可执行的训练安排',
+    noPlans: '还没有训练计划。',
+    createPlan: '创建计划',
+    editPlan: '编辑计划',
+    archivePlan: '归档计划',
+    selectPlan: '选择当前计划',
+    activePlan: '当前计划',
+    planTitleRequired: '请输入计划标题',
+    planStartRequired: '请选择开始日期',
+    planEndRequired: '请选择结束日期',
+    planInvalidDateRange: '结束日期不能早于开始日期',
+    planInvalidStatus: '计划状态必须是 draft 或 active',
+    planTitlePlaceholder: '例如：AGN 备赛周计划',
+    focus: '训练重点',
+    linkedGoal: '关联目标',
+    noLinkedGoal: '不关联目标',
+    startDate: '开始日期',
+    endDate: '结束日期',
+    draft: '草稿',
+    active: '进行中',
+    weeklyCompletion: '周完成度',
+    addPlanTask: '添加计划任务',
+    editPlanTask: '编辑计划任务',
+    planTaskTextRequired: '请输入任务内容',
+    planTaskDateRequired: '请选择任务日期',
+    planTaskInvalidCategory: '任务分类不正确',
+    planTaskInvalidDuration: '训练时长必须是正数',
+    planTaskInvalidIntensity: '强度必须是 low、medium、high 或留空',
+    planTaskTextPlaceholder: '例如：弯道技术训练',
+    category: '分类',
+    durationMinutes: '时长(分钟)',
+    intensity: '强度',
+    completedAt: '完成于',
+    addToToday: '加入今日任务',
+    alreadyInToday: '今日任务里已有相同项目',
+    taskImportedToToday: '已加入今日任务',
     daysNames: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
     language: '语言',
     optionalTarget: '目标/配速要求 (选填)',
@@ -697,7 +746,7 @@ const translations = {
     saveSettings: 'Save Settings',
     savedSuccessfully: 'Saved!',
     loggedIn: 'Logged in:',
-    nav: { dashboard: 'Home', tasks: 'Tasks', academy: 'Academy', goals: 'Goals', data: 'Data', shop: 'Shop' },
+    nav: { dashboard: 'Home', tasks: 'Tasks', academy: 'Academy', goals: 'Goals', plans: 'Plan', data: 'Data', shop: 'Shop' },
     goalsTitle: 'Competition Goals',
     goalsSubtitle: 'Use clear goals to drive every training session',
     noGoals: 'No competition goals yet.',
@@ -725,6 +774,43 @@ const translations = {
     goalInvalidPriority: 'Priority must be A, B, or C',
     goalTitlePlaceholder: 'Example: AGN 2027 500m',
     goalNotesPlaceholder: 'Training focus, strategy, or reminders...',
+    plansTitle: 'Training Plan',
+    plansSubtitle: 'Turn goals into daily training work',
+    noPlans: 'No training plan yet.',
+    createPlan: 'Create Plan',
+    editPlan: 'Edit Plan',
+    archivePlan: 'Archive Plan',
+    selectPlan: 'Select Current Plan',
+    activePlan: 'Current Plan',
+    planTitleRequired: 'Plan title is required',
+    planStartRequired: 'Start date is required',
+    planEndRequired: 'End date is required',
+    planInvalidDateRange: 'End date must not be before start date',
+    planInvalidStatus: 'Plan status must be draft or active',
+    planTitlePlaceholder: 'Example: AGN prep weekly plan',
+    focus: 'Focus',
+    linkedGoal: 'Linked Goal',
+    noLinkedGoal: 'No linked goal',
+    startDate: 'Start Date',
+    endDate: 'End Date',
+    draft: 'Draft',
+    active: 'Active',
+    weeklyCompletion: 'Weekly Completion',
+    addPlanTask: 'Add Plan Task',
+    editPlanTask: 'Edit Plan Task',
+    planTaskTextRequired: 'Task text is required',
+    planTaskDateRequired: 'Task date is required',
+    planTaskInvalidCategory: 'Invalid task category',
+    planTaskInvalidDuration: 'Duration must be a positive number',
+    planTaskInvalidIntensity: 'Intensity must be low, medium, high, or blank',
+    planTaskTextPlaceholder: 'Example: Corner technique session',
+    category: 'Category',
+    durationMinutes: 'Duration (min)',
+    intensity: 'Intensity',
+    completedAt: 'Completed at',
+    addToToday: 'Add to Today',
+    alreadyInToday: 'A matching task already exists today',
+    taskImportedToToday: 'Added to today',
     daysNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     language: 'Language',
     optionalTarget: 'Target/Pace (Optional)',
@@ -992,6 +1078,58 @@ const formatGoalSeconds = (value) => (
     : '--'
 );
 
+const PLAN_TASK_CATEGORIES = ['ice', 'dryland', 'strength', 'running', 'mobility', 'recovery', 'video', 'mental', 'competition', 'other'];
+const PLAN_TASK_INTENSITIES = ['low', 'medium', 'high'];
+
+const createEmptyPlanForm = () => ({
+  title: '',
+  focus: '',
+  startDate: '',
+  endDate: '',
+  goalId: '',
+  status: 'draft',
+});
+
+const createPlanFormFromPlan = (plan) => ({
+  title: plan?.title || '',
+  focus: plan?.focus || '',
+  startDate: plan?.startDate || '',
+  endDate: plan?.endDate || '',
+  goalId: plan?.goalId || '',
+  status: ['draft', 'active'].includes(plan?.status) ? plan.status : 'draft',
+});
+
+const createEmptyPlanTaskForm = (date = '') => ({
+  date,
+  text: '',
+  target: '',
+  desc: '',
+  category: 'other',
+  durationMinutes: '',
+  intensity: '',
+});
+
+const createPlanTaskFormFromTask = (task, date = '') => ({
+  date,
+  text: task?.text || '',
+  target: task?.target || '',
+  desc: task?.desc || '',
+  category: task?.category || 'other',
+  durationMinutes: typeof task?.durationMinutes === 'number' ? String(task.durationMinutes) : '',
+  intensity: task?.intensity || '',
+});
+
+const parseOptionalPositiveNumber = (value) => {
+  const trimmed = String(value ?? '').trim();
+  if (!trimmed) return { isValid: true, value: null };
+
+  const parsed = Number(trimmed);
+  return {
+    isValid: Number.isFinite(parsed) && parsed > 0,
+    value: parsed,
+  };
+};
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1049,6 +1187,14 @@ export default function App() {
   const [goalForm, setGoalForm] = useState(createEmptyGoalForm);
   const [goalFormError, setGoalFormError] = useState('');
   const [showArchivedGoals, setShowArchivedGoals] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState(null);
+  const [planForm, setPlanForm] = useState(createEmptyPlanForm);
+  const [planFormError, setPlanFormError] = useState('');
+  const [showPlanTaskModal, setShowPlanTaskModal] = useState(false);
+  const [editingPlanTaskId, setEditingPlanTaskId] = useState(null);
+  const [planTaskForm, setPlanTaskForm] = useState(createEmptyPlanTaskForm);
+  const [planTaskFormError, setPlanTaskFormError] = useState('');
 
   // 🛍️ 新增：商店商品管理弹窗状态
   const [showShopItemModal, setShowShopItemModal] = useState(false);
@@ -1195,6 +1341,282 @@ export default function App() {
     ));
 
     updateData({ competitionGoalsV1: updatedGoals });
+  };
+
+  const getSelectableTrainingPlans = () => (
+    (data.trainingPlansV1 || []).filter(plan => plan?.status !== 'archived')
+  );
+
+  const getDisplayTrainingPlan = () => {
+    const plans = data.trainingPlansV1 || [];
+    const activePlan = getActiveTrainingPlan(plans, data.activeTrainingPlanId);
+    if (activePlan) return activePlan;
+
+    const selectedPlan = plans.find(plan => plan?.id === data.activeTrainingPlanId && plan?.status !== 'archived');
+    if (selectedPlan) return selectedPlan;
+
+    return plans.find(plan => plan?.status === 'active' || plan?.status === 'draft') || null;
+  };
+
+  const openCreatePlanModal = () => {
+    setEditingPlanId(null);
+    setPlanForm(createEmptyPlanForm());
+    setPlanFormError('');
+    setShowPlanModal(true);
+  };
+
+  const openEditPlanModal = (plan) => {
+    setEditingPlanId(plan.id);
+    setPlanForm(createPlanFormFromPlan(plan));
+    setPlanFormError('');
+    setShowPlanModal(true);
+  };
+
+  const closePlanModal = () => {
+    setShowPlanModal(false);
+    setEditingPlanId(null);
+    setPlanForm(createEmptyPlanForm());
+    setPlanFormError('');
+  };
+
+  const handlePlanFormChange = (field, value) => {
+    setPlanForm(prev => ({ ...prev, [field]: value }));
+    setPlanFormError('');
+  };
+
+  const saveTrainingPlan = () => {
+    const title = planForm.title.trim();
+    const startDate = planForm.startDate;
+    const endDate = planForm.endDate;
+
+    if (!title) {
+      setPlanFormError(t.planTitleRequired);
+      return;
+    }
+
+    if (!startDate) {
+      setPlanFormError(t.planStartRequired);
+      return;
+    }
+
+    if (!endDate) {
+      setPlanFormError(t.planEndRequired);
+      return;
+    }
+
+    if (endDate < startDate) {
+      setPlanFormError(t.planInvalidDateRange);
+      return;
+    }
+
+    if (!['draft', 'active'].includes(planForm.status)) {
+      setPlanFormError(t.planInvalidStatus);
+      return;
+    }
+
+    const patch = {
+      title,
+      focus: planForm.focus.trim(),
+      startDate,
+      endDate,
+      goalId: planForm.goalId || null,
+      status: planForm.status,
+    };
+
+    const plans = data.trainingPlansV1 || [];
+    let nextActivePlanId = data.activeTrainingPlanId || null;
+    let updatedPlans;
+
+    if (editingPlanId) {
+      updatedPlans = plans.map(plan => (
+        plan.id === editingPlanId ? updateTrainingPlan(plan, patch) : plan
+      ));
+    } else {
+      const newPlan = createTrainingPlan(patch);
+      updatedPlans = [...plans, newPlan];
+      if (!nextActivePlanId) nextActivePlanId = newPlan.id;
+    }
+
+    updateData({
+      trainingPlansV1: updatedPlans,
+      activeTrainingPlanId: nextActivePlanId,
+    });
+    closePlanModal();
+  };
+
+  const selectTrainingPlan = (planId) => {
+    updateData({ activeTrainingPlanId: planId || null });
+  };
+
+  const archivePlan = (plan) => {
+    const updatedPlans = (data.trainingPlansV1 || []).map(existingPlan => (
+      existingPlan.id === plan.id ? archiveTrainingPlan(existingPlan) : existingPlan
+    ));
+
+    let nextActivePlanId = data.activeTrainingPlanId;
+    if (data.activeTrainingPlanId === plan.id) {
+      nextActivePlanId = updatedPlans.find(nextPlan => nextPlan?.status !== 'archived')?.id || null;
+    }
+
+    updateData({
+      trainingPlansV1: updatedPlans,
+      activeTrainingPlanId: nextActivePlanId,
+    });
+  };
+
+  const openAddPlanTaskModal = (plan) => {
+    setEditingPlanTaskId(null);
+    setPlanTaskForm(createEmptyPlanTaskForm(plan?.startDate || currentDateStr));
+    setPlanTaskFormError('');
+    setShowPlanTaskModal(true);
+  };
+
+  const openEditPlanTaskModal = (task, date) => {
+    setEditingPlanTaskId(task.id);
+    setPlanTaskForm(createPlanTaskFormFromTask(task, date));
+    setPlanTaskFormError('');
+    setShowPlanTaskModal(true);
+  };
+
+  const closePlanTaskModal = () => {
+    setShowPlanTaskModal(false);
+    setEditingPlanTaskId(null);
+    setPlanTaskForm(createEmptyPlanTaskForm());
+    setPlanTaskFormError('');
+  };
+
+  const handlePlanTaskFormChange = (field, value) => {
+    setPlanTaskForm(prev => ({ ...prev, [field]: value }));
+    setPlanTaskFormError('');
+  };
+
+  const upsertTaskIntoPlanDays = (days = [], date, task, editingTaskId = null) => {
+    const withoutEditedTask = editingTaskId
+      ? days.map(day => ({
+        ...day,
+        tasks: (day.tasks || []).filter(existingTask => existingTask.id !== editingTaskId),
+      }))
+      : days;
+
+    const existingDay = withoutEditedTask.find(day => day?.date === date);
+    if (existingDay) {
+      return withoutEditedTask.map(day => (
+        day?.date === date
+          ? { ...day, tasks: [...(day.tasks || []), task] }
+          : day
+      ));
+    }
+
+    return [
+      ...withoutEditedTask,
+      {
+        date,
+        focus: '',
+        tasks: [task],
+      },
+    ].sort((a, b) => (a?.date || '').localeCompare(b?.date || ''));
+  };
+
+  const updateTaskInPlan = (planId, taskId, taskUpdater) => {
+    const updatedPlans = (data.trainingPlansV1 || []).map(plan => {
+      if (plan.id !== planId) return plan;
+
+      return updateTrainingPlan(plan, {
+        days: (plan.days || []).map(day => ({
+          ...day,
+          tasks: (day.tasks || []).map(task => (
+            task.id === taskId ? taskUpdater(task) : task
+          )),
+        })),
+      });
+    });
+
+    updateData({ trainingPlansV1: updatedPlans });
+  };
+
+  const savePlanTask = () => {
+    const selectedPlan = getDisplayTrainingPlan();
+    if (!selectedPlan) return;
+
+    const date = planTaskForm.date;
+    const text = planTaskForm.text.trim();
+    const duration = parseOptionalPositiveNumber(planTaskForm.durationMinutes);
+    const intensity = planTaskForm.intensity || null;
+
+    if (!date) {
+      setPlanTaskFormError(t.planTaskDateRequired);
+      return;
+    }
+
+    if (!text) {
+      setPlanTaskFormError(t.planTaskTextRequired);
+      return;
+    }
+
+    if (!PLAN_TASK_CATEGORIES.includes(planTaskForm.category)) {
+      setPlanTaskFormError(t.planTaskInvalidCategory);
+      return;
+    }
+
+    if (!duration.isValid) {
+      setPlanTaskFormError(t.planTaskInvalidDuration);
+      return;
+    }
+
+    if (intensity !== null && !PLAN_TASK_INTENSITIES.includes(intensity)) {
+      setPlanTaskFormError(t.planTaskInvalidIntensity);
+      return;
+    }
+
+    const patch = {
+      text,
+      target: planTaskForm.target.trim() || null,
+      desc: planTaskForm.desc.trim() || null,
+      category: planTaskForm.category,
+      durationMinutes: duration.value,
+      intensity,
+    };
+
+    const updatedPlans = (data.trainingPlansV1 || []).map(plan => {
+      if (plan.id !== selectedPlan.id) return plan;
+
+      let nextTask;
+      if (editingPlanTaskId) {
+        const existingTask = (plan.days || [])
+          .flatMap(day => day?.tasks || [])
+          .find(task => task.id === editingPlanTaskId);
+        nextTask = existingTask ? updatePlanTask(existingTask, patch) : createPlanTask(patch);
+      } else {
+        nextTask = createPlanTask(patch);
+      }
+
+      return updateTrainingPlan(plan, {
+        days: upsertTaskIntoPlanDays(plan.days || [], date, nextTask, editingPlanTaskId),
+      });
+    });
+
+    updateData({ trainingPlansV1: updatedPlans });
+    closePlanTaskModal();
+  };
+
+  const togglePlanTaskCompletion = (plan, task, completed) => {
+    updateTaskInPlan(plan.id, task.id, currentTask => completePlanTask(currentTask, completed));
+  };
+
+  const addPlanTaskToToday = (planTask) => {
+    const convertedTask = convertPlanTaskToDailyTask(planTask);
+    const existingTasks = data.tasks || [];
+    const hasDuplicate = existingTasks.some(task => (
+      task?.text === convertedTask.text && (task?.target || null) === (convertedTask.target || null)
+    ));
+
+    if (hasDuplicate) {
+      alert(t.alreadyInToday);
+      return;
+    }
+
+    updateData({ tasks: [...existingTasks, convertedTask] });
+    alert(t.taskImportedToToday);
   };
 
   const computedStreak = (() => {
@@ -2851,6 +3273,422 @@ export default function App() {
     );
   };
 
+  const TrainingPlanView = () => {
+    const plans = data.trainingPlansV1 || [];
+    const selectablePlans = getSelectableTrainingPlans();
+    const activePlans = getActiveTrainingPlans(plans);
+    const selectedPlan = getDisplayTrainingPlan();
+    const linkedGoal = selectedPlan?.goalId
+      ? (data.competitionGoalsV1 || []).find(goal => goal.id === selectedPlan.goalId)
+      : null;
+    const completion = selectedPlan
+      ? getWeeklyPlanCompletion(selectedPlan)
+      : { completedTasks: 0, totalTasks: 0, completionPercent: 0 };
+    const sortedDays = [...(selectedPlan?.days || [])].sort((a, b) => (a?.date || '').localeCompare(b?.date || ''));
+
+    const PlanTaskCard = ({ plan, day, task }) => (
+      <div className={`${task.completed ? tc.badgeBg + ' opacity-70' : 'bg-white/80'} border ${tc.borderLight} rounded-xl p-3 space-y-3`}>
+        <div className="flex items-start justify-between gap-3">
+          <button
+            onClick={() => togglePlanTaskCompletion(plan, task, !task.completed)}
+            className="pt-0.5 shrink-0"
+            aria-label={task.completed ? 'Uncomplete plan task' : 'Complete plan task'}
+          >
+            {task.completed ? (
+              <CheckCircle2 size={22} className={tc.checkActive} />
+            ) : (
+              <Circle size={22} className={`${tc.textMuted} opacity-60`} />
+            )}
+          </button>
+
+          <div className="min-w-0 flex-1">
+            <div className={`font-black text-sm leading-tight ${task.completed ? tc.textMuted + ' line-through' : tc.textHeading}`}>
+              {task.text}
+            </div>
+            {task.target && (
+              <div className={`text-[11px] font-bold mt-1 ${tc.textPrimary}`}>
+                {t.targetLabel}: {task.target}
+              </div>
+            )}
+            {task.desc && (
+              <p className={`text-[11px] leading-relaxed mt-1 ${tc.textMuted}`}>{task.desc}</p>
+            )}
+          </div>
+
+          <button
+            onClick={() => openEditPlanTaskModal(task, day.date)}
+            className={`p-1.5 ${tc.badgeBg} ${tc.textPrimary} rounded-lg shrink-0 active:scale-95 transition-all`}
+            aria-label={t.editPlanTask}
+          >
+            <Edit2 size={15} />
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2 text-[10px] font-black">
+          <span className={`${tc.badgeBg} ${tc.textPrimary} px-2 py-1 rounded-lg`}>{task.category || 'other'}</span>
+          {task.durationMinutes && <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg">{task.durationMinutes} min</span>}
+          {task.intensity && <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-lg">{task.intensity}</span>}
+          {task.completedAt && (
+            <span className="bg-green-50 text-green-600 px-2 py-1 rounded-lg">
+              {t.completedAt}: {new Date(task.completedAt).toLocaleDateString(data.language === 'en' ? 'en-US' : 'zh-CN')}
+            </span>
+          )}
+        </div>
+
+        {!task.completed && (
+          <button
+            onClick={() => addPlanTaskToToday(task)}
+            className={`w-full ${tc.btnCancel} py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 active:scale-95 transition-all`}
+          >
+            <Plus size={14} /> {t.addToToday}
+          </button>
+        )}
+      </div>
+    );
+
+    return (
+      <div className="space-y-6 pb-4">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h2 className={`text-2xl font-black ${tc.textHeading}`}>{t.plansTitle}</h2>
+            <p className={`text-sm ${tc.textMuted} mt-1`}>{t.plansSubtitle}</p>
+          </div>
+          <button
+            onClick={openCreatePlanModal}
+            className={`${tc.btnPrimary} px-4 py-3 rounded-xl shadow-md font-bold text-sm flex items-center gap-2 shrink-0 active:scale-95 transition-all`}
+          >
+            <Plus size={18} /> {t.createPlan}
+          </button>
+        </div>
+
+        {selectablePlans.length === 0 ? (
+          <div className={`${tc.cardBg} p-8 rounded-2xl shadow-sm border ${tc.borderLight} text-center space-y-4`}>
+            <div className={`w-16 h-16 mx-auto rounded-2xl ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary}`}>
+              <CalendarDays size={30} />
+            </div>
+            <div>
+              <h3 className={`font-black ${tc.textHeading}`}>{t.noPlans}</h3>
+              <p className={`text-sm ${tc.textMuted} mt-1`}>{t.plansSubtitle}</p>
+            </div>
+            <button
+              onClick={openCreatePlanModal}
+              className={`${tc.btnPrimary} px-5 py-3 rounded-xl shadow-md font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
+            >
+              <Plus size={18} /> {t.createPlan}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {selectablePlans.length > 1 && (
+              <div className={`${tc.cardBg} border ${tc.borderLight} rounded-2xl p-4 shadow-sm space-y-2`}>
+                <label className={`text-xs font-black ${tc.textMuted} uppercase`}>{t.selectPlan}</label>
+                <select
+                  value={selectedPlan?.id || ''}
+                  onChange={(e) => selectTrainingPlan(e.target.value)}
+                  className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+                >
+                  {selectablePlans.map(plan => (
+                    <option key={plan.id} value={plan.id}>{plan.title}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {selectedPlan && (
+              <>
+                <div className={`relative overflow-hidden bg-gradient-to-br ${tc.gradientCard} rounded-[2rem] p-6 text-white shadow-lg space-y-5`}>
+                  <CalendarDays size={120} className="absolute -right-5 -bottom-8 opacity-10 pointer-events-none" />
+                  <div className="relative z-10 flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-black uppercase opacity-75 mb-1">
+                        {t.activePlan} · {selectedPlan.status}
+                      </div>
+                      <h3 className="text-2xl font-black leading-tight truncate">{selectedPlan.title}</h3>
+                      <p className="text-sm font-medium opacity-85 mt-1">{selectedPlan.focus || t.focus}</p>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button
+                        onClick={() => openEditPlanModal(selectedPlan)}
+                        className="p-2 bg-white/20 rounded-xl active:scale-95 transition-all"
+                        aria-label={t.editPlan}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => archivePlan(selectedPlan)}
+                        className="p-2 bg-white/20 rounded-xl active:scale-95 transition-all"
+                        aria-label={t.archivePlan}
+                      >
+                        <Archive size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="relative z-10 grid grid-cols-2 gap-3">
+                    <div className="bg-white/15 rounded-2xl p-3">
+                      <div className="text-[10px] font-black uppercase opacity-70">{t.startDate}</div>
+                      <div className="text-sm font-black mt-1">{(selectedPlan.startDate || '').replace(/-/g, '/') || '--'}</div>
+                    </div>
+                    <div className="bg-white/15 rounded-2xl p-3">
+                      <div className="text-[10px] font-black uppercase opacity-70">{t.endDate}</div>
+                      <div className="text-sm font-black mt-1">{(selectedPlan.endDate || '').replace(/-/g, '/') || '--'}</div>
+                    </div>
+                    <div className="bg-white/15 rounded-2xl p-3">
+                      <div className="text-[10px] font-black uppercase opacity-70">{t.weeklyCompletion}</div>
+                      <div className="text-sm font-black mt-1">
+                        {completion.completedTasks}/{completion.totalTasks} · {completion.completionPercent}%
+                      </div>
+                    </div>
+                    <div className="bg-white/15 rounded-2xl p-3">
+                      <div className="text-[10px] font-black uppercase opacity-70">{t.linkedGoal}</div>
+                      <div className="text-sm font-black mt-1 truncate">{linkedGoal?.title || '--'}</div>
+                    </div>
+                  </div>
+
+                  {activePlans.length > 0 && (
+                    <div className="relative z-10 text-[10px] font-bold opacity-75">
+                      {activePlans.length} {data.language === 'en' ? 'active plan(s)' : '个进行中计划'}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <h3 className={`font-black ${tc.textHeading}`}>{data.language === 'en' ? 'Plan Tasks' : '计划任务'}</h3>
+                  <button
+                    onClick={() => openAddPlanTaskModal(selectedPlan)}
+                    className={`${tc.btnPrimary} px-4 py-2.5 rounded-xl shadow-sm font-bold text-xs flex items-center gap-2 active:scale-95 transition-all`}
+                  >
+                    <Plus size={16} /> {t.addPlanTask}
+                  </button>
+                </div>
+
+                {sortedDays.length === 0 ? (
+                  <div className={`${tc.cardBg} border ${tc.borderLight} rounded-2xl p-6 text-center`}>
+                    <p className={`text-sm font-bold ${tc.textMuted}`}>{data.language === 'en' ? 'No tasks in this plan yet.' : '这个计划里还没有任务。'}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {sortedDays.map(day => (
+                      <div key={day.date} className={`${tc.cardBg} border ${tc.borderLight} rounded-2xl p-4 shadow-sm space-y-3`}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <h4 className={`font-black ${tc.textHeading}`}>{(day.date || '').replace(/-/g, '/')}</h4>
+                            {day.focus && <p className={`text-xs ${tc.textMuted} font-bold mt-0.5`}>{day.focus}</p>}
+                          </div>
+                          <span className={`text-[10px] font-black ${tc.badgeBg} ${tc.textPrimary} px-2 py-1 rounded-lg`}>
+                            {(day.tasks || []).filter(task => task.completed).length}/{(day.tasks || []).length}
+                          </span>
+                        </div>
+
+                        <div className="space-y-2">
+                          {(day.tasks || []).map(task => (
+                            <PlanTaskCard key={task.id} plan={selectedPlan} day={day} task={task} />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const PlanManagementModal = () => {
+    if (!showPlanModal) return null;
+
+    const activeGoals = sortGoalsByPriorityAndDate(getActiveCompetitionGoals(data.competitionGoalsV1 || []));
+
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={closePlanModal}>
+        <div className={`${tc.cardBg} w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]`} onClick={e => e.stopPropagation()}>
+          <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
+            <h3 className={`font-black ${tc.textHeading} flex items-center gap-2`}>
+              <CalendarDays size={18} className={tc.textPrimary} />
+              {editingPlanId ? t.editPlan : t.createPlan}
+            </h3>
+            <button onClick={closePlanModal} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-5 overflow-y-auto space-y-4">
+            <input
+              type="text"
+              value={planForm.title}
+              onChange={(e) => handlePlanFormChange('title', e.target.value)}
+              placeholder={t.planTitlePlaceholder}
+              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+            />
+            <input
+              type="text"
+              value={planForm.focus}
+              onChange={(e) => handlePlanFormChange('focus', e.target.value)}
+              placeholder={t.focus}
+              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="date"
+                value={planForm.startDate}
+                onChange={(e) => handlePlanFormChange('startDate', e.target.value)}
+                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+              <input
+                type="date"
+                value={planForm.endDate}
+                onChange={(e) => handlePlanFormChange('endDate', e.target.value)}
+                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+            </div>
+
+            <select
+              value={planForm.goalId}
+              onChange={(e) => handlePlanFormChange('goalId', e.target.value)}
+              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+            >
+              <option value="">{t.noLinkedGoal}</option>
+              {activeGoals.map(goal => (
+                <option key={goal.id} value={goal.id}>{goal.title}</option>
+              ))}
+            </select>
+
+            <div>
+              <label className={`text-xs font-black ${tc.textMuted} ml-1 mb-2 block`}>{t.status}</label>
+              <div className="grid grid-cols-2 gap-2">
+                {['draft', 'active'].map(status => (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => handlePlanFormChange('status', status)}
+                    className={`py-2.5 rounded-xl text-sm font-black transition-all ${planForm.status === status ? tc.btnPrimary + ' shadow-md' : tc.badgeBg + ' ' + tc.textPrimary}`}
+                  >
+                    {status === 'active' ? t.active : t.draft}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {planFormError && (
+              <div className="text-xs font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl p-3">
+                {planFormError}
+              </div>
+            )}
+          </div>
+
+          <div className={`p-5 border-t ${tc.borderLight} ${tc.appBg}`}>
+            <button
+              onClick={saveTrainingPlan}
+              className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
+            >
+              {t.save}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const PlanTaskManagementModal = () => {
+    if (!showPlanTaskModal) return null;
+
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={closePlanTaskModal}>
+        <div className={`${tc.cardBg} w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]`} onClick={e => e.stopPropagation()}>
+          <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
+            <h3 className={`font-black ${tc.textHeading} flex items-center gap-2`}>
+              <ListTodo size={18} className={tc.textPrimary} />
+              {editingPlanTaskId ? t.editPlanTask : t.addPlanTask}
+            </h3>
+            <button onClick={closePlanTaskModal} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-5 overflow-y-auto space-y-4">
+            <input
+              type="date"
+              value={planTaskForm.date}
+              onChange={(e) => handlePlanTaskFormChange('date', e.target.value)}
+              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+            />
+            <input
+              type="text"
+              value={planTaskForm.text}
+              onChange={(e) => handlePlanTaskFormChange('text', e.target.value)}
+              placeholder={t.planTaskTextPlaceholder}
+              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+            />
+            <input
+              type="text"
+              value={planTaskForm.target}
+              onChange={(e) => handlePlanTaskFormChange('target', e.target.value)}
+              placeholder={t.optionalTarget}
+              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+            />
+            <textarea
+              value={planTaskForm.desc}
+              onChange={(e) => handlePlanTaskFormChange('desc', e.target.value)}
+              placeholder={t.notes}
+              rows={3}
+              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-medium ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all resize-none`}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <select
+                value={planTaskForm.category}
+                onChange={(e) => handlePlanTaskFormChange('category', e.target.value)}
+                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+              >
+                {PLAN_TASK_CATEGORIES.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                min="1"
+                value={planTaskForm.durationMinutes}
+                onChange={(e) => handlePlanTaskFormChange('durationMinutes', e.target.value)}
+                placeholder={t.durationMinutes}
+                className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+            </div>
+
+            <select
+              value={planTaskForm.intensity}
+              onChange={(e) => handlePlanTaskFormChange('intensity', e.target.value)}
+              className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+            >
+              <option value="">{t.intensity}</option>
+              {PLAN_TASK_INTENSITIES.map(intensity => (
+                <option key={intensity} value={intensity}>{intensity}</option>
+              ))}
+            </select>
+
+            {planTaskFormError && (
+              <div className="text-xs font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl p-3">
+                {planTaskFormError}
+              </div>
+            )}
+          </div>
+
+          <div className={`p-5 border-t ${tc.borderLight} ${tc.appBg}`}>
+            <button
+              onClick={savePlanTask}
+              className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
+            >
+              {t.save}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const DataView = () => {
     return (
       <div className="space-y-10">
@@ -4239,6 +5077,7 @@ export default function App() {
         {activeTab === 'tasks' && TasksView()}
         {activeTab === 'academy' && AcademyView()}
         {activeTab === TABS.GOALS && GoalsView()}
+        {activeTab === TABS.PLANS && TrainingPlanView()}
         {activeTab === 'data' && DataView()}
         {activeTab === 'shop' && ShopView()}
       </main>
@@ -4250,6 +5089,7 @@ export default function App() {
             { id: 'tasks', icon: ListTodo, label: t.nav?.tasks },
             { id: 'academy', icon: Dumbbell, label: t.nav?.academy },
             { id: TABS.GOALS, icon: Target, label: t.nav?.goals },
+            { id: TABS.PLANS, icon: CalendarDays, label: t.nav?.plans },
             { id: 'data', icon: LineChart, label: t.nav?.data },
             { id: 'shop', icon: ShoppingCart, label: t.nav?.shop },
           ].map((item) => {
@@ -4276,6 +5116,8 @@ export default function App() {
       {RecordManagementModal()} {/* ✨ 新增：挂载成绩管理弹窗 */}
       {RaceManagementModal()} {/* 🌟 新增：挂载比赛目标管理弹窗 */}
       {GoalManagementModal()} {/* V1 Step 2：挂载比赛目标表单 */}
+      {PlanManagementModal()} {/* V1 Step 3：挂载训练计划表单 */}
+      {PlanTaskManagementModal()} {/* V1 Step 3：挂载训练计划任务表单 */}
       {ShopItemManagementModal()} {/* 🛍️ 新增：挂载商店商品管理弹窗 */}
       {RewardHistoryModal()}
       {ProfileModal()}

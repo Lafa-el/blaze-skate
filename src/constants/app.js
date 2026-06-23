@@ -8,6 +8,7 @@ export const TABS = {
   TASKS: 'tasks',
   ACADEMY: 'academy',
   GOALS: 'goals',
+  PLANS: 'plans',
   DATA: 'data',
   SHOP: 'shop',
 };
