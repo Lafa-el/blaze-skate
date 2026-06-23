@@ -45,8 +45,21 @@ const isPlanDateComplete = (plan, dateString) => {
   return tasks.length > 0 && tasks.every((task) => task?.completed);
 };
 
+export const getDashboardTrainingPlan = (data = {}) => {
+  const plans = data.trainingPlansV1 || [];
+  const activePlan = getActiveTrainingPlan(plans, data.activeTrainingPlanId);
+  if (activePlan) return activePlan;
+
+  const selectedPlan = plans.find((plan) => (
+    plan?.id === data.activeTrainingPlanId && plan?.status !== 'archived'
+  ));
+  if (selectedPlan) return selectedPlan;
+
+  return plans.find((plan) => plan?.status === 'active' || plan?.status === 'draft') || null;
+};
+
 export const getTodayPlanSummary = (data = {}, todayString) => {
-  const activePlan = getActiveTrainingPlan(data.trainingPlansV1 || [], data.activeTrainingPlanId);
+  const activePlan = getDashboardTrainingPlan(data);
   const tasks = activePlan ? getPlanTasksByDate(activePlan, todayString) : [];
 
   return {
@@ -58,7 +71,7 @@ export const getTodayPlanSummary = (data = {}, todayString) => {
 };
 
 export const getWeeklyPlanSummary = (data = {}, weekStartDateString) => {
-  const activePlan = getActiveTrainingPlan(data.trainingPlansV1 || [], data.activeTrainingPlanId);
+  const activePlan = getDashboardTrainingPlan(data);
   const tasks = activePlan ? getPlanTasksForWeek(activePlan, weekStartDateString) : [];
 
   return {
@@ -85,6 +98,23 @@ export const getGoalsSummary = (data = {}) => {
 };
 
 export const getV1PBFromGoalOrRecords = (data = {}, distance) => {
+  const records = Array.isArray(data[getRecordsKey(distance)]) ? data[getRecordsKey(distance)] : [];
+  const record = records.reduce((best, current) => {
+    if (typeof current?.time !== 'number') return best;
+    if (!best || current.time < best.time) return current;
+    return best;
+  }, null);
+
+  if (record) {
+    return {
+      distance,
+      timeSeconds: record.time,
+      source: 'records',
+      goal: null,
+      record,
+    };
+  }
+
   const matchingGoals = getActiveCompetitionGoals(data.competitionGoalsV1 || [])
     .filter((goal) => goal?.targetDistance === distance && typeof goal?.currentTimeSeconds === 'number');
 
@@ -102,26 +132,11 @@ export const getV1PBFromGoalOrRecords = (data = {}, distance) => {
     };
   }
 
-  const records = data[getRecordsKey(distance)] || [];
-  const record = records.reduce((best, current) => {
-    if (typeof current?.time !== 'number') return best;
-    if (!best || current.time < best.time) return current;
-    return best;
-  }, null);
-
-  return record
-    ? {
-      distance,
-      timeSeconds: record.time,
-      source: 'records',
-      goal: null,
-      record,
-    }
-    : null;
+  return null;
 };
 
 export const getSimplePlanStreak = (data = {}, todayString) => {
-  const activePlan = getActiveTrainingPlan(data.trainingPlansV1 || [], data.activeTrainingPlanId);
+  const activePlan = getDashboardTrainingPlan(data);
   if (!activePlan) return 0;
 
   const yesterdayString = addDays(todayString, -1);
@@ -134,6 +149,38 @@ export const getSimplePlanStreak = (data = {}, todayString) => {
   }
 
   return streak;
+};
+
+export const getPlanConsistencySummary = (data = {}, weekStartDateString) => {
+  const activePlan = getDashboardTrainingPlan(data);
+  const weekDates = Array.from({ length: 7 }, (_, index) => addDays(weekStartDateString, index));
+
+  if (!activePlan) {
+    return {
+      plan: null,
+      weekStartDate: weekStartDateString,
+      weekEndDate: addDays(weekStartDateString, 6),
+      daysWithCompletedTasks: 0,
+      completedTasks: 0,
+    };
+  }
+
+  return weekDates.reduce((summary, dateString) => {
+    const completedTasksForDay = getPlanTasksByDate(activePlan, dateString)
+      .filter((task) => task?.completed).length;
+
+    return {
+      ...summary,
+      daysWithCompletedTasks: summary.daysWithCompletedTasks + (completedTasksForDay > 0 ? 1 : 0),
+      completedTasks: summary.completedTasks + completedTasksForDay,
+    };
+  }, {
+    plan: activePlan,
+    weekStartDate: weekStartDateString,
+    weekEndDate: addDays(weekStartDateString, 6),
+    daysWithCompletedTasks: 0,
+    completedTasks: 0,
+  });
 };
 
 export const getGoalCurrentBest = getGoalCurrentBestFromRecords;

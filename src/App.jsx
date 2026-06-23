@@ -73,6 +73,13 @@ import {
   updatePlanTask,
   updateTrainingPlan,
 } from './features/trainingV1/plans.js';
+import {
+  getGoalsSummary,
+  getPlanConsistencySummary,
+  getTodayPlanSummary,
+  getV1PBFromGoalOrRecords,
+  getWeeklyPlanSummary,
+} from './features/trainingV1/dashboardMetrics.js';
 
 initializeFirestorePersistence();
 
@@ -593,6 +600,21 @@ const translations = {
     addToToday: '加入今日任务',
     alreadyInToday: '今日任务里已有相同项目',
     taskImportedToToday: '已加入今日任务',
+    v1DashboardTitle: 'V1 训练进度',
+    viewGoals: '查看目标',
+    viewPlan: '查看计划',
+    topGoals: '重点比赛目标',
+    todayPlanTasks: '今日计划任务',
+    noPlanTasksToday: '今天没有计划任务。',
+    targetGapTitle: 'PB / 目标差距',
+    currentBest: '当前最好',
+    planConsistency: '计划执行稳定性',
+    completedPlanTasksThisWeek: '本周已完成计划任务',
+    daysThisWeek: '本周天数',
+    tasksThisWeek: '本周任务',
+    noTargetGapData: '暂无可对比目标',
+    recordSourcePB: 'PB记录',
+    recordSourceGoal: '目标记录',
     daysNames: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
     language: '语言',
     optionalTarget: '目标/配速要求 (选填)',
@@ -811,6 +833,21 @@ const translations = {
     addToToday: 'Add to Today',
     alreadyInToday: 'A matching task already exists today',
     taskImportedToToday: 'Added to today',
+    v1DashboardTitle: 'V1 Training Progress',
+    viewGoals: 'View Goals',
+    viewPlan: 'View Plan',
+    topGoals: 'Top Competition Goals',
+    todayPlanTasks: 'Today Plan Tasks',
+    noPlanTasksToday: 'No plan tasks for today.',
+    targetGapTitle: 'PB / Target Gap',
+    currentBest: 'Current Best',
+    planConsistency: 'Plan Consistency',
+    completedPlanTasksThisWeek: 'Completed plan tasks this week',
+    daysThisWeek: 'Days this week',
+    tasksThisWeek: 'Tasks this week',
+    noTargetGapData: 'No target gap data yet',
+    recordSourcePB: 'PB record',
+    recordSourceGoal: 'Goal record',
     daysNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     language: 'Language',
     optionalTarget: 'Target/Pace (Optional)',
@@ -2099,6 +2136,7 @@ export default function App() {
     const dayOfWeek = currentTime.getDay(); 
     const startOfWeek = new Date(currentTime);
     startOfWeek.setDate(currentTime.getDate() - dayOfWeek);
+    const weekStartDateStr = `${startOfWeek.getFullYear()}-${String(startOfWeek.getMonth() + 1).padStart(2, '0')}-${String(startOfWeek.getDate()).padStart(2, '0')}`;
     
     const currentWeek = [];
     for (let i = 0; i < 7; i++) {
@@ -2119,6 +2157,33 @@ export default function App() {
         isToday: i === dayOfWeek
       });
     }
+
+    const goalsSummary = getGoalsSummary(data);
+    const topActiveGoals = goalsSummary.activeGoals.slice(0, 3);
+    const weeklyPlanSummary = getWeeklyPlanSummary(data, weekStartDateStr);
+    const selectedDashboardPlan = weeklyPlanSummary.plan;
+    const todayPlanSummary = getTodayPlanSummary(data, currentDateStr);
+    const todayPlanTasks = todayPlanSummary.tasks || [];
+    const planConsistency = getPlanConsistencySummary(data, weekStartDateStr);
+    const targetGapRows = topActiveGoals.map(goal => {
+      const currentBest = goal.targetDistance ? getV1PBFromGoalOrRecords(data, goal.targetDistance) : null;
+      const currentTimeSeconds = currentBest?.timeSeconds ?? goal.currentTimeSeconds;
+      const metricGoal = { ...goal, currentTimeSeconds };
+      const gap = getGoalGap(metricGoal);
+      const progress = getGoalProgress(metricGoal);
+      const achieved = typeof currentTimeSeconds === 'number'
+        && typeof goal.targetTimeSeconds === 'number'
+        && currentTimeSeconds <= goal.targetTimeSeconds;
+
+      return {
+        goal,
+        currentBest,
+        currentTimeSeconds,
+        gap,
+        progress,
+        achieved,
+      };
+    });
 
     // 🏆 抓取所有设置项目中的 PB (个人最好成绩)
     const pbCards = currentDistNames.map(dist => {
@@ -2260,6 +2325,222 @@ export default function App() {
               className={`h-full bg-gradient-to-r ${tc.gradientIcon} transition-all duration-500 ease-out`} 
               style={{ width: `${progressPercent}%` }}
             ></div>
+          </div>
+        </div>
+
+        {/* V1 训练进度：只读摘要，不写入 Firestore */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h3 className={`text-sm font-black ${tc.textHeading} flex items-center gap-2`}>
+              <Target size={18} className={tc.textPrimary} /> {t.v1DashboardTitle}
+            </h3>
+          </div>
+
+          <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} space-y-3`}>
+            <div className="flex items-center justify-between gap-3">
+              <div className={`text-sm font-black ${tc.textHeading}`}>{t.topGoals}</div>
+              <button
+                onClick={() => setActiveTab(TABS.GOALS)}
+                className={`${tc.btnCancel} px-3 py-1.5 rounded-lg text-[11px] font-black active:scale-95 transition-all shrink-0`}
+              >
+                {topActiveGoals.length > 0 ? t.viewGoals : t.addGoal}
+              </button>
+            </div>
+
+            {topActiveGoals.length === 0 ? (
+              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center`}>
+                {t.noGoals}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {topActiveGoals.map(goal => {
+                  const progress = getGoalProgress(goal);
+                  const gap = getGoalGap(goal);
+                  const achieved = progress === 100;
+
+                  return (
+                    <div key={goal.id} className={`${tc.badgeBg} rounded-xl p-3`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className={`font-black text-sm ${tc.textHeading} truncate`}>{goal.title}</div>
+                          <div className={`text-[11px] font-bold ${tc.textMuted} mt-0.5 truncate`}>
+                            {goal.eventName || goal.targetDistance || '--'}
+                          </div>
+                        </div>
+                        <span className={`text-[10px] font-black px-2 py-1 rounded-lg shrink-0 ${achieved ? 'bg-green-50 text-green-600' : 'bg-white/80 ' + tc.textPrimary}`}>
+                          {achieved ? t.achieved : `${progress ?? 0}%`}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 mt-3 text-[10px] font-bold">
+                        <div className="bg-white/70 rounded-lg p-2">
+                          <div className={tc.textMuted}>{t.currentTimeSeconds}</div>
+                          <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(goal.currentTimeSeconds)}</div>
+                        </div>
+                        <div className="bg-white/70 rounded-lg p-2">
+                          <div className={tc.textMuted}>{t.targetTimeSeconds}</div>
+                          <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(goal.targetTimeSeconds)}</div>
+                        </div>
+                        <div className="bg-white/70 rounded-lg p-2">
+                          <div className={tc.textMuted}>{t.gap}</div>
+                          <div className={`${achieved ? 'text-green-600' : tc.textHeading} mt-0.5`}>
+                            {gap === null ? '--' : formatGoalSeconds(gap)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} space-y-3`}>
+            <div className="flex items-center justify-between gap-3">
+              <div className={`text-sm font-black ${tc.textHeading}`}>{t.plansTitle}</div>
+              <button
+                onClick={() => setActiveTab(TABS.PLANS)}
+                className={`${tc.btnCancel} px-3 py-1.5 rounded-lg text-[11px] font-black active:scale-95 transition-all shrink-0`}
+              >
+                {selectedDashboardPlan ? t.viewPlan : t.createPlan}
+              </button>
+            </div>
+
+            {!selectedDashboardPlan ? (
+              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center`}>
+                {t.noPlans}
+              </div>
+            ) : (
+              <>
+                <div className={`${tc.badgeBg} rounded-xl p-3`}>
+                  <div className={`font-black text-sm ${tc.textHeading} truncate`}>{selectedDashboardPlan.title}</div>
+                  <div className={`text-[11px] font-bold ${tc.textMuted} mt-0.5 truncate`}>
+                    {selectedDashboardPlan.focus || t.focus}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-3 text-[10px] font-bold">
+                    <div className="bg-white/70 rounded-lg p-2">
+                      <div className={tc.textMuted}>{t.startDate}</div>
+                      <div className={`${tc.textHeading} mt-0.5`}>{(selectedDashboardPlan.startDate || '').replace(/-/g, '/') || '--'}</div>
+                    </div>
+                    <div className="bg-white/70 rounded-lg p-2">
+                      <div className={tc.textMuted}>{t.endDate}</div>
+                      <div className={`${tc.textHeading} mt-0.5`}>{(selectedDashboardPlan.endDate || '').replace(/-/g, '/') || '--'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                    <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyPlanSummary.completedTasks}</div>
+                    <div className={`text-[10px] font-bold ${tc.textMuted}`}>{data.language === 'en' ? 'Done' : '已完成'}</div>
+                  </div>
+                  <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                    <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyPlanSummary.totalTasks}</div>
+                    <div className={`text-[10px] font-bold ${tc.textMuted}`}>{data.language === 'en' ? 'Total' : '总任务'}</div>
+                  </div>
+                  <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                    <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyPlanSummary.completionPercent}%</div>
+                    <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.weeklyCompletion}</div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} space-y-3`}>
+            <div className={`text-sm font-black ${tc.textHeading} flex items-center gap-2`}>
+              <ListTodo size={17} className={tc.textPrimary} /> {t.todayPlanTasks}
+            </div>
+
+            {todayPlanTasks.length === 0 ? (
+              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center`}>
+                {t.noPlanTasksToday}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {todayPlanTasks.map(task => (
+                  <div key={task.id} className={`${tc.badgeBg} rounded-xl p-3 flex items-start gap-3`}>
+                    {task.completed ? (
+                      <CheckCircle2 size={18} className={`${tc.checkActive} shrink-0 mt-0.5`} />
+                    ) : (
+                      <Circle size={18} className={`${tc.textMuted} shrink-0 mt-0.5 opacity-60`} />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className={`text-sm font-black ${task.completed ? tc.textMuted + ' line-through' : tc.textHeading} truncate`}>
+                        {task.text}
+                      </div>
+                      <div className={`text-[10px] font-bold ${tc.textMuted} mt-1 flex flex-wrap gap-2`}>
+                        <span>{task.category || 'other'}</span>
+                        {task.target && <span>{t.targetLabel}: {task.target}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} space-y-3`}>
+            <div className={`text-sm font-black ${tc.textHeading} flex items-center gap-2`}>
+              <Award size={17} className="text-yellow-500" /> {t.targetGapTitle}
+            </div>
+
+            {targetGapRows.length === 0 ? (
+              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center`}>
+                {t.noTargetGapData}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {targetGapRows.map(({ goal, currentBest, currentTimeSeconds, gap, progress, achieved }) => (
+                  <div key={goal.id} className={`${tc.badgeBg} rounded-xl p-3`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className={`text-sm font-black ${tc.textHeading} truncate`}>
+                          {goal.targetDistance || goal.eventName || goal.title}
+                        </div>
+                        <div className={`text-[10px] font-bold ${tc.textMuted}`}>
+                          {currentBest?.source === 'records' ? t.recordSourcePB : t.recordSourceGoal}
+                        </div>
+                      </div>
+                      <span className={`text-[10px] font-black px-2 py-1 rounded-lg shrink-0 ${achieved ? 'bg-green-50 text-green-600' : 'bg-white/80 ' + tc.textPrimary}`}>
+                        {achieved ? t.achieved : `${progress ?? 0}%`}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 mt-3 text-[10px] font-bold">
+                      <div className="bg-white/70 rounded-lg p-2">
+                        <div className={tc.textMuted}>{t.currentBest}</div>
+                        <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(currentTimeSeconds)}</div>
+                      </div>
+                      <div className="bg-white/70 rounded-lg p-2">
+                        <div className={tc.textMuted}>{t.targetTimeSeconds}</div>
+                        <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(goal.targetTimeSeconds)}</div>
+                      </div>
+                      <div className="bg-white/70 rounded-lg p-2">
+                        <div className={tc.textMuted}>{t.gap}</div>
+                        <div className={`${achieved ? 'text-green-600' : tc.textHeading} mt-0.5`}>
+                          {gap === null ? '--' : formatGoalSeconds(gap)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight}`}>
+            <div className={`text-sm font-black ${tc.textHeading} flex items-center gap-2 mb-3`}>
+              <Flame size={17} className="text-orange-500" /> {t.planConsistency}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`${tc.badgeBg} rounded-xl p-3`}>
+                <div className={`text-2xl font-black ${tc.textHeading}`}>{planConsistency.daysWithCompletedTasks}/7</div>
+                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.daysThisWeek}</div>
+              </div>
+              <div className={`${tc.badgeBg} rounded-xl p-3`}>
+                <div className={`text-2xl font-black ${tc.textHeading}`}>{planConsistency.completedTasks}</div>
+                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.completedPlanTasksThisWeek}</div>
+              </div>
+            </div>
           </div>
         </div>
 
