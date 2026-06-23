@@ -793,6 +793,9 @@ const defaultData = {
   pointsPerTask: 10,
   dailyBonusPoints: 20,
   completedDays: [], 
+  competitionGoalsV1: [],
+  trainingPlansV1: [],
+  activeTrainingPlanId: null,
   customRewards: [
     { id: 1, name: '心仪零食一份', cost: 200, icon: '🍿' },
     { id: 2, name: '周末自由游戏 2 小时', cost: 500, icon: '🎮' },
