@@ -17,8 +17,8 @@ export const TRAINING_V1_DEFAULT_FIELDS = {
   activeTrainingPlanId: null,
 };
 
-export const createDefaultLindsayGoals = () => [
-  createCompetitionGoal({
+const LINDSAY_DEFAULT_GOAL_INPUTS = [
+  {
     title: 'AGN 2027 500m',
     competitionName: 'Age Group Nationals 2027',
     competitionDate: '2027-03-20',
@@ -28,8 +28,8 @@ export const createDefaultLindsayGoals = () => [
     targetTimeSeconds: 48.0,
     priority: 'A',
     status: 'active',
-  }),
-  createCompetitionGoal({
+  },
+  {
     title: 'AGN 2027 777m',
     competitionName: 'Age Group Nationals 2027',
     competitionDate: '2027-03-20',
@@ -39,8 +39,8 @@ export const createDefaultLindsayGoals = () => [
     targetTimeSeconds: 77.0,
     priority: 'A',
     status: 'active',
-  }),
-  createCompetitionGoal({
+  },
+  {
     title: 'AGN 2027 1000m',
     competitionName: 'Age Group Nationals 2027',
     competitionDate: '2027-03-20',
@@ -50,8 +50,35 @@ export const createDefaultLindsayGoals = () => [
     targetTimeSeconds: 103.0,
     priority: 'A',
     status: 'active',
-  }),
+  },
 ];
+
+const LINDSAY_DEFAULT_PLAN_TITLE = 'Lindsay Weekly Training Plan';
+
+const isEquivalentLindsayGoal = (goal, defaultGoal) => (
+  goal?.title === defaultGoal.title
+  && goal?.competitionName === defaultGoal.competitionName
+  && goal?.competitionDate === defaultGoal.competitionDate
+  && goal?.eventName === defaultGoal.eventName
+  && goal?.targetDistance === defaultGoal.targetDistance
+  && goal?.status !== 'archived'
+);
+
+export const createDefaultLindsayGoals = () => (
+  LINDSAY_DEFAULT_GOAL_INPUTS.map((goalInput) => createCompetitionGoal(goalInput))
+);
+
+export const getMissingDefaultLindsayGoalInputs = (data = {}) => {
+  const existingGoals = Array.isArray(data.competitionGoalsV1) ? data.competitionGoalsV1 : [];
+
+  return LINDSAY_DEFAULT_GOAL_INPUTS.filter((defaultGoal) => (
+    !existingGoals.some((goal) => isEquivalentLindsayGoal(goal, defaultGoal))
+  ));
+};
+
+export const createMissingDefaultLindsayGoals = (data = {}) => (
+  getMissingDefaultLindsayGoalInputs(data).map((goalInput) => createCompetitionGoal(goalInput))
+);
 
 export const createDefaultLindsayWeeklyPlan = (startDateString) => {
   const dayTemplates = [
@@ -106,7 +133,7 @@ export const createDefaultLindsayWeeklyPlan = (startDateString) => {
   ];
 
   return createTrainingPlan({
-    title: 'Lindsay Weekly Training Plan',
+    title: LINDSAY_DEFAULT_PLAN_TITLE,
     startDate: startDateString,
     endDate: addDays(startDateString, 6),
     focus: 'AGN 2027 preparation',
@@ -128,13 +155,17 @@ export const createDefaultLindsayWeeklyPlan = (startDateString) => {
 };
 
 export const shouldSeedTrainingV1Goals = (data = {}) => (
-  !Array.isArray(data.competitionGoalsV1) || data.competitionGoalsV1.length === 0
+  getMissingDefaultLindsayGoalInputs(data).length > 0
 );
 
 export const shouldSeedTrainingV1Plan = (data = {}, weekStartDateString) => {
-  const plans = data.trainingPlansV1 || [];
+  const plans = Array.isArray(data.trainingPlansV1) ? data.trainingPlansV1 : [];
+  const weekEndDateString = addDays(weekStartDateString, 6);
 
   return !plans.some((plan) => (
-    plan?.startDate === weekStartDateString && plan?.status !== 'archived'
+    plan?.title === LINDSAY_DEFAULT_PLAN_TITLE
+    && plan?.startDate === weekStartDateString
+    && plan?.endDate === weekEndDateString
+    && plan?.status !== 'archived'
   ));
 };

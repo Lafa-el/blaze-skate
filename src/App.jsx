@@ -80,6 +80,12 @@ import {
   getV1PBFromGoalOrRecords,
   getWeeklyPlanSummary,
 } from './features/trainingV1/dashboardMetrics.js';
+import {
+  createDefaultLindsayWeeklyPlan,
+  createMissingDefaultLindsayGoals,
+  shouldSeedTrainingV1Goals,
+  shouldSeedTrainingV1Plan,
+} from './features/trainingV1/trainingV1Defaults.js';
 
 initializeFirestorePersistence();
 
@@ -615,6 +621,12 @@ const translations = {
     noTargetGapData: '暂无可对比目标',
     recordSourcePB: 'PB记录',
     recordSourceGoal: '目标记录',
+    lindsayDefaultsTitle: 'Lindsay V1 默认数据',
+    lindsayDefaultsDescription: '添加 AGN 2027 目标和默认周训练计划。',
+    initializeDefaults: '初始化默认数据',
+    lindsayDefaultsInitialized: 'Lindsay V1 默认数据已初始化。',
+    lindsayDefaultsAlreadyExist: 'Lindsay V1 默认数据已存在。',
+    lindsayDefaultsConfirm: '要初始化 Lindsay V1 默认目标和周计划吗？这只会添加缺失的默认数据，不会覆盖已有数据。',
     daysNames: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
     language: '语言',
     optionalTarget: '目标/配速要求 (选填)',
@@ -848,6 +860,12 @@ const translations = {
     noTargetGapData: 'No target gap data yet',
     recordSourcePB: 'PB record',
     recordSourceGoal: 'Goal record',
+    lindsayDefaultsTitle: 'Lindsay V1 Defaults',
+    lindsayDefaultsDescription: 'Add AGN 2027 goals and a default weekly training plan.',
+    initializeDefaults: 'Initialize Defaults',
+    lindsayDefaultsInitialized: 'Lindsay V1 defaults initialized.',
+    lindsayDefaultsAlreadyExist: 'Lindsay V1 defaults already exist.',
+    lindsayDefaultsConfirm: 'Initialize Lindsay V1 default goals and weekly plan? This will only add missing defaults and will not overwrite existing data.',
     daysNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     language: 'Language',
     optionalTarget: 'Target/Pace (Optional)',
@@ -1058,6 +1076,12 @@ const getPrevDayStr = (dateStr) => {
   const [y, m, d] = dateStr.split('-').map(Number);
   const date = new Date(y, m - 1, d - 1);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+};
+
+const getWeekStartDateString = (date) => {
+  const startOfWeek = new Date(date);
+  startOfWeek.setDate(date.getDate() - date.getDay());
+  return `${startOfWeek.getFullYear()}-${String(startOfWeek.getMonth() + 1).padStart(2, '0')}-${String(startOfWeek.getDate()).padStart(2, '0')}`;
 };
 
 const getRecordsKey = (dist) => {
@@ -1656,6 +1680,43 @@ export default function App() {
     alert(t.taskImportedToToday);
   };
 
+  const initializeLindsayTrainingV1Defaults = () => {
+    const weekStartDateString = getWeekStartDateString(currentTime);
+    const shouldSeedGoals = shouldSeedTrainingV1Goals(data);
+    const shouldSeedPlan = shouldSeedTrainingV1Plan(data, weekStartDateString);
+
+    if (!shouldSeedGoals && !shouldSeedPlan) {
+      alert(t.lindsayDefaultsAlreadyExist);
+      return;
+    }
+
+    if (!window.confirm(t.lindsayDefaultsConfirm)) return;
+
+    const patch = {};
+
+    if (shouldSeedGoals) {
+      patch.competitionGoalsV1 = [
+        ...(data.competitionGoalsV1 || []),
+        ...createMissingDefaultLindsayGoals(data),
+      ];
+    }
+
+    if (shouldSeedPlan) {
+      const newPlan = createDefaultLindsayWeeklyPlan(weekStartDateString);
+      patch.trainingPlansV1 = [
+        ...(data.trainingPlansV1 || []),
+        newPlan,
+      ];
+
+      if (!data.activeTrainingPlanId) {
+        patch.activeTrainingPlanId = newPlan.id;
+      }
+    }
+
+    updateData(patch);
+    alert(t.lindsayDefaultsInitialized);
+  };
+
   const computedStreak = (() => {
     const days = data.completedDays || [];
     if (days.length === 0) return 0;
@@ -2136,7 +2197,7 @@ export default function App() {
     const dayOfWeek = currentTime.getDay(); 
     const startOfWeek = new Date(currentTime);
     startOfWeek.setDate(currentTime.getDate() - dayOfWeek);
-    const weekStartDateStr = `${startOfWeek.getFullYear()}-${String(startOfWeek.getMonth() + 1).padStart(2, '0')}-${String(startOfWeek.getDate()).padStart(2, '0')}`;
+    const weekStartDateStr = getWeekStartDateString(currentTime);
     
     const currentWeek = [];
     for (let i = 0; i < 7; i++) {
@@ -2165,6 +2226,9 @@ export default function App() {
     const todayPlanSummary = getTodayPlanSummary(data, currentDateStr);
     const todayPlanTasks = todayPlanSummary.tasks || [];
     const planConsistency = getPlanConsistencySummary(data, weekStartDateStr);
+    const canSeedLindsayGoals = shouldSeedTrainingV1Goals(data);
+    const canSeedLindsayPlan = shouldSeedTrainingV1Plan(data, weekStartDateStr);
+    const canSeedLindsayDefaults = canSeedLindsayGoals || canSeedLindsayPlan;
     const targetGapRows = topActiveGoals.map(goal => {
       const currentBest = goal.targetDistance ? getV1PBFromGoalOrRecords(data, goal.targetDistance) : null;
       const currentTimeSeconds = currentBest?.timeSeconds ?? goal.currentTimeSeconds;
@@ -2334,6 +2398,29 @@ export default function App() {
             <h3 className={`text-sm font-black ${tc.textHeading} flex items-center gap-2`}>
               <Target size={18} className={tc.textPrimary} /> {t.v1DashboardTitle}
             </h3>
+          </div>
+
+          <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight}`}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className={`text-sm font-black ${tc.textHeading}`}>{t.lindsayDefaultsTitle}</div>
+                <p className={`text-[11px] font-bold ${tc.textMuted} mt-1 leading-relaxed`}>
+                  {canSeedLindsayDefaults ? t.lindsayDefaultsDescription : t.lindsayDefaultsAlreadyExist}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={initializeLindsayTrainingV1Defaults}
+                disabled={!canSeedLindsayDefaults}
+                className={`px-3 py-2 rounded-xl text-[11px] font-black shrink-0 active:scale-95 transition-all ${
+                  canSeedLindsayDefaults
+                    ? tc.btnPrimary
+                    : `${tc.badgeBg} ${tc.textMuted} cursor-not-allowed opacity-70`
+                }`}
+              >
+                {canSeedLindsayDefaults ? t.initializeDefaults : t.lindsayDefaultsAlreadyExist}
+              </button>
+            </div>
           </div>
 
           <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} space-y-3`}>
