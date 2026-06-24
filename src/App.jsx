@@ -77,6 +77,10 @@ import {
   updateTrainingPlan,
 } from './features/trainingV1/plans.js';
 import {
+  createTrainingPlanFromTemplate,
+  getTrainingPlanTemplates,
+} from './features/trainingV1/planTemplates.js';
+import {
   getGoalsSummary,
   getPlanConsistencySummary,
   getTodayExecutionSummary,
@@ -582,6 +586,11 @@ const translations = {
     plansSubtitle: '把目标拆成清晰的周训练计划',
     noPlans: '还没有训练计划。创建一个周计划来安排每天的训练。',
     createPlan: '创建计划',
+    createPlanFromTemplate: '使用模板创建',
+    planTemplate: '训练计划模板',
+    planTemplateTitleOverride: '自定义标题（选填）',
+    planTemplateTitlePlaceholder: '留空则使用模板标题',
+    planTemplateDuplicate: '同一标题和开始日期的计划已存在。',
     editPlan: '编辑计划',
     archivePlan: '归档计划',
     selectPlan: '选择当前计划',
@@ -851,6 +860,11 @@ const translations = {
     plansSubtitle: 'Turn goals into a clear weekly training plan',
     noPlans: 'No training plan yet. Create a weekly plan to organize daily work.',
     createPlan: 'Create Plan',
+    createPlanFromTemplate: 'Create from Template',
+    planTemplate: 'Training Plan Template',
+    planTemplateTitleOverride: 'Custom Title (optional)',
+    planTemplateTitlePlaceholder: 'Leave blank to use template title',
+    planTemplateDuplicate: 'A plan with the same title and start date already exists.',
     editPlan: 'Edit Plan',
     archivePlan: 'Archive Plan',
     selectPlan: 'Select Current Plan',
@@ -1214,6 +1228,14 @@ const createEmptyPlanForm = () => ({
   status: 'draft',
 });
 
+const createEmptyTemplatePlanForm = (startDate = '') => ({
+  templateId: 'regular_week',
+  startDate,
+  titleOverride: '',
+  goalId: '',
+  status: 'draft',
+});
+
 const createPlanFormFromPlan = (plan) => ({
   title: plan?.title || '',
   focus: plan?.focus || '',
@@ -1315,6 +1337,9 @@ export default function App() {
   const [editingPlanId, setEditingPlanId] = useState(null);
   const [planForm, setPlanForm] = useState(createEmptyPlanForm);
   const [planFormError, setPlanFormError] = useState('');
+  const [showTemplatePlanModal, setShowTemplatePlanModal] = useState(false);
+  const [templatePlanForm, setTemplatePlanForm] = useState(() => createEmptyTemplatePlanForm());
+  const [templatePlanFormError, setTemplatePlanFormError] = useState('');
   const [showPlanTaskModal, setShowPlanTaskModal] = useState(false);
   const [editingPlanTaskId, setEditingPlanTaskId] = useState(null);
   const [planTaskForm, setPlanTaskForm] = useState(createEmptyPlanTaskForm);
@@ -1503,9 +1528,26 @@ export default function App() {
     setPlanFormError('');
   };
 
+  const openTemplatePlanModal = () => {
+    setTemplatePlanForm(createEmptyTemplatePlanForm(currentDateStr));
+    setTemplatePlanFormError('');
+    setShowTemplatePlanModal(true);
+  };
+
+  const closeTemplatePlanModal = () => {
+    setShowTemplatePlanModal(false);
+    setTemplatePlanForm(createEmptyTemplatePlanForm());
+    setTemplatePlanFormError('');
+  };
+
   const handlePlanFormChange = (field, value) => {
     setPlanForm(prev => ({ ...prev, [field]: value }));
     setPlanFormError('');
+  };
+
+  const handleTemplatePlanFormChange = (field, value) => {
+    setTemplatePlanForm(prev => ({ ...prev, [field]: value }));
+    setTemplatePlanFormError('');
   };
 
   const saveTrainingPlan = () => {
@@ -1566,6 +1608,53 @@ export default function App() {
       activeTrainingPlanId: nextActivePlanId,
     });
     closePlanModal();
+  };
+
+  const saveTrainingPlanFromTemplate = () => {
+    if (!templatePlanForm.startDate) {
+      setTemplatePlanFormError(t.planStartRequired);
+      return;
+    }
+
+    if (!['draft', 'active'].includes(templatePlanForm.status)) {
+      setTemplatePlanFormError(t.planInvalidStatus);
+      return;
+    }
+
+    let newPlan;
+    try {
+      newPlan = createTrainingPlanFromTemplate(templatePlanForm.templateId, templatePlanForm.startDate, {
+        titleOverride: templatePlanForm.titleOverride,
+        goalId: templatePlanForm.goalId || null,
+        status: templatePlanForm.status,
+        language: data.language === 'en' ? 'en' : 'zh',
+      });
+    } catch {
+      setTemplatePlanFormError(t.planInvalidStatus);
+      return;
+    }
+
+    const plans = data.trainingPlansV1 || [];
+    const duplicatePlan = plans.some(plan => (
+      plan?.status !== 'archived'
+        && plan?.title === newPlan.title
+        && plan?.startDate === newPlan.startDate
+    ));
+
+    if (duplicatePlan) {
+      setTemplatePlanFormError(t.planTemplateDuplicate);
+      return;
+    }
+
+    const nextActivePlanId = templatePlanForm.status === 'active' || !data.activeTrainingPlanId
+      ? newPlan.id
+      : data.activeTrainingPlanId;
+
+    updateData({
+      trainingPlansV1: [...plans, newPlan],
+      activeTrainingPlanId: nextActivePlanId,
+    });
+    closeTemplatePlanModal();
   };
 
   const selectTrainingPlan = (planId) => {
@@ -3890,12 +3979,20 @@ export default function App() {
             <h2 className={`text-2xl font-black ${tc.textHeading}`}>{t.plansTitle}</h2>
             <p className={`text-sm ${tc.textMuted} mt-1`}>{t.plansSubtitle}</p>
           </div>
-          <button
-            onClick={openCreatePlanModal}
-            className={`${tc.btnPrimary} px-4 py-3 rounded-xl shadow-md font-bold text-sm flex items-center justify-center gap-2 shrink-0 active:scale-95 transition-all`}
-          >
-            <Plus size={18} /> {t.createPlan}
-          </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 shrink-0">
+            <button
+              onClick={openTemplatePlanModal}
+              className={`${tc.btnCancel} px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all`}
+            >
+              <CalendarDays size={18} /> {t.createPlanFromTemplate}
+            </button>
+            <button
+              onClick={openCreatePlanModal}
+              className={`${tc.btnPrimary} px-4 py-3 rounded-xl shadow-md font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all`}
+            >
+              <Plus size={18} /> {t.createPlan}
+            </button>
+          </div>
         </div>
 
         {selectablePlans.length === 0 ? (
@@ -3912,6 +4009,12 @@ export default function App() {
               className={`${tc.btnPrimary} px-5 py-3 rounded-xl shadow-md font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
             >
               <Plus size={18} /> {t.createPlan}
+            </button>
+            <button
+              onClick={openTemplatePlanModal}
+              className={`${tc.btnCancel} px-5 py-3 rounded-xl font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
+            >
+              <CalendarDays size={18} /> {t.createPlanFromTemplate}
             </button>
           </div>
         ) : (
@@ -4138,6 +4241,123 @@ export default function App() {
               className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
             >
               {t.save}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const TemplatePlanManagementModal = () => {
+    if (!showTemplatePlanModal) return null;
+
+    const templates = getTrainingPlanTemplates();
+    const activeGoals = sortGoalsByPriorityAndDate(getActiveCompetitionGoals(data.competitionGoalsV1 || []));
+    const selectedTemplate = templates.find(template => template.id === templatePlanForm.templateId) || templates[0];
+    const templateTitle = selectedTemplate?.title?.[data.language === 'en' ? 'en' : 'zh'] || selectedTemplate?.title?.en || '';
+
+    return (
+      <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={closeTemplatePlanModal}>
+        <div className={`${tc.cardBg} w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]`} onClick={e => e.stopPropagation()}>
+          <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
+            <h3 className={`font-black ${tc.textHeading} flex items-center gap-2`}>
+              <CalendarDays size={18} className={tc.textPrimary} />
+              {t.createPlanFromTemplate}
+            </h3>
+            <button onClick={closeTemplatePlanModal} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-5 overflow-y-auto space-y-4">
+            <label className="block space-y-2">
+              <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.planTemplate}</span>
+              <select
+                value={templatePlanForm.templateId}
+                onChange={(e) => handleTemplatePlanFormChange('templateId', e.target.value)}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+              >
+                {templates.map(template => (
+                  <option key={template.id} value={template.id}>
+                    {template.title?.[data.language === 'en' ? 'en' : 'zh'] || template.title?.en}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {selectedTemplate && (
+              <div className={`${tc.badgeBg} rounded-xl p-3`}>
+                <div className={`text-sm font-black ${tc.textHeading}`}>{templateTitle}</div>
+                <div className={`text-[11px] font-bold ${tc.textMuted} mt-1 leading-relaxed`}>{selectedTemplate.focus}</div>
+              </div>
+            )}
+
+            <label className="block space-y-2">
+              <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.startDate}</span>
+              <input
+                type="date"
+                value={templatePlanForm.startDate}
+                onChange={(e) => handleTemplatePlanFormChange('startDate', e.target.value)}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+            </label>
+
+            <label className="block space-y-2">
+              <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.planTemplateTitleOverride}</span>
+              <input
+                type="text"
+                value={templatePlanForm.titleOverride}
+                onChange={(e) => handleTemplatePlanFormChange('titleOverride', e.target.value)}
+                placeholder={t.planTemplateTitlePlaceholder}
+                className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
+              />
+            </label>
+
+            {activeGoals.length > 0 && (
+              <label className="block space-y-2">
+                <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.linkedGoal}</span>
+                <select
+                  value={templatePlanForm.goalId}
+                  onChange={(e) => handleTemplatePlanFormChange('goalId', e.target.value)}
+                  className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
+                >
+                  <option value="">{t.noLinkedGoal}</option>
+                  {activeGoals.map(goal => (
+                    <option key={goal.id} value={goal.id}>{goal.title}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            <div>
+              <label className={`text-xs font-black ${tc.textMuted} ml-1 mb-2 block`}>{t.status}</label>
+              <div className="grid grid-cols-2 gap-2">
+                {['draft', 'active'].map(status => (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => handleTemplatePlanFormChange('status', status)}
+                    className={`py-2.5 rounded-xl text-sm font-black transition-all ${templatePlanForm.status === status ? tc.btnPrimary + ' shadow-md' : tc.badgeBg + ' ' + tc.textPrimary}`}
+                  >
+                    {status === 'active' ? t.active : t.draft}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {templatePlanFormError && (
+              <div className="text-xs font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl p-3">
+                {templatePlanFormError}
+              </div>
+            )}
+          </div>
+
+          <div className={`p-5 border-t ${tc.borderLight} ${tc.appBg}`}>
+            <button
+              onClick={saveTrainingPlanFromTemplate}
+              className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
+            >
+              {t.createPlanFromTemplate}
             </button>
           </div>
         </div>
@@ -5690,6 +5910,7 @@ export default function App() {
       {RaceManagementModal()} {/* 🌟 新增：挂载比赛目标管理弹窗 */}
       {GoalManagementModal()} {/* V1 Step 2：挂载比赛目标表单 */}
       {PlanManagementModal()} {/* V1 Step 3：挂载训练计划表单 */}
+      {TemplatePlanManagementModal()} {/* V1.1 Step 4：挂载训练计划模板表单 */}
       {PlanTaskManagementModal()} {/* V1 Step 3：挂载训练计划任务表单 */}
       {ShopItemManagementModal()} {/* 🛍️ 新增：挂载商店商品管理弹窗 */}
       {RewardHistoryModal()}
