@@ -57,6 +57,12 @@ const getGoalDistanceCandidates = (goal) => (
     .filter(Boolean)
 );
 
+const toTimestamp = (dateString) => {
+  if (typeof dateString !== 'string' || !dateString.trim()) return null;
+  const timestamp = new Date(dateString.replace(/-/g, '/')).getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
+};
+
 export const getBestRecordForDistance = (data = {}, distance) => {
   const recordsWithKeys = getRecordKeysForDistance(distance)
     .flatMap((recordsKey) => (
@@ -81,6 +87,31 @@ export const getBestRecordForDistance = (data = {}, distance) => {
   }, null);
 
   return bestRecordWithKey;
+};
+
+export const getRecordHistoryForDistance = (data = {}, distance) => {
+  const recordsWithKeys = getRecordKeysForDistance(distance)
+    .flatMap((recordsKey) => (
+      Array.isArray(data[recordsKey])
+        ? data[recordsKey].map(record => ({ record, recordsKey }))
+        : []
+    ))
+    .map(({ record, recordsKey }) => ({
+      date: typeof record?.date === 'string' ? record.date : null,
+      timeSeconds: normalizeNullableNumber(record?.time),
+      timestamp: toTimestamp(record?.date),
+      recordsKey,
+    }))
+    .filter(record => record.date && record.timeSeconds !== null && record.timestamp !== null)
+    .sort((a, b) => {
+      return a.timestamp - b.timestamp;
+    });
+
+  return recordsWithKeys.map((record) => ({
+    date: record.date,
+    timeSeconds: record.timeSeconds,
+    recordsKey: record.recordsKey,
+  }));
 };
 
 const getManualCurrentDate = (goal) => (
@@ -116,6 +147,56 @@ export const getGoalCurrentPerformance = (goal, data = {}) => {
     source: 'none',
     timeSeconds: null,
     date: null,
+  };
+};
+
+export const getGoalTargetGapHistory = (goal, data = {}) => {
+  const targetTimeSeconds = normalizeNullableNumber(goal?.targetTimeSeconds);
+  if (targetTimeSeconds === null) return [];
+
+  const recordHistory = getGoalDistanceCandidates(goal)
+    .map(distance => getRecordHistoryForDistance(data, distance))
+    .find(history => history.length > 0) || [];
+
+  return recordHistory.map((record) => ({
+    date: record.date,
+    timeSeconds: record.timeSeconds,
+    targetTimeSeconds,
+    gapSeconds: record.timeSeconds - targetTimeSeconds,
+    achieved: record.timeSeconds <= targetTimeSeconds,
+  }));
+};
+
+export const getGoalTrendSummary = (goal, data = {}) => {
+  const history = getGoalTargetGapHistory(goal, data);
+  if (history.length === 0) {
+    return {
+      hasHistory: false,
+      firstGapSeconds: null,
+      latestGapSeconds: null,
+      bestGapSeconds: null,
+      improvementSeconds: null,
+      latestRecordDate: null,
+      bestRecordDate: null,
+      achieved: false,
+    };
+  }
+
+  const firstRecord = history[0];
+  const latestRecord = history[history.length - 1];
+  const bestRecord = history.reduce((best, current) => (
+    current.gapSeconds < best.gapSeconds ? current : best
+  ), history[0]);
+
+  return {
+    hasHistory: true,
+    firstGapSeconds: firstRecord.gapSeconds,
+    latestGapSeconds: latestRecord.gapSeconds,
+    bestGapSeconds: bestRecord.gapSeconds,
+    improvementSeconds: firstRecord.gapSeconds - latestRecord.gapSeconds,
+    latestRecordDate: latestRecord.date,
+    bestRecordDate: bestRecord.date,
+    achieved: history.some(record => record.achieved),
   };
 };
 

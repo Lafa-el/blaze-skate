@@ -59,6 +59,8 @@ import {
   getGoalGapWithPB,
   getGoalCurrentPerformance,
   getGoalProgressWithPB,
+  getGoalTargetGapHistory,
+  getGoalTrendSummary,
   sortGoalsByPriorityAndDate,
   updateCompetitionGoal,
 } from './features/trainingV1/goals.js';
@@ -662,6 +664,16 @@ const translations = {
     recordSourceGoal: '手动当前成绩',
     manualCurrent: '手动当前成绩',
     pbDate: 'PB 日期',
+    progressHistory: '进度趋势',
+    latestGap: '最新差距',
+    bestGap: '最佳差距',
+    improvement: '进步幅度',
+    latestRecord: '最新记录',
+    targetAchieved: '目标已达成',
+    noPbHistoryForGoal: '这个目标还没有 PB 历史记录。',
+    noPbHistoryYet: '还没有 PB 历史',
+    improvedBy: '进步 {value} 秒',
+    lastThreeRecords: '最近三次记录',
     currentTimeFallbackHelp: '仅在没有 PB 记录时使用。',
     lindsayDefaultsTitle: 'Lindsay V1 默认数据',
     lindsayDefaultsDescription: '添加 AGN 2027 目标和默认周训练计划。',
@@ -936,6 +948,16 @@ const translations = {
     recordSourceGoal: 'Manual Current',
     manualCurrent: 'Manual Current',
     pbDate: 'PB Date',
+    progressHistory: 'Progress History',
+    latestGap: 'Latest Gap',
+    bestGap: 'Best Gap',
+    improvement: 'Improvement',
+    latestRecord: 'Latest Record',
+    targetAchieved: 'Target Achieved',
+    noPbHistoryForGoal: 'No PB history for this goal yet.',
+    noPbHistoryYet: 'No PB history yet',
+    improvedBy: 'Improved by {value}s',
+    lastThreeRecords: 'Last 3 Records',
     currentTimeFallbackHelp: 'Used only when no PB record is available.',
     lindsayDefaultsTitle: 'Lindsay V1 Defaults',
     lindsayDefaultsDescription: 'Add AGN 2027 goals and a default weekly training plan.',
@@ -1215,6 +1237,21 @@ const formatGoalSeconds = (value) => (
     ? `${Number(value.toFixed(3))}s`
     : '--'
 );
+
+const formatSignedGoalSeconds = (value) => (
+  typeof value === 'number' && Number.isFinite(value)
+    ? `${value > 0 ? '+' : ''}${Number(value.toFixed(3))}s`
+    : '--'
+);
+
+const formatTrendSummaryText = (trendSummary, t) => {
+  if (trendSummary?.achieved) return t.targetAchieved;
+  if (!trendSummary?.hasHistory) return t.noPbHistoryYet;
+  if (typeof trendSummary.improvementSeconds === 'number' && trendSummary.improvementSeconds > 0) {
+    return t.improvedBy.replace('{value}', Number(trendSummary.improvementSeconds.toFixed(3)));
+  }
+  return `${t.latestGap} ${formatSignedGoalSeconds(trendSummary.latestGapSeconds)}`;
+};
 
 const PLAN_TASK_CATEGORIES = ['ice', 'dryland', 'strength', 'running', 'mobility', 'recovery', 'video', 'mental', 'competition', 'other'];
 const PLAN_TASK_INTENSITIES = ['low', 'medium', 'high'];
@@ -2385,6 +2422,7 @@ export default function App() {
       const currentTimeSeconds = currentPerformance.timeSeconds;
       const gap = getGoalGapWithPB(goal, data);
       const progress = getGoalProgressWithPB(goal, data);
+      const trendSummary = getGoalTrendSummary(goal, data);
       const achieved = typeof currentTimeSeconds === 'number'
         && typeof goal.targetTimeSeconds === 'number'
         && currentTimeSeconds <= goal.targetTimeSeconds;
@@ -2395,6 +2433,7 @@ export default function App() {
         currentTimeSeconds,
         gap,
         progress,
+        trendSummary,
         achieved,
       };
     });
@@ -2761,7 +2800,7 @@ export default function App() {
               </div>
             ) : (
               <div className="space-y-2">
-                {targetGapRows.map(({ goal, currentPerformance, currentTimeSeconds, gap, progress, achieved }) => {
+                {targetGapRows.map(({ goal, currentPerformance, currentTimeSeconds, gap, progress, trendSummary, achieved }) => {
                   const sourceLabel = currentPerformance.source === 'records'
                     ? t.recordSourcePB
                     : currentPerformance.source === 'goal'
@@ -2780,6 +2819,9 @@ export default function App() {
                             {currentPerformance.source === 'records' && currentPerformance.date
                               ? ` · ${t.pbDate}: ${currentPerformance.date.replace(/-/g, '/')}`
                               : ''}
+                          </div>
+                          <div className={`text-[10px] font-bold mt-1 ${achieved ? 'text-green-600' : tc.textMuted}`}>
+                            {formatTrendSummaryText(trendSummary, t)}
                           </div>
                         </div>
                         <span className={`text-[10px] font-black px-2 py-1 rounded-lg shrink-0 ${achieved ? 'bg-green-50 text-green-600' : 'bg-white/80 ' + tc.textPrimary}`}>
@@ -3568,6 +3610,9 @@ export default function App() {
       const currentPerformance = getGoalCurrentPerformance(goal, data);
       const progress = getGoalProgressWithPB(goal, data);
       const gap = getGoalGapWithPB(goal, data);
+      const trendSummary = getGoalTrendSummary(goal, data);
+      const gapHistory = getGoalTargetGapHistory(goal, data);
+      const recentHistory = gapHistory.slice(-3).reverse();
       const achieved = progress === 100;
       const performanceSourceLabel = currentPerformance.source === 'records'
         ? t.recordSourcePB
@@ -3640,13 +3685,64 @@ export default function App() {
             <div className={`${achieved ? 'bg-green-50 text-green-700 border-green-100' : 'bg-yellow-50 text-yellow-700 border-yellow-100'} rounded-xl p-3 border`}>
               <div className="text-[10px] font-black uppercase opacity-70">{t.gap}</div>
               <div className="text-lg font-black mt-0.5">
-                {typeof gap === 'number' ? `${gap > 0 ? '+' : ''}${Number(gap.toFixed(3))}s` : '--'}
+                {formatSignedGoalSeconds(gap)}
               </div>
             </div>
             <div className={`${tc.badgeBg} rounded-xl p-3`}>
               <div className={`text-[10px] font-black uppercase ${tc.textMuted}`}>{t.progress}</div>
               <div className={`text-lg font-black ${tc.textPrimary} mt-0.5`}>{progress === null ? '--' : `${progress}%`}</div>
             </div>
+          </div>
+
+          <div className={`${tc.badgeBg} rounded-xl p-3 space-y-3`}>
+            <div className="flex items-center justify-between gap-3">
+              <div className={`text-[10px] font-black uppercase ${tc.textMuted}`}>{t.progressHistory}</div>
+              {trendSummary.achieved && (
+                <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-green-50 text-green-600 border border-green-100">
+                  {t.targetAchieved}
+                </span>
+              )}
+            </div>
+
+            {!trendSummary.hasHistory ? (
+              <div className={`text-xs font-bold ${tc.textMuted}`}>{t.noPbHistoryForGoal}</div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
+                  <div className="bg-white/70 rounded-lg p-2">
+                    <div className={tc.textMuted}>{t.latestGap}</div>
+                    <div className={`${tc.textHeading} mt-0.5`}>{formatSignedGoalSeconds(trendSummary.latestGapSeconds)}</div>
+                  </div>
+                  <div className="bg-white/70 rounded-lg p-2">
+                    <div className={tc.textMuted}>{t.bestGap}</div>
+                    <div className={`${tc.textHeading} mt-0.5`}>{formatSignedGoalSeconds(trendSummary.bestGapSeconds)}</div>
+                  </div>
+                  <div className="bg-white/70 rounded-lg p-2">
+                    <div className={tc.textMuted}>{t.improvement}</div>
+                    <div className={`${trendSummary.improvementSeconds > 0 ? 'text-green-600' : tc.textHeading} mt-0.5`}>
+                      {formatGoalSeconds(trendSummary.improvementSeconds)}
+                    </div>
+                  </div>
+                  <div className="bg-white/70 rounded-lg p-2">
+                    <div className={tc.textMuted}>{t.latestRecord}</div>
+                    <div className={`${tc.textHeading} mt-0.5`}>
+                      {trendSummary.latestRecordDate ? trendSummary.latestRecordDate.replace(/-/g, '/') : '--'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className={`text-[10px] font-black uppercase ${tc.textMuted}`}>{t.lastThreeRecords}</div>
+                  {recentHistory.map((record) => (
+                    <div key={`${goal.id}_${record.date}_${record.timeSeconds}`} className="grid grid-cols-3 gap-2 bg-white/70 rounded-lg p-2 text-[10px] font-bold">
+                      <div className={tc.textMuted}>{record.date.replace(/-/g, '/')}</div>
+                      <div className={tc.textHeading}>{formatGoalSeconds(record.timeSeconds)}</div>
+                      <div className={record.achieved ? 'text-green-600' : tc.textHeading}>{formatSignedGoalSeconds(record.gapSeconds)}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {goal.notes && (
