@@ -78,6 +78,7 @@ import {
 import {
   getGoalsSummary,
   getPlanConsistencySummary,
+  getTodayExecutionSummary,
   getTodayPlanSummary,
   getV1PBFromGoalOrRecords,
   getWeeklyPlanSummary,
@@ -626,8 +627,14 @@ const translations = {
     viewPlan: '查看计划',
     topGoals: '重点比赛目标',
     todayPlanTasks: '今日计划任务',
+    scheduledPlanTasksToday: '今日原定计划任务',
     noPlanTasksToday: '今天没有计划任务。',
     todayWorkflow: '今日执行流程',
+    todayExecution: '今日执行',
+    dailyTasksLabel: '今日任务',
+    completedLabel: '已完成',
+    addedFromPlan: '来自计划',
+    addedFromOtherDates: '从其他日期加入',
     addedToToday: '已加入今日任务',
     dailyTasksCompleted: '已完成今日任务',
     noPlanTasksScheduledToday: '今天没有安排计划任务。',
@@ -883,8 +890,14 @@ const translations = {
     viewPlan: 'View Plan',
     topGoals: 'Top Competition Goals',
     todayPlanTasks: 'Today Plan Tasks',
+    scheduledPlanTasksToday: 'Scheduled Plan Tasks Today',
     noPlanTasksToday: 'No plan tasks for today.',
     todayWorkflow: 'Today Workflow',
+    todayExecution: 'Today Execution',
+    dailyTasksLabel: 'Daily Tasks',
+    completedLabel: 'Completed',
+    addedFromPlan: 'Added from Plan',
+    addedFromOtherDates: 'Added from Other Dates',
     addedToToday: 'Added to Today',
     dailyTasksCompleted: 'Daily Tasks Completed',
     noPlanTasksScheduledToday: 'No plan tasks scheduled for today.',
@@ -2261,9 +2274,7 @@ export default function App() {
     const selectedDashboardPlan = weeklyPlanSummary.plan;
     const todayPlanSummary = getTodayPlanSummary(data, currentDateStr);
     const todayPlanTasks = todayPlanSummary.tasks || [];
-    const addedTodayPlanTasksCount = todayPlanTasks.filter(task => (
-      isPlanTaskAddedToToday(task, data.tasks || [])
-    )).length;
+    const todayExecutionSummary = getTodayExecutionSummary(data, currentDateStr);
     const planConsistency = getPlanConsistencySummary(data, weekStartDateStr);
     const canSeedLindsayGoals = shouldSeedTrainingV1Goals(data);
     const canSeedLindsayPlan = shouldSeedTrainingV1Plan(data, weekStartDateStr);
@@ -2574,12 +2585,12 @@ export default function App() {
 
           <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} space-y-3`}>
             <div className={`text-sm font-black ${tc.textHeading} flex items-center gap-2`}>
-              <ListTodo size={17} className={tc.textPrimary} /> {t.todayPlanTasks}
+              <ListTodo size={17} className={tc.textPrimary} /> {t.scheduledPlanTasksToday}
             </div>
 
             {todayPlanTasks.length === 0 ? (
               <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center leading-relaxed`}>
-                {t.noPlanTasksToday}
+                {t.noPlanTasksScheduledToday}
               </div>
             ) : (
               <div className="space-y-2">
@@ -2607,33 +2618,27 @@ export default function App() {
 
           <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} space-y-3`}>
             <div className={`text-sm font-black ${tc.textHeading} flex items-center gap-2`}>
-              <CheckCircle2 size={17} className={tc.textPrimary} /> {t.todayWorkflow}
+              <CheckCircle2 size={17} className={tc.textPrimary} /> {t.todayExecution}
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="grid grid-cols-2 gap-2 text-center">
               <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                <div className={`text-lg font-black ${tc.textHeading}`}>{todayPlanTasks.length}</div>
-                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.todayPlanTasks}</div>
+                <div className={`text-lg font-black ${tc.textHeading}`}>{todayExecutionSummary.totalDailyTasks}</div>
+                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.dailyTasksLabel}</div>
               </div>
               <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                <div className={`text-lg font-black ${tc.textHeading}`}>{addedTodayPlanTasksCount}</div>
-                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.addedToToday}</div>
+                <div className={`text-lg font-black ${tc.textHeading}`}>{todayExecutionSummary.completedDailyTasks}</div>
+                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.completedLabel}</div>
               </div>
               <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                <div className={`text-lg font-black ${tc.textHeading}`}>{completedTasks}</div>
-                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.dailyTasksCompleted}</div>
+                <div className={`text-lg font-black ${tc.textHeading}`}>{todayExecutionSummary.planTasksAddedToToday}</div>
+                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.addedFromPlan}</div>
+              </div>
+              <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                <div className={`text-lg font-black ${tc.textHeading}`}>{todayExecutionSummary.planTasksAddedFromOtherDates}</div>
+                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.addedFromOtherDates}</div>
               </div>
             </div>
-
-            {todayPlanTasks.length === 0 ? (
-              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center leading-relaxed`}>
-                {t.noPlanTasksScheduledToday}
-              </div>
-            ) : addedTodayPlanTasksCount === 0 ? (
-              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center leading-relaxed`}>
-                {t.addPlanTasksToTodayHint}
-              </div>
-            ) : null}
           </div>
 
           <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} space-y-3`}>

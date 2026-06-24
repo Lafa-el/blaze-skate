@@ -7,6 +7,7 @@ import {
   getActiveTrainingPlan,
   getPlanTasksByDate,
   getPlanTasksForWeek,
+  normalizeTaskText,
 } from './plans.js';
 
 const getRecordsKey = (distance) => {
@@ -67,6 +68,55 @@ export const getTodayPlanSummary = (data = {}, todayString) => {
     date: todayString,
     tasks,
     ...summarizeTasks(tasks),
+  };
+};
+
+export const getAllPlanTasksWithDates = (plan) => (
+  (plan?.days || []).flatMap((day) => (
+    (day?.tasks || []).map((task) => ({
+      task,
+      date: day?.date || '',
+    }))
+  ))
+);
+
+const getTaskMatchKey = (task) => (
+  `${normalizeTaskText(task?.text)}::${normalizeTaskText(task?.target)}`
+);
+
+export const getDailyTasksMatchedToPlanTasks = (dailyTasks = [], plan) => {
+  const planTaskMatchesByKey = getAllPlanTasksWithDates(plan).reduce((matches, planTaskWithDate) => {
+    const key = getTaskMatchKey(planTaskWithDate.task);
+    if (!normalizeTaskText(planTaskWithDate.task?.text)) return matches;
+
+    return {
+      ...matches,
+      [key]: [...(matches[key] || []), planTaskWithDate],
+    };
+  }, {});
+
+  return dailyTasks
+    .map((dailyTask) => ({
+      dailyTask,
+      matches: planTaskMatchesByKey[getTaskMatchKey(dailyTask)] || [],
+    }))
+    .filter(({ matches }) => matches.length > 0);
+};
+
+export const getTodayExecutionSummary = (data = {}, todayString) => {
+  const dailyTasks = data.tasks || [];
+  const activePlan = getDashboardTrainingPlan(data);
+  const matchedDailyTasks = getDailyTasksMatchedToPlanTasks(dailyTasks, activePlan);
+
+  return {
+    plan: activePlan,
+    date: todayString,
+    totalDailyTasks: dailyTasks.length,
+    completedDailyTasks: dailyTasks.filter((task) => task?.completed).length,
+    planTasksAddedToToday: matchedDailyTasks.length,
+    planTasksAddedFromOtherDates: matchedDailyTasks.filter(({ matches }) => (
+      matches.some((match) => match.date !== todayString)
+    )).length,
   };
 };
 
