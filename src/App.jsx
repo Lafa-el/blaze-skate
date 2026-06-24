@@ -56,8 +56,9 @@ import {
   archiveCompetitionGoal,
   createCompetitionGoal,
   getActiveCompetitionGoals,
-  getGoalGap,
-  getGoalProgress,
+  getGoalGapWithPB,
+  getGoalCurrentPerformance,
+  getGoalProgressWithPB,
   sortGoalsByPriorityAndDate,
   updateCompetitionGoal,
 } from './features/trainingV1/goals.js';
@@ -80,7 +81,6 @@ import {
   getPlanConsistencySummary,
   getTodayExecutionSummary,
   getTodayPlanSummary,
-  getV1PBFromGoalOrRecords,
   getWeeklyPlanSummary,
 } from './features/trainingV1/dashboardMetrics.js';
 import {
@@ -649,8 +649,11 @@ const translations = {
     daysThisWeek: '本周天数',
     tasksThisWeek: '本周任务',
     noTargetGapData: '暂无可对比目标',
-    recordSourcePB: 'PB记录',
-    recordSourceGoal: '目标记录',
+    recordSourcePB: 'PB',
+    recordSourceGoal: '手动当前成绩',
+    manualCurrent: '手动当前成绩',
+    pbDate: 'PB 日期',
+    currentTimeFallbackHelp: '仅在没有 PB 记录时使用。',
     lindsayDefaultsTitle: 'Lindsay V1 默认数据',
     lindsayDefaultsDescription: '添加 AGN 2027 目标和默认周训练计划。',
     initializeDefaults: '初始化默认数据',
@@ -915,8 +918,11 @@ const translations = {
     daysThisWeek: 'Days this week',
     tasksThisWeek: 'Tasks this week',
     noTargetGapData: 'No target gap data yet',
-    recordSourcePB: 'PB record',
-    recordSourceGoal: 'Goal record',
+    recordSourcePB: 'PB',
+    recordSourceGoal: 'Manual Current',
+    manualCurrent: 'Manual Current',
+    pbDate: 'PB Date',
+    currentTimeFallbackHelp: 'Used only when no PB record is available.',
     lindsayDefaultsTitle: 'Lindsay V1 Defaults',
     lindsayDefaultsDescription: 'Add AGN 2027 goals and a default weekly training plan.',
     initializeDefaults: 'Initialize Defaults',
@@ -2286,18 +2292,17 @@ export default function App() {
     const canSeedLindsayPlan = shouldSeedTrainingV1Plan(data, weekStartDateStr);
     const canSeedLindsayDefaults = canSeedLindsayGoals || canSeedLindsayPlan;
     const targetGapRows = topActiveGoals.map(goal => {
-      const currentBest = goal.targetDistance ? getV1PBFromGoalOrRecords(data, goal.targetDistance) : null;
-      const currentTimeSeconds = currentBest?.timeSeconds ?? goal.currentTimeSeconds;
-      const metricGoal = { ...goal, currentTimeSeconds };
-      const gap = getGoalGap(metricGoal);
-      const progress = getGoalProgress(metricGoal);
+      const currentPerformance = getGoalCurrentPerformance(goal, data);
+      const currentTimeSeconds = currentPerformance.timeSeconds;
+      const gap = getGoalGapWithPB(goal, data);
+      const progress = getGoalProgressWithPB(goal, data);
       const achieved = typeof currentTimeSeconds === 'number'
         && typeof goal.targetTimeSeconds === 'number'
         && currentTimeSeconds <= goal.targetTimeSeconds;
 
       return {
         goal,
-        currentBest,
+        currentPerformance,
         currentTimeSeconds,
         gap,
         progress,
@@ -2497,9 +2502,15 @@ export default function App() {
             ) : (
               <div className="space-y-2">
                 {topActiveGoals.map(goal => {
-                  const progress = getGoalProgress(goal);
-                  const gap = getGoalGap(goal);
+                  const currentPerformance = getGoalCurrentPerformance(goal, data);
+                  const progress = getGoalProgressWithPB(goal, data);
+                  const gap = getGoalGapWithPB(goal, data);
                   const achieved = progress === 100;
+                  const performanceSourceLabel = currentPerformance.source === 'records'
+                    ? t.recordSourcePB
+                    : currentPerformance.source === 'goal'
+                      ? t.manualCurrent
+                      : '--';
 
                   return (
                     <div key={goal.id} className={`${tc.badgeBg} rounded-xl p-3`}>
@@ -2516,8 +2527,11 @@ export default function App() {
                       </div>
                       <div className="grid grid-cols-3 gap-2 mt-3 text-[10px] font-bold">
                         <div className="bg-white/70 rounded-lg p-2 min-w-0">
-                          <div className={tc.textMuted}>{t.currentTimeSeconds}</div>
-                          <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(goal.currentTimeSeconds)}</div>
+                          <div className={tc.textMuted}>{performanceSourceLabel}</div>
+                          <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(currentPerformance.timeSeconds)}</div>
+                          {currentPerformance.source === 'records' && currentPerformance.date && (
+                            <div className={`${tc.textMuted} mt-0.5`}>{t.pbDate}: {currentPerformance.date.replace(/-/g, '/')}</div>
+                          )}
                         </div>
                         <div className="bg-white/70 rounded-lg p-2 min-w-0">
                           <div className={tc.textMuted}>{t.targetTimeSeconds}</div>
@@ -2658,39 +2672,50 @@ export default function App() {
               </div>
             ) : (
               <div className="space-y-2">
-                {targetGapRows.map(({ goal, currentBest, currentTimeSeconds, gap, progress, achieved }) => (
-                  <div key={goal.id} className={`${tc.badgeBg} rounded-xl p-3`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className={`text-sm font-black ${tc.textHeading} truncate`}>
-                          {goal.targetDistance || goal.eventName || goal.title}
+                {targetGapRows.map(({ goal, currentPerformance, currentTimeSeconds, gap, progress, achieved }) => {
+                  const sourceLabel = currentPerformance.source === 'records'
+                    ? t.recordSourcePB
+                    : currentPerformance.source === 'goal'
+                      ? t.recordSourceGoal
+                      : '--';
+
+                  return (
+                    <div key={goal.id} className={`${tc.badgeBg} rounded-xl p-3`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className={`text-sm font-black ${tc.textHeading} truncate`}>
+                            {goal.targetDistance || goal.eventName || goal.title}
+                          </div>
+                          <div className={`text-[10px] font-bold ${tc.textMuted}`}>
+                            {sourceLabel}
+                            {currentPerformance.source === 'records' && currentPerformance.date
+                              ? ` · ${t.pbDate}: ${currentPerformance.date.replace(/-/g, '/')}`
+                              : ''}
+                          </div>
                         </div>
-                        <div className={`text-[10px] font-bold ${tc.textMuted}`}>
-                          {currentBest?.source === 'records' ? t.recordSourcePB : t.recordSourceGoal}
+                        <span className={`text-[10px] font-black px-2 py-1 rounded-lg shrink-0 ${achieved ? 'bg-green-50 text-green-600' : 'bg-white/80 ' + tc.textPrimary}`}>
+                          {achieved ? t.achieved : `${progress ?? 0}%`}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 mt-3 text-[10px] font-bold">
+                        <div className="bg-white/70 rounded-lg p-2 min-w-0">
+                          <div className={tc.textMuted}>{t.currentBest}</div>
+                          <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(currentTimeSeconds)}</div>
+                        </div>
+                        <div className="bg-white/70 rounded-lg p-2 min-w-0">
+                          <div className={tc.textMuted}>{t.targetTimeSeconds}</div>
+                          <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(goal.targetTimeSeconds)}</div>
+                        </div>
+                        <div className="bg-white/70 rounded-lg p-2 min-w-0">
+                          <div className={tc.textMuted}>{t.gap}</div>
+                          <div className={`${achieved ? 'text-green-600' : tc.textHeading} mt-0.5`}>
+                            {gap === null ? '--' : formatGoalSeconds(gap)}
+                          </div>
                         </div>
                       </div>
-                      <span className={`text-[10px] font-black px-2 py-1 rounded-lg shrink-0 ${achieved ? 'bg-green-50 text-green-600' : 'bg-white/80 ' + tc.textPrimary}`}>
-                        {achieved ? t.achieved : `${progress ?? 0}%`}
-                      </span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 mt-3 text-[10px] font-bold">
-                      <div className="bg-white/70 rounded-lg p-2 min-w-0">
-                        <div className={tc.textMuted}>{t.currentBest}</div>
-                        <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(currentTimeSeconds)}</div>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-2 min-w-0">
-                        <div className={tc.textMuted}>{t.targetTimeSeconds}</div>
-                        <div className={`${tc.textHeading} mt-0.5`}>{formatGoalSeconds(goal.targetTimeSeconds)}</div>
-                      </div>
-                      <div className="bg-white/70 rounded-lg p-2 min-w-0">
-                        <div className={tc.textMuted}>{t.gap}</div>
-                        <div className={`${achieved ? 'text-green-600' : tc.textHeading} mt-0.5`}>
-                          {gap === null ? '--' : formatGoalSeconds(gap)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -3451,9 +3476,15 @@ export default function App() {
     const archivedGoals = sortGoalsByPriorityAndDate(goals.filter(goal => goal?.status === 'archived'));
 
     const GoalCard = ({ goal, isArchived = false }) => {
-      const progress = getGoalProgress(goal);
-      const gap = getGoalGap(goal);
+      const currentPerformance = getGoalCurrentPerformance(goal, data);
+      const progress = getGoalProgressWithPB(goal, data);
+      const gap = getGoalGapWithPB(goal, data);
       const achieved = progress === 100;
+      const performanceSourceLabel = currentPerformance.source === 'records'
+        ? t.recordSourcePB
+        : currentPerformance.source === 'goal'
+          ? t.manualCurrent
+          : '--';
 
       return (
         <div className={`${tc.cardBg} rounded-2xl shadow-sm border ${tc.borderLight} p-5 space-y-4 ${isArchived ? 'opacity-70' : ''}`}>
@@ -3502,8 +3533,13 @@ export default function App() {
               <div className={`text-sm font-black ${tc.textHeading} mt-1 truncate`}>{goal.targetDistance || '--'}</div>
             </div>
             <div className="bg-gray-50/70 rounded-xl p-3 border border-gray-100">
-              <div className="text-[10px] font-black uppercase text-gray-400">{t.currentTimeSeconds}</div>
-              <div className={`text-sm font-black ${tc.textHeading} mt-1`}>{formatGoalSeconds(goal.currentTimeSeconds)}</div>
+              <div className="text-[10px] font-black uppercase text-gray-400">{performanceSourceLabel}</div>
+              <div className={`text-sm font-black ${tc.textHeading} mt-1`}>{formatGoalSeconds(currentPerformance.timeSeconds)}</div>
+              {currentPerformance.source === 'records' && currentPerformance.date && (
+                <div className="text-[10px] font-black text-gray-400 mt-1">
+                  {t.pbDate}: {currentPerformance.date.replace(/-/g, '/')}
+                </div>
+              )}
             </div>
             <div className="bg-gray-50/70 rounded-xl p-3 border border-gray-100">
               <div className="text-[10px] font-black uppercase text-gray-400">{t.targetTimeSeconds}</div>
@@ -3682,6 +3718,9 @@ export default function App() {
                   placeholder={t.goalCurrentTimePlaceholder}
                   className={`w-full ${tc.inputBg} rounded-xl px-3 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing} transition-all`}
                 />
+                <span className={`block text-[10px] font-bold ${tc.textMuted} leading-relaxed px-1`}>
+                  {t.currentTimeFallbackHelp}
+                </span>
               </label>
               <label className="block space-y-2">
                 <span className={`text-xs font-black ${tc.textMuted} ml-1`}>{t.targetTimeSeconds}</span>

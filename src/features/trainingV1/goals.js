@@ -19,14 +19,112 @@ const normalizeNullableNumber = (value) => (
 
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 
-const getRecordsKey = (distance) => {
-  if (distance === '500m') return 'records';
-  if (distance === '777m') return 'records777';
-  if (distance === '1000m') return 'records1000';
-  if (distance === '1500m') return 'records1500';
-  if (distance === '起跑' || distance === 'Start') return 'recordsStart';
-  if (distance === '单圈' || distance === 'Lap') return 'recordsLap';
-  return `records_${distance}`;
+export const normalizeGoalDistance = (value) => {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+
+  const compactLower = raw.replace(/\s+/g, '').toLowerCase();
+  if (compactLower === 'start' || raw === '起跑') return 'Start';
+  if (compactLower === 'lap' || raw === '单圈') return 'Lap';
+
+  const knownDistanceMatch = raw.match(/(^|[^0-9])(500|777|1000|1500)\s*m?([^0-9]|$)/i);
+  if (knownDistanceMatch) return `${knownDistanceMatch[2]}m`;
+
+  return raw.replace(/\s+/g, ' ');
+};
+
+export const getRecordsKeyForDistance = (distance) => {
+  const normalizedDistance = normalizeGoalDistance(distance);
+  if (normalizedDistance === '500m') return 'records';
+  if (normalizedDistance === '777m') return 'records777';
+  if (normalizedDistance === '1000m') return 'records1000';
+  if (normalizedDistance === '1500m') return 'records1500';
+  if (normalizedDistance === 'Start') return 'recordsStart';
+  if (normalizedDistance === 'Lap') return 'recordsLap';
+  return normalizedDistance ? `records_${normalizedDistance}` : null;
+};
+
+const getRecordKeysForDistance = (distance) => {
+  const raw = String(distance ?? '').trim();
+  const normalizedKey = getRecordsKeyForDistance(raw);
+  const rawKey = raw ? `records_${raw}` : null;
+  return [...new Set([normalizedKey, rawKey].filter(Boolean))];
+};
+
+const getGoalDistanceCandidates = (goal) => (
+  [goal?.targetDistance, goal?.eventName]
+    .map(value => String(value ?? '').trim())
+    .filter(Boolean)
+);
+
+export const getBestRecordForDistance = (data = {}, distance) => {
+  const recordsWithKeys = getRecordKeysForDistance(distance)
+    .flatMap((recordsKey) => (
+      Array.isArray(data[recordsKey])
+        ? data[recordsKey].map(record => ({ record, recordsKey }))
+        : []
+    ));
+
+  const bestRecordWithKey = recordsWithKeys.reduce((best, current) => {
+    const time = normalizeNullableNumber(current.record?.time);
+    if (time === null) return best;
+    if (!best || time < best.timeSeconds) {
+      return {
+        source: 'records',
+        timeSeconds: time,
+        date: typeof current.record?.date === 'string' ? current.record.date : null,
+        record: current.record,
+        recordsKey: current.recordsKey,
+      };
+    }
+    return best;
+  }, null);
+
+  return bestRecordWithKey;
+};
+
+const getManualCurrentDate = (goal) => (
+  typeof goal?.currentTimeDate === 'string' ? goal.currentTimeDate
+    : typeof goal?.currentDate === 'string' ? goal.currentDate
+      : typeof goal?.currentPerformanceDate === 'string' ? goal.currentPerformanceDate
+        : null
+);
+
+export const getGoalCurrentPerformance = (goal, data = {}) => {
+  const bestRecord = getGoalDistanceCandidates(goal)
+    .map(distance => getBestRecordForDistance(data, distance))
+    .find(Boolean);
+
+  if (bestRecord) {
+    return {
+      source: 'records',
+      timeSeconds: bestRecord.timeSeconds,
+      date: bestRecord.date,
+    };
+  }
+
+  const manualCurrentTime = normalizeNullableNumber(goal?.currentTimeSeconds);
+  if (manualCurrentTime !== null) {
+    return {
+      source: 'goal',
+      timeSeconds: manualCurrentTime,
+      date: getManualCurrentDate(goal),
+    };
+  }
+
+  return {
+    source: 'none',
+    timeSeconds: null,
+    date: null,
+  };
+};
+
+const createGoalWithCurrentPerformance = (goal, data = {}) => {
+  const currentPerformance = getGoalCurrentPerformance(goal, data);
+  return {
+    ...goal,
+    currentTimeSeconds: currentPerformance.timeSeconds,
+  };
 };
 
 export const isValidGoalPriority = (priority) => GOAL_PRIORITIES.includes(priority);
@@ -96,18 +194,20 @@ export const getGoalGap = (goal) => {
 };
 
 export const getGoalCurrentBestFromRecords = (goal, data = {}) => {
-  const distance = goal?.targetDistance;
-  if (!distance) return null;
+  const bestRecord = getGoalDistanceCandidates(goal)
+    .map(distance => getBestRecordForDistance(data, distance))
+    .find(Boolean);
 
-  const records = data[getRecordsKey(distance)] || [];
-  if (records.length === 0) return null;
-
-  return records.reduce((best, record) => {
-    if (typeof record?.time !== 'number') return best;
-    if (!best || record.time < best.time) return record;
-    return best;
-  }, null);
+  return bestRecord?.record || null;
 };
+
+export const getGoalProgressWithPB = (goal, data = {}) => (
+  getGoalProgress(createGoalWithCurrentPerformance(goal, data))
+);
+
+export const getGoalGapWithPB = (goal, data = {}) => (
+  getGoalGap(createGoalWithCurrentPerformance(goal, data))
+);
 
 export const sortGoalsByPriorityAndDate = (goals = []) => (
   [...goals].sort((a, b) => {

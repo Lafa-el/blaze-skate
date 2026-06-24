@@ -1,6 +1,7 @@
 import {
+  getBestRecordForDistance,
   getActiveCompetitionGoals,
-  getGoalCurrentBestFromRecords,
+  getGoalCurrentPerformance,
   sortGoalsByPriorityAndDate,
 } from './goals.js';
 import {
@@ -9,16 +10,6 @@ import {
   getPlanTasksForWeek,
   normalizeTaskText,
 } from './plans.js';
-
-const getRecordsKey = (distance) => {
-  if (distance === '500m') return 'records';
-  if (distance === '777m') return 'records777';
-  if (distance === '1000m') return 'records1000';
-  if (distance === '1500m') return 'records1500';
-  if (distance === '起跑' || distance === 'Start') return 'recordsStart';
-  if (distance === '单圈' || distance === 'Lap') return 'recordsLap';
-  return `records_${distance}`;
-};
 
 const toDateString = (date) => (
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
@@ -148,20 +139,16 @@ export const getGoalsSummary = (data = {}) => {
 };
 
 export const getV1PBFromGoalOrRecords = (data = {}, distance) => {
-  const records = Array.isArray(data[getRecordsKey(distance)]) ? data[getRecordsKey(distance)] : [];
-  const record = records.reduce((best, current) => {
-    if (typeof current?.time !== 'number') return best;
-    if (!best || current.time < best.time) return current;
-    return best;
-  }, null);
+  const bestRecord = getBestRecordForDistance(data, distance);
 
-  if (record) {
+  if (bestRecord) {
     return {
       distance,
-      timeSeconds: record.time,
+      timeSeconds: bestRecord.timeSeconds,
       source: 'records',
       goal: null,
-      record,
+      record: bestRecord.record,
+      date: bestRecord.date,
     };
   }
 
@@ -176,9 +163,10 @@ export const getV1PBFromGoalOrRecords = (data = {}, distance) => {
     return {
       distance,
       timeSeconds: goal.currentTimeSeconds,
-      source: 'competitionGoalsV1',
+      source: 'goal',
       goal,
       record: null,
+      date: null,
     };
   }
 
@@ -233,4 +221,4 @@ export const getPlanConsistencySummary = (data = {}, weekStartDateString) => {
   });
 };
 
-export const getGoalCurrentBest = getGoalCurrentBestFromRecords;
+export const getGoalCurrentBest = (goal, data = {}) => getGoalCurrentPerformance(goal, data);
