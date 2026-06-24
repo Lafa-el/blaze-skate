@@ -558,6 +558,7 @@ const translations = {
     noGoals: '还没有比赛目标。先添加一个目标，把训练和比赛结果连接起来。',
     addGoal: '添加目标',
     editGoal: '编辑目标',
+    viewDetails: '查看详情',
     archiveGoal: '归档目标',
     archivedGoals: '已归档目标',
     showArchived: '查看归档',
@@ -670,12 +671,17 @@ const translations = {
     recordSourcePB: 'PB',
     recordSourceGoal: '手动当前成绩',
     manualCurrent: '手动当前成绩',
+    goalOverview: '目标概览',
+    currentPerformance: '当前成绩',
+    targetGap: '目标差距',
     pbDate: 'PB 日期',
     progressHistory: '进度趋势',
     latestGap: '最新差距',
     bestGap: '最佳差距',
     improvement: '进步幅度',
     latestRecord: '最新记录',
+    bestRecordDate: '最佳记录日期',
+    recentPbRecords: '最近 PB 记录',
     targetAchieved: '目标已达成',
     noPbHistoryForGoal: '这个目标还没有 PB 历史记录。',
     noPbHistoryYet: '还没有 PB 历史',
@@ -848,6 +854,7 @@ const translations = {
     noGoals: 'No competition goals yet. Add your first target to connect training with race outcomes.',
     addGoal: 'Add Goal',
     editGoal: 'Edit Goal',
+    viewDetails: 'View Details',
     archiveGoal: 'Archive Goal',
     archivedGoals: 'Archived Goals',
     showArchived: 'Show Archived',
@@ -960,12 +967,17 @@ const translations = {
     recordSourcePB: 'PB',
     recordSourceGoal: 'Manual Current',
     manualCurrent: 'Manual Current',
+    goalOverview: 'Goal Overview',
+    currentPerformance: 'Current Performance',
+    targetGap: 'Target Gap',
     pbDate: 'PB Date',
     progressHistory: 'Progress History',
     latestGap: 'Latest Gap',
     bestGap: 'Best Gap',
     improvement: 'Improvement',
     latestRecord: 'Latest Record',
+    bestRecordDate: 'Best Record Date',
+    recentPbRecords: 'Recent PB Records',
     targetAchieved: 'Target Achieved',
     noPbHistoryForGoal: 'No PB history for this goal yet.',
     noPbHistoryYet: 'No PB history yet',
@@ -1380,6 +1392,7 @@ export default function App() {
   const [newRaceDateInput, setNewRaceDateInput] = useState(''); // 🌟 新增：新比赛日期暂存
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState(null);
+  const [selectedGoalForDetails, setSelectedGoalForDetails] = useState(null);
   const [goalForm, setGoalForm] = useState(createEmptyGoalForm);
   const [goalFormError, setGoalFormError] = useState('');
   const [showArchivedGoals, setShowArchivedGoals] = useState(false);
@@ -1472,6 +1485,14 @@ export default function App() {
     setShowGoalModal(true);
   };
 
+  const openGoalDetailModal = (goal) => {
+    setSelectedGoalForDetails(goal?.id || null);
+  };
+
+  const closeGoalDetailModal = () => {
+    setSelectedGoalForDetails(null);
+  };
+
   const closeGoalModal = () => {
     setShowGoalModal(false);
     setEditingGoalId(null);
@@ -1540,6 +1561,9 @@ export default function App() {
     ));
 
     updateData({ competitionGoalsV1: updatedGoals });
+    if (selectedGoalForDetails === goal.id) {
+      closeGoalDetailModal();
+    }
   };
 
   const getSelectableTrainingPlans = () => (
@@ -3663,9 +3687,6 @@ export default function App() {
       const currentPerformance = getGoalCurrentPerformance(goal, data);
       const progress = getGoalProgressWithPB(goal, data);
       const gap = getGoalGapWithPB(goal, data);
-      const trendSummary = getGoalTrendSummary(goal, data);
-      const gapHistory = getGoalTargetGapHistory(goal, data);
-      const recentHistory = gapHistory.slice(-3).reverse();
       const achieved = progress === 100;
       const performanceSourceLabel = currentPerformance.source === 'records'
         ? t.recordSourcePB
@@ -3690,24 +3711,6 @@ export default function App() {
                 {goal.competitionName || '--'} · {(goal.competitionDate || '').replace(/-/g, '/') || '--'}
               </p>
             </div>
-            {!isArchived && (
-              <div className="flex gap-1 shrink-0">
-                <button
-                  onClick={() => openEditGoalModal(goal)}
-                  className={`p-2 ${tc.badgeBg} ${tc.textPrimary} rounded-xl active:scale-95 transition-all`}
-                  aria-label={t.editGoal}
-                >
-                  <Edit2 size={16} />
-                </button>
-                <button
-                  onClick={() => archiveGoal(goal)}
-                  className="p-2 bg-red-50 text-red-500 border border-red-100 rounded-xl active:scale-95 transition-all"
-                  aria-label={t.archiveGoal}
-                >
-                  <Archive size={16} />
-                </button>
-              </div>
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -3747,63 +3750,30 @@ export default function App() {
             </div>
           </div>
 
-          <div className={`${tc.badgeBg} rounded-xl p-3 space-y-3`}>
-            <div className="flex items-center justify-between gap-3">
-              <div className={`text-[10px] font-black uppercase ${tc.textMuted}`}>{t.progressHistory}</div>
-              {trendSummary.achieved && (
-                <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-green-50 text-green-600 border border-green-100">
-                  {t.targetAchieved}
-                </span>
-              )}
-            </div>
-
-            {!trendSummary.hasHistory ? (
-              <div className={`text-xs font-bold ${tc.textMuted}`}>{t.noPbHistoryForGoal}</div>
-            ) : (
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => openGoalDetailModal(goal)}
+              className={`${tc.btnCancel} px-3 py-2 rounded-xl text-xs font-black inline-flex items-center gap-2 active:scale-95 transition-all`}
+            >
+              <Info size={14} /> {t.viewDetails}
+            </button>
+            {!isArchived && (
               <>
-                <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
-                  <div className="bg-white/70 rounded-lg p-2">
-                    <div className={tc.textMuted}>{t.latestGap}</div>
-                    <div className={`${tc.textHeading} mt-0.5`}>{formatSignedGoalSeconds(trendSummary.latestGapSeconds)}</div>
-                  </div>
-                  <div className="bg-white/70 rounded-lg p-2">
-                    <div className={tc.textMuted}>{t.bestGap}</div>
-                    <div className={`${tc.textHeading} mt-0.5`}>{formatSignedGoalSeconds(trendSummary.bestGapSeconds)}</div>
-                  </div>
-                  <div className="bg-white/70 rounded-lg p-2">
-                    <div className={tc.textMuted}>{t.improvement}</div>
-                    <div className={`${trendSummary.improvementSeconds > 0 ? 'text-green-600' : tc.textHeading} mt-0.5`}>
-                      {formatGoalSeconds(trendSummary.improvementSeconds)}
-                    </div>
-                  </div>
-                  <div className="bg-white/70 rounded-lg p-2">
-                    <div className={tc.textMuted}>{t.latestRecord}</div>
-                    <div className={`${tc.textHeading} mt-0.5`}>
-                      {trendSummary.latestRecordDate ? trendSummary.latestRecordDate.replace(/-/g, '/') : '--'}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className={`text-[10px] font-black uppercase ${tc.textMuted}`}>{t.lastThreeRecords}</div>
-                  {recentHistory.map((record) => (
-                    <div key={`${goal.id}_${record.date}_${record.timeSeconds}`} className="grid grid-cols-3 gap-2 bg-white/70 rounded-lg p-2 text-[10px] font-bold">
-                      <div className={tc.textMuted}>{record.date.replace(/-/g, '/')}</div>
-                      <div className={tc.textHeading}>{formatGoalSeconds(record.timeSeconds)}</div>
-                      <div className={record.achieved ? 'text-green-600' : tc.textHeading}>{formatSignedGoalSeconds(record.gapSeconds)}</div>
-                    </div>
-                  ))}
-                </div>
+                <button
+                  onClick={() => openEditGoalModal(goal)}
+                  className={`${tc.badgeBg} ${tc.textPrimary} px-3 py-2 rounded-xl text-xs font-black inline-flex items-center gap-2 active:scale-95 transition-all`}
+                >
+                  <Edit2 size={14} /> {t.editGoal}
+                </button>
+                <button
+                  onClick={() => archiveGoal(goal)}
+                  className="bg-red-50 text-red-500 border border-red-100 px-3 py-2 rounded-xl text-xs font-black inline-flex items-center gap-2 active:scale-95 transition-all"
+                >
+                  <Archive size={14} /> {t.archiveGoal}
+                </button>
               </>
             )}
           </div>
-
-          {goal.notes && (
-            <div className="bg-white/60 border border-gray-100 rounded-xl p-3">
-              <div className={`text-[10px] font-black uppercase ${tc.textMuted} mb-1`}>{t.notes}</div>
-              <p className={`text-xs leading-relaxed ${tc.appText}`}>{goal.notes}</p>
-            </div>
-          )}
         </div>
       );
     };
@@ -4011,6 +3981,220 @@ export default function App() {
               className={`w-full ${tc.btnPrimary} py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all`}
             >
               {t.save}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const GoalDetailModal = () => {
+    if (!selectedGoalForDetails) return null;
+
+    const goal = (data.competitionGoalsV1 || []).find((item) => item?.id === selectedGoalForDetails);
+    if (!goal) return null;
+
+    const currentPerformance = getGoalCurrentPerformance(goal, data);
+    const progress = getGoalProgressWithPB(goal, data);
+    const gap = getGoalGapWithPB(goal, data);
+    const trendSummary = getGoalTrendSummary(goal, data);
+    const gapHistory = getGoalTargetGapHistory(goal, data);
+    const recentHistory = gapHistory.slice(-5).reverse();
+    const performanceSourceLabel = currentPerformance.source === 'records'
+      ? t.recordSourcePB
+      : currentPerformance.source === 'goal'
+        ? t.manualCurrent
+        : '--';
+    const achieved = progress === 100 || trendSummary.achieved;
+    const isArchived = goal.status === 'archived';
+
+    return (
+      <div className="fixed inset-0 z-[85] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={closeGoalDetailModal}>
+        <div className={`${tc.cardBg} w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]`} onClick={(e) => e.stopPropagation()}>
+          <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
+            <h3 className={`font-black ${tc.textHeading} flex items-center gap-2 min-w-0`}>
+              <Target size={18} className={tc.textPrimary} />
+              <span className="truncate">{t.viewDetails}</span>
+            </h3>
+            <button onClick={closeGoalDetailModal} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-5 overflow-y-auto space-y-4">
+            <section className={`${tc.badgeBg} rounded-2xl p-4 space-y-3`}>
+              <div className="flex items-center justify-between gap-3">
+                <div className={`text-xs font-black uppercase ${tc.textMuted}`}>{t.goalOverview}</div>
+                {achieved && (
+                  <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-green-50 text-green-600 border border-green-100">
+                    {t.targetAchieved}
+                  </span>
+                )}
+              </div>
+              <div className={`text-lg font-black ${tc.textHeading} break-words`}>{goal.title || '--'}</div>
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-bold">
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.competitionName}</div>
+                  <div className={`${tc.textHeading} mt-1 break-words`}>{goal.competitionName || '--'}</div>
+                </div>
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.competitionDate}</div>
+                  <div className={`${tc.textHeading} mt-1`}>{(goal.competitionDate || '').replace(/-/g, '/') || '--'}</div>
+                </div>
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.eventName}</div>
+                  <div className={`${tc.textHeading} mt-1 break-words`}>{goal.eventName || '--'}</div>
+                </div>
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.targetDistance}</div>
+                  <div className={`${tc.textHeading} mt-1 break-words`}>{goal.targetDistance || '--'}</div>
+                </div>
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.priority}</div>
+                  <div className={`${tc.textHeading} mt-1`}>{goal.priority || '--'}</div>
+                </div>
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.status}</div>
+                  <div className={`${tc.textHeading} mt-1`}>{goal.status || '--'}</div>
+                </div>
+              </div>
+              {goal.notes && (
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={`text-[10px] font-black uppercase ${tc.textMuted} mb-1`}>{t.notes}</div>
+                  <p className={`text-xs leading-relaxed ${tc.appText}`}>{goal.notes}</p>
+                </div>
+              )}
+            </section>
+
+            <section className={`${tc.badgeBg} rounded-2xl p-4 space-y-3`}>
+              <div className={`text-xs font-black uppercase ${tc.textMuted}`}>{t.currentPerformance}</div>
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-bold">
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{performanceSourceLabel}</div>
+                  <div className={`${tc.textHeading} mt-1`}>{formatGoalSeconds(currentPerformance.timeSeconds)}</div>
+                  {currentPerformance.source === 'records' && currentPerformance.date && (
+                    <div className={`${tc.textMuted} mt-1`}>{t.pbDate}: {currentPerformance.date.replace(/-/g, '/')}</div>
+                  )}
+                </div>
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.targetTimeSeconds}</div>
+                  <div className={`${tc.textHeading} mt-1`}>{formatGoalSeconds(goal.targetTimeSeconds)}</div>
+                </div>
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.progress}</div>
+                  <div className={`${tc.textHeading} mt-1`}>{progress === null ? '--' : `${progress}%`}</div>
+                </div>
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.status}</div>
+                  <div className={`${achieved ? 'text-green-600' : tc.textHeading} mt-1`}>
+                    {achieved ? t.targetAchieved : (goal.status || '--')}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className={`${tc.badgeBg} rounded-2xl p-4 space-y-3`}>
+              <div className={`text-xs font-black uppercase ${tc.textMuted}`}>{t.targetGap}</div>
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-bold">
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.latestGap}</div>
+                  <div className={`${tc.textHeading} mt-1`}>{formatSignedGoalSeconds(trendSummary.latestGapSeconds ?? gap)}</div>
+                </div>
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.bestGap}</div>
+                  <div className={`${tc.textHeading} mt-1`}>{formatSignedGoalSeconds(trendSummary.bestGapSeconds)}</div>
+                </div>
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.improvement}</div>
+                  <div className={`${typeof trendSummary.improvementSeconds === 'number' && trendSummary.improvementSeconds > 0 ? 'text-green-600' : tc.textHeading} mt-1`}>
+                    {formatGoalSeconds(trendSummary.improvementSeconds)}
+                  </div>
+                </div>
+                <div className="bg-white/70 rounded-xl p-3">
+                  <div className={tc.textMuted}>{t.targetAchieved}</div>
+                  <div className={`${achieved ? 'text-green-600' : tc.textHeading} mt-1`}>
+                    {achieved ? t.achieved : '--'}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className={`${tc.badgeBg} rounded-2xl p-4 space-y-3`}>
+              <div className={`text-xs font-black uppercase ${tc.textMuted}`}>{t.progressHistory}</div>
+              {!trendSummary.hasHistory ? (
+                <div className={`text-xs font-bold ${tc.textMuted}`}>{t.noPbHistoryYet}</div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 text-[11px] font-bold">
+                  <div className="bg-white/70 rounded-xl p-3">
+                    <div className={tc.textMuted}>{t.latestGap}</div>
+                    <div className={`${tc.textHeading} mt-1`}>{formatSignedGoalSeconds(trendSummary.latestGapSeconds)}</div>
+                  </div>
+                  <div className="bg-white/70 rounded-xl p-3">
+                    <div className={tc.textMuted}>{t.bestGap}</div>
+                    <div className={`${tc.textHeading} mt-1`}>{formatSignedGoalSeconds(trendSummary.bestGapSeconds)}</div>
+                  </div>
+                  <div className="bg-white/70 rounded-xl p-3">
+                    <div className={tc.textMuted}>{t.latestRecord}</div>
+                    <div className={`${tc.textHeading} mt-1`}>{trendSummary.latestRecordDate ? trendSummary.latestRecordDate.replace(/-/g, '/') : '--'}</div>
+                  </div>
+                  <div className="bg-white/70 rounded-xl p-3">
+                    <div className={tc.textMuted}>{t.bestRecordDate}</div>
+                    <div className={`${tc.textHeading} mt-1`}>{trendSummary.bestRecordDate ? trendSummary.bestRecordDate.replace(/-/g, '/') : '--'}</div>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className={`${tc.badgeBg} rounded-2xl p-4 space-y-3`}>
+              <div className={`text-xs font-black uppercase ${tc.textMuted}`}>{t.recentPbRecords}</div>
+              {recentHistory.length === 0 ? (
+                <div className={`text-xs font-bold ${tc.textMuted}`}>{t.noPbHistoryYet}</div>
+              ) : (
+                <div className="space-y-2">
+                  {recentHistory.map((record) => (
+                    <div key={`${goal.id}_${record.date}_${record.timeSeconds}`} className="grid grid-cols-[1.2fr_1fr_1fr] gap-2 bg-white/70 rounded-xl p-3 text-[11px] font-bold items-center">
+                      <div className={tc.textMuted}>{record.date.replace(/-/g, '/')}</div>
+                      <div className={tc.textHeading}>{formatGoalSeconds(record.timeSeconds)}</div>
+                      <div className="flex items-center justify-end gap-2">
+                        <span className={record.achieved ? 'text-green-600' : tc.textHeading}>{formatSignedGoalSeconds(record.gapSeconds)}</span>
+                        {record.achieved && (
+                          <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-green-50 text-green-600 border border-green-100">
+                            {t.achieved}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+
+          <div className={`p-4 border-t ${tc.borderLight} ${tc.appBg} flex flex-wrap gap-2`}>
+            {!isArchived && (
+              <>
+                <button
+                  onClick={() => {
+                    closeGoalDetailModal();
+                    openEditGoalModal(goal);
+                  }}
+                  className={`${tc.btnPrimary} flex-1 min-w-[120px] py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all inline-flex items-center justify-center gap-2`}
+                >
+                  <Edit2 size={16} /> {t.editGoal}
+                </button>
+                <button
+                  onClick={() => archiveGoal(goal)}
+                  className="flex-1 min-w-[120px] py-3 rounded-xl font-bold bg-red-50 text-red-500 border border-red-100 active:scale-95 transition-all inline-flex items-center justify-center gap-2"
+                >
+                  <Archive size={16} /> {t.archiveGoal}
+                </button>
+              </>
+            )}
+            <button
+              onClick={closeGoalDetailModal}
+              className={`${tc.btnCancel} flex-1 min-w-[120px] py-3 rounded-xl font-bold active:scale-95 transition-all inline-flex items-center justify-center gap-2`}
+            >
+              <X size={16} /> {t.close}
             </button>
           </div>
         </div>
@@ -6085,6 +6269,7 @@ export default function App() {
       {RecordManagementModal()} {/* ✨ 新增：挂载成绩管理弹窗 */}
       {RaceManagementModal()} {/* 🌟 新增：挂载比赛目标管理弹窗 */}
       {GoalManagementModal()} {/* V1 Step 2：挂载比赛目标表单 */}
+      {GoalDetailModal()} {/* V1.3 Step 1：挂载目标详情弹窗 */}
       {PlanManagementModal()} {/* V1 Step 3：挂载训练计划表单 */}
       {TemplatePlanManagementModal()} {/* V1.1 Step 4：挂载训练计划模板表单 */}
       {PlanTaskManagementModal()} {/* V1 Step 3：挂载训练计划任务表单 */}
