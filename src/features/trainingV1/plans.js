@@ -179,6 +179,17 @@ export const getPlanTaskTodayStatus = (planTask, dailyTasks = []) => (
   isPlanTaskAddedToToday(planTask, dailyTasks) ? 'added_to_today' : 'not_added'
 );
 
+export const getPlanTaskDailyStatus = (planTask, dayDateString, dailyTasks = [], todayString) => {
+  const isAddedToToday = isPlanTaskAddedToToday(planTask, dailyTasks);
+  const isScheduledToday = Boolean(dayDateString && todayString && dayDateString === todayString);
+
+  return {
+    isAddedToToday,
+    isScheduledToday,
+    isAddedFromOtherDate: isAddedToToday && !isScheduledToday,
+  };
+};
+
 export const convertPlanTaskToDailyTask = (planTask) => ({
   id: Date.now() + Math.random(),
   text: planTask?.text || '',

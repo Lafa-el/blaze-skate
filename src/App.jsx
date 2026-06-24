@@ -69,7 +69,7 @@ import {
   createTrainingPlan,
   getActiveTrainingPlan,
   getActiveTrainingPlans,
-  getPlanTaskTodayStatus,
+  getPlanTaskDailyStatus,
   getWeeklyPlanCompletion,
   isPlanTaskAddedToToday,
   updatePlanTask,
@@ -620,7 +620,10 @@ const translations = {
     completedAt: '完成于',
     addToToday: '加入今日任务',
     added: '已加入',
-    alreadyInToday: '今日任务里已有相同项目',
+    scheduledToday: '今日原定',
+    addedFromOtherDate: '从其他日期加入',
+    notAdded: '未加入',
+    alreadyInToday: '这个任务已经在今日任务中。',
     taskImportedToToday: '已加入今日任务',
     v1DashboardTitle: 'V1 训练进度',
     viewGoals: '查看目标',
@@ -883,7 +886,10 @@ const translations = {
     completedAt: 'Completed at',
     addToToday: 'Add to Today',
     added: 'Added',
-    alreadyInToday: 'A matching task already exists today',
+    scheduledToday: 'Scheduled Today',
+    addedFromOtherDate: 'Added from Other Date',
+    notAdded: 'Not Added',
+    alreadyInToday: 'This task is already in today\'s task list.',
     taskImportedToToday: 'Added to today',
     v1DashboardTitle: 'V1 Training Progress',
     viewGoals: 'View Goals',
@@ -3749,8 +3755,14 @@ export default function App() {
     const sortedDays = [...(selectedPlan?.days || [])].sort((a, b) => (a?.date || '').localeCompare(b?.date || ''));
 
     const PlanTaskCard = ({ plan, day, task }) => {
-      const todayStatus = getPlanTaskTodayStatus(task, data.tasks || []);
-      const isAddedToToday = todayStatus === 'added_to_today';
+      const taskDailyStatus = getPlanTaskDailyStatus(task, day.date, data.tasks || [], currentDateStr);
+      const { isAddedToToday, isScheduledToday, isAddedFromOtherDate } = taskDailyStatus;
+      const dailyStatusLabel = isAddedFromOtherDate ? t.addedFromOtherDate : (isAddedToToday ? t.added : t.notAdded);
+      const dailyStatusClass = isAddedFromOtherDate
+        ? 'bg-amber-50 text-amber-700 border border-amber-100'
+        : isAddedToToday
+          ? 'bg-green-50 text-green-600 border border-green-100'
+          : `${tc.badgeBg} ${tc.textMuted}`;
 
       return (
         <div className={`${task.completed ? tc.badgeBg + ' opacity-75' : 'bg-white/80'} border ${tc.borderLight} rounded-xl p-3 space-y-3`}>
@@ -3794,9 +3806,10 @@ export default function App() {
             <span className={`${tc.badgeBg} ${tc.textPrimary} px-2 py-1 rounded-lg`}>{task.category || 'other'}</span>
             {task.durationMinutes && <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg">{task.durationMinutes} min</span>}
             {task.intensity && <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-lg">{task.intensity}</span>}
-            {!task.completed && isAddedToToday && (
-              <span className="bg-green-50 text-green-600 px-2 py-1 rounded-lg">{t.added}</span>
+            {isScheduledToday && (
+              <span className="bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded-lg">{t.scheduledToday}</span>
             )}
+            <span className={`${dailyStatusClass} px-2 py-1 rounded-lg`}>{dailyStatusLabel}</span>
             {task.completed && !task.completedAt && (
               <span className="bg-green-50 text-green-600 px-2 py-1 rounded-lg">{t.achieved}</span>
             )}
