@@ -72,9 +72,12 @@ import {
   createTrainingPlan,
   getActiveTrainingPlan,
   getActiveTrainingPlans,
+  getArchivedTrainingPlans,
+  getNonArchivedTrainingPlans,
   getPlanTaskDailyStatus,
   getWeeklyPlanCompletion,
   isPlanTaskAddedToToday,
+  restoreTrainingPlan,
   updatePlanTask,
   updateTrainingPlan,
 } from './features/trainingV1/plans.js';
@@ -589,6 +592,9 @@ const translations = {
     plansTitle: '训练计划',
     plansSubtitle: '把目标拆成清晰的周训练计划',
     noPlans: '还没有训练计划。创建一个周计划来安排每天的训练。',
+    currentPlans: '当前计划',
+    archivedPlans: '已归档计划',
+    noArchivedPlans: '没有已归档计划。',
     createPlan: '创建计划',
     createPlanFromTemplate: '使用模板创建',
     planTemplate: '训练计划模板',
@@ -597,6 +603,9 @@ const translations = {
     planTemplateDuplicate: '同一标题和开始日期的计划已存在。',
     editPlan: '编辑计划',
     archivePlan: '归档计划',
+    restorePlan: '恢复',
+    restored: '已恢复',
+    archivePlanConfirm: '要归档这个训练计划吗？之后可以恢复。',
     selectPlan: '选择当前计划',
     activePlan: '当前计划',
     planTitleRequired: '请输入计划标题',
@@ -885,6 +894,9 @@ const translations = {
     plansTitle: 'Training Plan',
     plansSubtitle: 'Turn goals into a clear weekly training plan',
     noPlans: 'No training plan yet. Create a weekly plan to organize daily work.',
+    currentPlans: 'Current Plans',
+    archivedPlans: 'Archived Plans',
+    noArchivedPlans: 'No archived plans.',
     createPlan: 'Create Plan',
     createPlanFromTemplate: 'Create from Template',
     planTemplate: 'Training Plan Template',
@@ -893,6 +905,9 @@ const translations = {
     planTemplateDuplicate: 'A plan with the same title and start date already exists.',
     editPlan: 'Edit Plan',
     archivePlan: 'Archive Plan',
+    restorePlan: 'Restore',
+    restored: 'Restored',
+    archivePlanConfirm: 'Archive this training plan? You can restore it later.',
     selectPlan: 'Select Current Plan',
     activePlan: 'Current Plan',
     planTitleRequired: 'Plan title is required',
@@ -1396,6 +1411,8 @@ export default function App() {
   const [goalForm, setGoalForm] = useState(createEmptyGoalForm);
   const [goalFormError, setGoalFormError] = useState('');
   const [showArchivedGoals, setShowArchivedGoals] = useState(false);
+  const [showArchivedPlans, setShowArchivedPlans] = useState(false);
+  const [recentlyRestoredPlanId, setRecentlyRestoredPlanId] = useState(null);
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [editingPlanId, setEditingPlanId] = useState(null);
   const [planForm, setPlanForm] = useState(createEmptyPlanForm);
@@ -1567,18 +1584,21 @@ export default function App() {
   };
 
   const getSelectableTrainingPlans = () => (
-    (data.trainingPlansV1 || []).filter(plan => plan?.status !== 'archived')
+    getNonArchivedTrainingPlans(data.trainingPlansV1 || [])
   );
 
   const getDisplayTrainingPlan = () => {
     const plans = data.trainingPlansV1 || [];
-    const activePlan = getActiveTrainingPlan(plans, data.activeTrainingPlanId);
+    const nonArchivedPlans = getNonArchivedTrainingPlans(plans);
+    const activePlan = getActiveTrainingPlan(nonArchivedPlans, data.activeTrainingPlanId);
     if (activePlan) return activePlan;
 
-    const selectedPlan = plans.find(plan => plan?.id === data.activeTrainingPlanId && plan?.status !== 'archived');
+    const selectedPlan = nonArchivedPlans.find(plan => plan?.id === data.activeTrainingPlanId);
     if (selectedPlan) return selectedPlan;
 
-    return plans.find(plan => plan?.status === 'active' || plan?.status === 'draft') || null;
+    return nonArchivedPlans.find(plan => (
+      plan?.status === 'active' || plan?.status === 'draft' || plan?.status === 'completed'
+    )) || null;
   };
 
   const openCreatePlanModal = () => {
@@ -1732,19 +1752,43 @@ export default function App() {
   };
 
   const selectTrainingPlan = (planId) => {
+    setRecentlyRestoredPlanId(null);
     updateData({ activeTrainingPlanId: planId || null });
   };
 
   const archivePlan = (plan) => {
+    if (!window.confirm(t.archivePlanConfirm)) return;
+
     const updatedPlans = (data.trainingPlansV1 || []).map(existingPlan => (
       existingPlan.id === plan.id ? archiveTrainingPlan(existingPlan) : existingPlan
     ));
 
-    let nextActivePlanId = data.activeTrainingPlanId;
-    if (data.activeTrainingPlanId === plan.id) {
-      nextActivePlanId = updatedPlans.find(nextPlan => nextPlan?.status !== 'archived')?.id || null;
-    }
+    const nextAvailablePlans = getNonArchivedTrainingPlans(updatedPlans);
+    const currentActivePlan = nextAvailablePlans.find((nextPlan) => nextPlan?.id === data.activeTrainingPlanId);
+    const nextActivePlanId = data.activeTrainingPlanId === plan.id || !currentActivePlan
+      ? nextAvailablePlans[0]?.id || null
+      : data.activeTrainingPlanId;
 
+    setRecentlyRestoredPlanId(null);
+    updateData({
+      trainingPlansV1: updatedPlans,
+      activeTrainingPlanId: nextActivePlanId,
+    });
+  };
+
+  const restoreArchivedPlan = (plan) => {
+    const updatedPlans = (data.trainingPlansV1 || []).map((existingPlan) => (
+      existingPlan.id === plan.id ? restoreTrainingPlan(existingPlan) : existingPlan
+    ));
+
+    const restoredPlan = updatedPlans.find((existingPlan) => existingPlan?.id === plan.id) || null;
+    const nextAvailablePlans = getNonArchivedTrainingPlans(updatedPlans);
+    const currentActivePlan = nextAvailablePlans.find((nextPlan) => nextPlan?.id === data.activeTrainingPlanId);
+    const nextActivePlanId = currentActivePlan
+      ? data.activeTrainingPlanId
+      : restoredPlan?.id || null;
+
+    setRecentlyRestoredPlanId(restoredPlan?.id || null);
     updateData({
       trainingPlansV1: updatedPlans,
       activeTrainingPlanId: nextActivePlanId,
@@ -4204,8 +4248,9 @@ export default function App() {
 
   const TrainingPlanView = () => {
     const plans = data.trainingPlansV1 || [];
-    const selectablePlans = getSelectableTrainingPlans();
-    const activePlans = getActiveTrainingPlans(plans);
+    const currentPlans = getSelectableTrainingPlans();
+    const archivedPlans = getArchivedTrainingPlans(plans);
+    const activePlans = getActiveTrainingPlans(currentPlans);
     const selectedPlan = getDisplayTrainingPlan();
     const linkedGoal = selectedPlan?.goalId
       ? (data.competitionGoalsV1 || []).find(goal => goal.id === selectedPlan.goalId)
@@ -4331,44 +4376,172 @@ export default function App() {
           </div>
         </div>
 
-        {selectablePlans.length === 0 ? (
-          <div className={`${tc.cardBg} p-8 rounded-2xl shadow-sm border ${tc.borderLight} text-center space-y-4`}>
-            <div className={`w-16 h-16 mx-auto rounded-2xl ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary}`}>
-              <CalendarDays size={30} />
+        {currentPlans.length === 0 ? (
+          <div className="space-y-5">
+            <div className={`${tc.cardBg} p-8 rounded-2xl shadow-sm border ${tc.borderLight} text-center space-y-4`}>
+              <div className={`w-16 h-16 mx-auto rounded-2xl ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary}`}>
+                <CalendarDays size={30} />
+              </div>
+              <div>
+                <h3 className={`font-black ${tc.textHeading}`}>{t.plansTitle}</h3>
+                <p className={`text-sm ${tc.textMuted} mt-1 leading-relaxed`}>{t.noPlans}</p>
+              </div>
+              <button
+                onClick={openCreatePlanModal}
+                className={`${tc.btnPrimary} px-5 py-3 rounded-xl shadow-md font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
+              >
+                <Plus size={18} /> {t.createPlan}
+              </button>
+              <button
+                onClick={openTemplatePlanModal}
+                className={`${tc.btnCancel} px-5 py-3 rounded-xl font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
+              >
+                <CalendarDays size={18} /> {t.createPlanFromTemplate}
+              </button>
             </div>
-            <div>
-              <h3 className={`font-black ${tc.textHeading}`}>{t.plansTitle}</h3>
-              <p className={`text-sm ${tc.textMuted} mt-1 leading-relaxed`}>{t.noPlans}</p>
+
+            <div className={`${tc.cardBg} border ${tc.borderLight} rounded-2xl p-4 shadow-sm space-y-3`}>
+              <button
+                onClick={() => setShowArchivedPlans(prev => !prev)}
+                className="w-full flex items-center justify-between gap-3"
+              >
+                <span className={`text-xs font-black ${tc.textMuted} uppercase`}>{t.archivedPlans}</span>
+                <span className={`text-[11px] font-black ${tc.textPrimary}`}>
+                  {archivedPlans.length}
+                </span>
+              </button>
+
+              {archivedPlans.length === 0 ? (
+                <div className={`${tc.badgeBg} rounded-xl p-3 text-xs font-bold ${tc.textMuted}`}>
+                  {t.noArchivedPlans}
+                </div>
+              ) : showArchivedPlans ? (
+                <div className="space-y-2">
+                  {archivedPlans.map((plan) => (
+                    <div key={plan.id} className="bg-gray-50/80 border border-gray-200 rounded-xl p-3 flex items-center justify-between gap-3 opacity-75">
+                      <div className="min-w-0">
+                        <div className="text-sm font-black text-gray-700 truncate">{plan.title}</div>
+                        <div className="text-[10px] font-bold text-gray-500 mt-1 flex flex-wrap gap-2">
+                          <span>{plan.status}</span>
+                          <span>{(plan.startDate || '').replace(/-/g, '/')}</span>
+                          {plan.focus && <span className="truncate">{plan.focus}</span>}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => restoreArchivedPlan(plan)}
+                        className={`${tc.btnCancel} px-3 py-2 rounded-lg text-[11px] font-black active:scale-95 transition-all shrink-0`}
+                      >
+                        {t.restorePlan}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
-            <button
-              onClick={openCreatePlanModal}
-              className={`${tc.btnPrimary} px-5 py-3 rounded-xl shadow-md font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
-            >
-              <Plus size={18} /> {t.createPlan}
-            </button>
-            <button
-              onClick={openTemplatePlanModal}
-              className={`${tc.btnCancel} px-5 py-3 rounded-xl font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
-            >
-              <CalendarDays size={18} /> {t.createPlanFromTemplate}
-            </button>
           </div>
         ) : (
           <div className="space-y-5">
-            {selectablePlans.length > 1 && (
-              <div className={`${tc.cardBg} border ${tc.borderLight} rounded-2xl p-4 shadow-sm space-y-2`}>
-                <label className={`text-xs font-black ${tc.textMuted} uppercase`}>{t.selectPlan}</label>
+            <div className={`${tc.cardBg} border ${tc.borderLight} rounded-2xl p-4 shadow-sm space-y-3`}>
+              <div className={`text-xs font-black ${tc.textMuted} uppercase`}>{t.currentPlans}</div>
+              {currentPlans.length > 1 ? (
                 <select
                   value={selectedPlan?.id || ''}
                   onChange={(e) => selectTrainingPlan(e.target.value)}
                   className={`w-full ${tc.inputBg} rounded-xl px-4 py-3 text-sm font-bold ${tc.appText} focus:outline-none focus:ring-2 ${tc.focusRing}`}
                 >
-                  {selectablePlans.map(plan => (
+                  {currentPlans.map(plan => (
                     <option key={plan.id} value={plan.id}>{plan.title}</option>
                   ))}
                 </select>
+              ) : (
+                <div className={`${tc.badgeBg} rounded-xl p-3`}>
+                  <div className={`font-black text-sm ${tc.textHeading}`}>{currentPlans[0]?.title || '--'}</div>
+                  <div className={`text-[11px] font-bold ${tc.textMuted} mt-1`}>
+                    {(currentPlans[0]?.startDate || '').replace(/-/g, '/')} - {(currentPlans[0]?.endDate || '').replace(/-/g, '/')}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                {currentPlans.map((plan) => {
+                  const isSelected = selectedPlan?.id === plan.id;
+                  const isActivePlan = data.activeTrainingPlanId === plan.id;
+                  const isRecentlyRestored = recentlyRestoredPlanId === plan.id;
+
+                  return (
+                    <div key={plan.id} className={`${tc.badgeBg} rounded-xl p-3 flex items-center justify-between gap-3`}>
+                      <div className="min-w-0">
+                        <div className={`text-sm font-black ${tc.textHeading} truncate`}>{plan.title}</div>
+                        <div className={`text-[10px] font-bold ${tc.textMuted} mt-1 flex flex-wrap gap-2`}>
+                          <span>{plan.status}</span>
+                          <span>{(plan.startDate || '').replace(/-/g, '/')}</span>
+                          {plan.focus && <span className="truncate">{plan.focus}</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {isRecentlyRestored && (
+                          <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-green-50 text-green-600 border border-green-100">
+                            {t.restored}
+                          </span>
+                        )}
+                        {isActivePlan && !isRecentlyRestored && (
+                          <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${tc.badgeBg} ${tc.textPrimary}`}>
+                            {t.activePlan}
+                          </span>
+                        )}
+                        {!isSelected && (
+                          <button
+                            onClick={() => selectTrainingPlan(plan.id)}
+                            className={`${tc.btnCancel} px-3 py-2 rounded-lg text-[11px] font-black active:scale-95 transition-all`}
+                          >
+                            {t.viewPlan}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
+
+            <div className={`${tc.cardBg} border ${tc.borderLight} rounded-2xl p-4 shadow-sm space-y-3`}>
+              <button
+                onClick={() => setShowArchivedPlans(prev => !prev)}
+                className="w-full flex items-center justify-between gap-3"
+              >
+                <span className={`text-xs font-black ${tc.textMuted} uppercase`}>{t.archivedPlans}</span>
+                <span className={`text-[11px] font-black ${tc.textPrimary}`}>
+                  {archivedPlans.length}
+                </span>
+              </button>
+
+              {archivedPlans.length === 0 ? (
+                <div className={`${tc.badgeBg} rounded-xl p-3 text-xs font-bold ${tc.textMuted}`}>
+                  {t.noArchivedPlans}
+                </div>
+              ) : showArchivedPlans ? (
+                <div className="space-y-2">
+                  {archivedPlans.map((plan) => (
+                    <div key={plan.id} className="bg-gray-50/80 border border-gray-200 rounded-xl p-3 flex items-center justify-between gap-3 opacity-75">
+                      <div className="min-w-0">
+                        <div className="text-sm font-black text-gray-700 truncate">{plan.title}</div>
+                        <div className="text-[10px] font-bold text-gray-500 mt-1 flex flex-wrap gap-2">
+                          <span>{plan.status}</span>
+                          <span>{(plan.startDate || '').replace(/-/g, '/')}</span>
+                          {plan.focus && <span className="truncate">{plan.focus}</span>}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => restoreArchivedPlan(plan)}
+                        className={`${tc.btnCancel} px-3 py-2 rounded-lg text-[11px] font-black active:scale-95 transition-all shrink-0`}
+                      >
+                        {t.restorePlan}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
 
             {selectedPlan && (
               <>

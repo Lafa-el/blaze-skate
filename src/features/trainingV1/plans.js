@@ -122,6 +122,20 @@ export const archiveTrainingPlan = (plan) => updateTrainingPlan(plan, {
   status: 'archived',
 });
 
+export const isPlanArchived = (plan) => plan?.status === 'archived';
+
+export const getArchivedTrainingPlans = (plans = []) => (
+  plans.filter((plan) => isPlanArchived(plan))
+);
+
+export const getNonArchivedTrainingPlans = (plans = []) => (
+  plans.filter((plan) => !isPlanArchived(plan))
+);
+
+export const restoreTrainingPlan = (plan) => updateTrainingPlan(plan, {
+  status: 'draft',
+});
+
 export const getActiveTrainingPlans = (plans = []) => (
   plans.filter((plan) => plan?.status === 'active')
 );
