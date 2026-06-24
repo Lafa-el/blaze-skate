@@ -159,6 +159,26 @@ export const getWeeklyPlanCompletion = (plan) => {
   };
 };
 
+export const normalizeTaskText = (value) => (
+  String(value ?? '').trim().toLowerCase()
+);
+
+export const isPlanTaskAddedToToday = (planTask, dailyTasks = []) => {
+  const planTaskText = normalizeTaskText(planTask?.text);
+  const planTaskTarget = normalizeTaskText(planTask?.target);
+
+  if (!planTaskText) return false;
+
+  return dailyTasks.some((dailyTask) => (
+    normalizeTaskText(dailyTask?.text) === planTaskText
+      && normalizeTaskText(dailyTask?.target) === planTaskTarget
+  ));
+};
+
+export const getPlanTaskTodayStatus = (planTask, dailyTasks = []) => (
+  isPlanTaskAddedToToday(planTask, dailyTasks) ? 'added_to_today' : 'not_added'
+);
+
 export const convertPlanTaskToDailyTask = (planTask) => ({
   id: Date.now() + Math.random(),
   text: planTask?.text || '',

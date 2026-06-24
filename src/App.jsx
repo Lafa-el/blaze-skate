@@ -69,7 +69,9 @@ import {
   createTrainingPlan,
   getActiveTrainingPlan,
   getActiveTrainingPlans,
+  getPlanTaskTodayStatus,
   getWeeklyPlanCompletion,
+  isPlanTaskAddedToToday,
   updatePlanTask,
   updateTrainingPlan,
 } from './features/trainingV1/plans.js';
@@ -616,6 +618,7 @@ const translations = {
     intensity: '强度',
     completedAt: '完成于',
     addToToday: '加入今日任务',
+    added: '已加入',
     alreadyInToday: '今日任务里已有相同项目',
     taskImportedToToday: '已加入今日任务',
     v1DashboardTitle: 'V1 训练进度',
@@ -624,6 +627,11 @@ const translations = {
     topGoals: '重点比赛目标',
     todayPlanTasks: '今日计划任务',
     noPlanTasksToday: '今天没有计划任务。',
+    todayWorkflow: '今日执行流程',
+    addedToToday: '已加入今日任务',
+    dailyTasksCompleted: '已完成今日任务',
+    noPlanTasksScheduledToday: '今天没有安排计划任务。',
+    addPlanTasksToTodayHint: '把计划任务加入今日任务后，就可以在今日任务列表中执行。',
     targetGapTitle: '目标差距',
     currentBest: '当前最好',
     planConsistency: '计划执行稳定性',
@@ -867,6 +875,7 @@ const translations = {
     intensity: 'Intensity',
     completedAt: 'Completed at',
     addToToday: 'Add to Today',
+    added: 'Added',
     alreadyInToday: 'A matching task already exists today',
     taskImportedToToday: 'Added to today',
     v1DashboardTitle: 'V1 Training Progress',
@@ -875,6 +884,11 @@ const translations = {
     topGoals: 'Top Competition Goals',
     todayPlanTasks: 'Today Plan Tasks',
     noPlanTasksToday: 'No plan tasks for today.',
+    todayWorkflow: 'Today Workflow',
+    addedToToday: 'Added to Today',
+    dailyTasksCompleted: 'Daily Tasks Completed',
+    noPlanTasksScheduledToday: 'No plan tasks scheduled for today.',
+    addPlanTasksToTodayHint: 'Add plan tasks to Today to execute them in the Daily Tasks list.',
     targetGapTitle: 'Target Gap',
     currentBest: 'Current Best',
     planConsistency: 'Plan Consistency',
@@ -1691,9 +1705,7 @@ export default function App() {
   const addPlanTaskToToday = (planTask) => {
     const convertedTask = convertPlanTaskToDailyTask(planTask);
     const existingTasks = data.tasks || [];
-    const hasDuplicate = existingTasks.some(task => (
-      task?.text === convertedTask.text && (task?.target || null) === (convertedTask.target || null)
-    ));
+    const hasDuplicate = isPlanTaskAddedToToday(planTask, existingTasks);
 
     if (hasDuplicate) {
       alert(t.alreadyInToday);
@@ -2249,6 +2261,9 @@ export default function App() {
     const selectedDashboardPlan = weeklyPlanSummary.plan;
     const todayPlanSummary = getTodayPlanSummary(data, currentDateStr);
     const todayPlanTasks = todayPlanSummary.tasks || [];
+    const addedTodayPlanTasksCount = todayPlanTasks.filter(task => (
+      isPlanTaskAddedToToday(task, data.tasks || [])
+    )).length;
     const planConsistency = getPlanConsistencySummary(data, weekStartDateStr);
     const canSeedLindsayGoals = shouldSeedTrainingV1Goals(data);
     const canSeedLindsayPlan = shouldSeedTrainingV1Plan(data, weekStartDateStr);
@@ -2588,6 +2603,37 @@ export default function App() {
                 ))}
               </div>
             )}
+          </div>
+
+          <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} space-y-3`}>
+            <div className={`text-sm font-black ${tc.textHeading} flex items-center gap-2`}>
+              <CheckCircle2 size={17} className={tc.textPrimary} /> {t.todayWorkflow}
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                <div className={`text-lg font-black ${tc.textHeading}`}>{todayPlanTasks.length}</div>
+                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.todayPlanTasks}</div>
+              </div>
+              <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                <div className={`text-lg font-black ${tc.textHeading}`}>{addedTodayPlanTasksCount}</div>
+                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.addedToToday}</div>
+              </div>
+              <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                <div className={`text-lg font-black ${tc.textHeading}`}>{completedTasks}</div>
+                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.dailyTasksCompleted}</div>
+              </div>
+            </div>
+
+            {todayPlanTasks.length === 0 ? (
+              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center leading-relaxed`}>
+                {t.noPlanTasksScheduledToday}
+              </div>
+            ) : addedTodayPlanTasksCount === 0 ? (
+              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center leading-relaxed`}>
+                {t.addPlanTasksToTodayHint}
+              </div>
+            ) : null}
           </div>
 
           <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} space-y-3`}>
@@ -3697,70 +3743,88 @@ export default function App() {
       : { completedTasks: 0, totalTasks: 0, completionPercent: 0 };
     const sortedDays = [...(selectedPlan?.days || [])].sort((a, b) => (a?.date || '').localeCompare(b?.date || ''));
 
-    const PlanTaskCard = ({ plan, day, task }) => (
-      <div className={`${task.completed ? tc.badgeBg + ' opacity-75' : 'bg-white/80'} border ${tc.borderLight} rounded-xl p-3 space-y-3`}>
-        <div className="flex items-start justify-between gap-3">
-          <button
-            onClick={() => togglePlanTaskCompletion(plan, task, !task.completed)}
-            className="pt-0.5 shrink-0"
-            aria-label={task.completed ? 'Uncomplete plan task' : 'Complete plan task'}
-          >
-            {task.completed ? (
-              <CheckCircle2 size={22} className={tc.checkActive} />
-            ) : (
-              <Circle size={22} className={`${tc.textMuted} opacity-60`} />
-            )}
-          </button>
+    const PlanTaskCard = ({ plan, day, task }) => {
+      const todayStatus = getPlanTaskTodayStatus(task, data.tasks || []);
+      const isAddedToToday = todayStatus === 'added_to_today';
 
-          <div className="min-w-0 flex-1">
-            <div className={`font-black text-sm leading-tight ${task.completed ? tc.textMuted + ' line-through' : tc.textHeading}`}>
-              {task.text}
-            </div>
-            {task.target && (
-              <div className={`text-[11px] font-bold mt-1 ${tc.textPrimary}`}>
-                {t.targetLabel}: {task.target}
-              </div>
-            )}
-            {task.desc && (
-              <p className={`text-[11px] leading-relaxed mt-1 ${tc.textMuted}`}>{task.desc}</p>
-            )}
-          </div>
-
-          <button
-            onClick={() => openEditPlanTaskModal(task, day.date)}
-            className={`p-1.5 ${tc.badgeBg} ${tc.textPrimary} rounded-lg shrink-0 active:scale-95 transition-all`}
-            aria-label={t.editPlanTask}
-          >
-            <Edit2 size={15} />
-          </button>
-        </div>
-
-        <div className="flex flex-wrap gap-2 text-[10px] font-black">
-          <span className={`${tc.badgeBg} ${tc.textPrimary} px-2 py-1 rounded-lg`}>{task.category || 'other'}</span>
-          {task.durationMinutes && <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg">{task.durationMinutes} min</span>}
-          {task.intensity && <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-lg">{task.intensity}</span>}
-          {task.completed && !task.completedAt && (
-            <span className="bg-green-50 text-green-600 px-2 py-1 rounded-lg">{t.achieved}</span>
-          )}
-          {task.completedAt && (
-            <span className="bg-green-50 text-green-600 px-2 py-1 rounded-lg">
-              {t.completedAt}: {new Date(task.completedAt).toLocaleDateString(data.language === 'en' ? 'en-US' : 'zh-CN')}
-            </span>
-          )}
-        </div>
-
-        {!task.completed && (
-          <div className="flex justify-end">
+      return (
+        <div className={`${task.completed ? tc.badgeBg + ' opacity-75' : 'bg-white/80'} border ${tc.borderLight} rounded-xl p-3 space-y-3`}>
+          <div className="flex items-start justify-between gap-3">
             <button
-              onClick={() => addPlanTaskToToday(task)}
-              className={`${tc.btnCancel} px-3 py-2 rounded-lg text-[11px] font-black inline-flex items-center justify-center gap-2 active:scale-95 transition-all`}
+              onClick={() => togglePlanTaskCompletion(plan, task, !task.completed)}
+              className="pt-0.5 shrink-0"
+              aria-label={task.completed ? 'Uncomplete plan task' : 'Complete plan task'}
             >
-              <Plus size={14} /> {t.addToToday}
+              {task.completed ? (
+                <CheckCircle2 size={22} className={tc.checkActive} />
+              ) : (
+                <Circle size={22} className={`${tc.textMuted} opacity-60`} />
+              )}
+            </button>
+
+            <div className="min-w-0 flex-1">
+              <div className={`font-black text-sm leading-tight ${task.completed ? tc.textMuted + ' line-through' : tc.textHeading}`}>
+                {task.text}
+              </div>
+              {task.target && (
+                <div className={`text-[11px] font-bold mt-1 ${tc.textPrimary}`}>
+                  {t.targetLabel}: {task.target}
+                </div>
+              )}
+              {task.desc && (
+                <p className={`text-[11px] leading-relaxed mt-1 ${tc.textMuted}`}>{task.desc}</p>
+              )}
+            </div>
+
+            <button
+              onClick={() => openEditPlanTaskModal(task, day.date)}
+              className={`p-1.5 ${tc.badgeBg} ${tc.textPrimary} rounded-lg shrink-0 active:scale-95 transition-all`}
+              aria-label={t.editPlanTask}
+            >
+              <Edit2 size={15} />
             </button>
           </div>
-        )}
-      </div>
-    );
+
+          <div className="flex flex-wrap gap-2 text-[10px] font-black">
+            <span className={`${tc.badgeBg} ${tc.textPrimary} px-2 py-1 rounded-lg`}>{task.category || 'other'}</span>
+            {task.durationMinutes && <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg">{task.durationMinutes} min</span>}
+            {task.intensity && <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-lg">{task.intensity}</span>}
+            {!task.completed && isAddedToToday && (
+              <span className="bg-green-50 text-green-600 px-2 py-1 rounded-lg">{t.added}</span>
+            )}
+            {task.completed && !task.completedAt && (
+              <span className="bg-green-50 text-green-600 px-2 py-1 rounded-lg">{t.achieved}</span>
+            )}
+            {task.completedAt && (
+              <span className="bg-green-50 text-green-600 px-2 py-1 rounded-lg">
+                {t.completedAt}: {new Date(task.completedAt).toLocaleDateString(data.language === 'en' ? 'en-US' : 'zh-CN')}
+              </span>
+            )}
+          </div>
+
+          {!task.completed && (
+            <div className="flex justify-end">
+              {isAddedToToday ? (
+                <button
+                  type="button"
+                  disabled
+                  className={`${tc.badgeBg} ${tc.textMuted} px-3 py-2 rounded-lg text-[11px] font-black inline-flex items-center justify-center gap-2 cursor-not-allowed`}
+                >
+                  <Check size={14} /> {t.added}
+                </button>
+              ) : (
+                <button
+                  onClick={() => addPlanTaskToToday(task)}
+                  className={`${tc.btnCancel} px-3 py-2 rounded-lg text-[11px] font-black inline-flex items-center justify-center gap-2 active:scale-95 transition-all`}
+                >
+                  <Plus size={14} /> {t.addToToday}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    };
 
     return (
       <div className="space-y-6 pb-4">
