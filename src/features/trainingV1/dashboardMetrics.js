@@ -21,6 +21,11 @@ const addDays = (dateString, daysToAdd) => {
   return toDateString(date);
 };
 
+export const getWeekDateRange = (startDateString) => ({
+  startDate: startDateString,
+  endDate: addDays(startDateString, 6),
+});
+
 const summarizeTasks = (tasks = []) => {
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((task) => task?.completed).length;
@@ -68,6 +73,15 @@ export const getAllPlanTasksWithDates = (plan) => (
       task,
       date: day?.date || '',
     }))
+  ))
+);
+
+export const getPlanTasksForDateRange = (plan, startDateString, endDateString) => (
+  getAllPlanTasksWithDates(plan).filter(({ date, task }) => (
+    typeof date === 'string'
+      && date >= startDateString
+      && date <= endDateString
+      && task
   ))
 );
 
@@ -121,6 +135,41 @@ export const getWeeklyPlanSummary = (data = {}, weekStartDateString) => {
     weekEndDate: addDays(weekStartDateString, 6),
     tasks,
     ...summarizeTasks(tasks),
+  };
+};
+
+export const getWeeklyPlanAdherenceSummary = (data = {}, weekStartDateString, planOverride = null) => {
+  const plan = planOverride || getDashboardTrainingPlan(data);
+  const { startDate, endDate } = getWeekDateRange(weekStartDateString);
+  const planTasksWithDates = plan ? getPlanTasksForDateRange(plan, startDate, endDate) : [];
+  const totalPlanTasks = planTasksWithDates.length;
+  const completedPlanTasks = planTasksWithDates.filter(({ task }) => task?.completed).length;
+  const dailyTasks = Array.isArray(data.tasks) ? data.tasks : [];
+  const dailyTasksTotal = dailyTasks.length;
+  const dailyTasksCompleted = dailyTasks.filter((task) => task?.completed).length;
+
+  const uniqueAddedPlanTaskKeys = new Set(
+    getDailyTasksMatchedToPlanTasks(dailyTasks, plan)
+      .flatMap(({ matches }) => matches)
+      .filter(({ date }) => date >= startDate && date <= endDate)
+      .map(({ task, date }) => `${date}::${getTaskMatchKey(task)}`)
+  );
+
+  const planCompletionPercent = totalPlanTasks === 0 ? 0 : Math.round((completedPlanTasks / totalPlanTasks) * 100);
+  const dailyCompletionPercent = dailyTasksTotal === 0 ? 0 : Math.round((dailyTasksCompleted / dailyTasksTotal) * 100);
+
+  return {
+    plan,
+    weekStartDate: startDate,
+    weekEndDate: endDate,
+    totalPlanTasks,
+    completedPlanTasks,
+    addedToTodayTasks: uniqueAddedPlanTaskKeys.size,
+    dailyTasksTotal,
+    dailyTasksCompleted,
+    planCompletionPercent,
+    dailyCompletionPercent,
+    adherencePercent: planCompletionPercent,
   };
 };
 

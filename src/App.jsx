@@ -87,6 +87,7 @@ import {
   getPlanConsistencySummary,
   getTodayExecutionSummary,
   getTodayPlanSummary,
+  getWeeklyPlanAdherenceSummary,
   getWeeklyPlanSummary,
 } from './features/trainingV1/dashboardMetrics.js';
 import {
@@ -655,6 +656,12 @@ const translations = {
     addPlanTasksToTodayHint: '把计划任务加入今日任务后，就可以在今日任务列表中执行。',
     targetGapTitle: '目标差距',
     currentBest: '当前最好',
+    weeklyPlanAdherence: '本周计划执行',
+    planTasksLabel: '计划任务',
+    completedPlanTasksLabel: '已完成计划任务',
+    adherence: '执行率',
+    noWeeklyPlan: '本周没有可用的训练计划。',
+    noPlanTasksThisWeek: '本周没有安排计划任务。',
     planConsistency: '计划执行稳定性',
     completedPlanTasksThisWeek: '本周已完成计划任务',
     daysThisWeek: '本周天数',
@@ -939,6 +946,12 @@ const translations = {
     addPlanTasksToTodayHint: 'Add plan tasks to Today to execute them in the Daily Tasks list.',
     targetGapTitle: 'Target Gap',
     currentBest: 'Current Best',
+    weeklyPlanAdherence: 'Weekly Plan Adherence',
+    planTasksLabel: 'Plan Tasks',
+    completedPlanTasksLabel: 'Completed Plan Tasks',
+    adherence: 'Adherence',
+    noWeeklyPlan: 'No active training plan for this week.',
+    noPlanTasksThisWeek: 'No plan tasks scheduled this week.',
     planConsistency: 'Plan Consistency',
     completedPlanTasksThisWeek: 'Completed plan tasks this week',
     daysThisWeek: 'Days this week',
@@ -2413,6 +2426,7 @@ export default function App() {
     const todayPlanSummary = getTodayPlanSummary(data, currentDateStr);
     const todayPlanTasks = todayPlanSummary.tasks || [];
     const todayExecutionSummary = getTodayExecutionSummary(data, currentDateStr);
+    const weeklyAdherenceSummary = getWeeklyPlanAdherenceSummary(data, weekStartDateStr);
     const planConsistency = getPlanConsistencySummary(data, weekStartDateStr);
     const canSeedLindsayGoals = shouldSeedTrainingV1Goals(data);
     const canSeedLindsayPlan = shouldSeedTrainingV1Plan(data, weekStartDateStr);
@@ -2787,6 +2801,45 @@ export default function App() {
                 <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.addedFromOtherDates}</div>
               </div>
             </div>
+          </div>
+
+          <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} space-y-3`}>
+            <div className={`text-sm font-black ${tc.textHeading} flex items-center gap-2`}>
+              <CalendarDays size={17} className={tc.textPrimary} /> {t.weeklyPlanAdherence}
+            </div>
+
+            {!weeklyAdherenceSummary.plan ? (
+              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center`}>
+                {t.noWeeklyPlan}
+              </div>
+            ) : weeklyAdherenceSummary.totalPlanTasks === 0 ? (
+              <div className={`${tc.badgeBg} ${tc.textMuted} rounded-xl p-3 text-xs font-bold text-center`}>
+                {t.noPlanTasksThisWeek}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 text-center">
+                <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                  <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.totalPlanTasks}</div>
+                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.planTasksLabel}</div>
+                </div>
+                <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                  <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.completedPlanTasks}</div>
+                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.completedPlanTasksLabel}</div>
+                </div>
+                <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                  <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.addedToTodayTasks}</div>
+                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.addedToToday}</div>
+                </div>
+                <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                  <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.dailyTasksCompleted}</div>
+                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.dailyTasksCompleted}</div>
+                </div>
+                <div className="col-span-2 bg-white/70 rounded-xl p-3 text-center">
+                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.adherence}</div>
+                  <div className={`text-2xl font-black ${tc.textHeading} mt-1`}>{weeklyAdherenceSummary.adherencePercent}%</div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className={`${tc.cardBg} p-4 rounded-2xl shadow-sm border ${tc.borderLight} space-y-3`}>
@@ -3976,6 +4029,9 @@ export default function App() {
     const completion = selectedPlan
       ? getWeeklyPlanCompletion(selectedPlan)
       : { completedTasks: 0, totalTasks: 0, completionPercent: 0 };
+    const weeklyAdherenceSummary = selectedPlan
+      ? getWeeklyPlanAdherenceSummary(data, getWeekStartDateString(currentTime), selectedPlan)
+      : null;
     const sortedDays = [...(selectedPlan?.days || [])].sort((a, b) => (a?.date || '').localeCompare(b?.date || ''));
 
     const PlanTaskCard = ({ plan, day, task }) => {
@@ -4184,6 +4240,30 @@ export default function App() {
                   {activePlans.length > 0 && (
                     <div className="relative z-10 text-[10px] font-bold opacity-75">
                       {activePlans.length} {data.language === 'en' ? 'active plan(s)' : '个进行中计划'}
+                    </div>
+                  )}
+                </div>
+
+                <div className={`${tc.cardBg} border ${tc.borderLight} rounded-2xl p-4 shadow-sm space-y-3`}>
+                  <div className={`text-xs font-black ${tc.textMuted} uppercase`}>{t.weeklyPlanAdherence}</div>
+                  {!weeklyAdherenceSummary ? (
+                    <div className={`text-xs font-bold ${tc.textMuted}`}>{t.noWeeklyPlan}</div>
+                  ) : weeklyAdherenceSummary.totalPlanTasks === 0 ? (
+                    <div className={`text-xs font-bold ${tc.textMuted}`}>{t.noPlanTasksThisWeek}</div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                        <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.totalPlanTasks}</div>
+                        <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.planTasksLabel}</div>
+                      </div>
+                      <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                        <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.completedPlanTasks}</div>
+                        <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.completedPlanTasksLabel}</div>
+                      </div>
+                      <div className={`${tc.badgeBg} rounded-xl p-2`}>
+                        <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.planCompletionPercent}%</div>
+                        <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.adherence}</div>
+                      </div>
                     </div>
                   )}
                 </div>
