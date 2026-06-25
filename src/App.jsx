@@ -52,6 +52,13 @@ import { auth, db } from './firebase/firebaseApp';
 import { initializeFirestorePersistence } from './firebase/firestore';
 import { saveProfilePatch, subscribeToProfile } from './services/profileRepository';
 import {
+  buildAvatarPatch,
+  buildLanguagePreferencePatch,
+  buildParentPinPatch,
+  buildThemePreferencePatch,
+  buildUsernamePatch,
+} from './services/trainingProfileWrites.js';
+import {
   EmptyState,
   SectionHeader,
   StatCard,
@@ -2418,7 +2425,7 @@ export default function App() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        updateData({ avatar: dataUrl });
+        updateData(buildAvatarPatch(dataUrl));
       };
       img.src = event.target.result;
     };
@@ -4651,7 +4658,7 @@ export default function App() {
 
     const handleSetPin = () => {
       if (/^\d{4}$/.test(pinInput)) {
-        updateData({ parentPin: pinInput });
+        updateData(buildParentPinPatch(pinInput));
         setIsUnlocked(true);
         setPinInput('');
         setPinError('');
@@ -4671,14 +4678,14 @@ export default function App() {
     };
 
     const handleRemovePin = () => {
-      updateData({ parentPin: '' });
+      updateData(buildParentPinPatch(''));
       setIsUnlocked(true);
     };
 
     const toggleLanguage = async () => {
       const targetLang = data.language === 'en' ? 'zh' : 'en';
       localStorage.setItem('blaze_lang', targetLang); // ✨ 切换时立写本地
-      await updateData({ language: targetLang });
+      await updateData(buildLanguagePreferencePatch(targetLang));
     };
 
     const toggleSection = (section, isLocked) => {
@@ -4720,7 +4727,7 @@ export default function App() {
               key={key}
               onClick={() => {
                 if (isLocked) setShowProModal(true);
-                else updateData({ theme: key });
+                else updateData(buildThemePreferencePatch(key));
               }}
               className={`flex flex-col items-center gap-2 py-3 rounded-xl transition-all relative ${
                 isActive ? tc.badgeBg + ' ring-2 ' + tc.focusRing : 'hover:opacity-70 ' + tc.calEmpty.split(' ')[0]
@@ -5691,7 +5698,7 @@ export default function App() {
                 onChange={(e) => setAccountUsername(e.target.value)}
                 onBlur={() => {
                   if ((data.username || '') !== accountUsername) {
-                    updateData({ username: accountUsername });
+                    updateData(buildUsernamePatch(accountUsername));
                   }
                 }}
                 placeholder={data.language === 'en' ? "Your skater codename" : "给宝宝起个炫酷的滑冰代号"}

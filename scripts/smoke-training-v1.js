@@ -44,6 +44,15 @@ import {
   shouldSeedTrainingV1Plan,
 } from '../src/features/trainingV1/trainingV1Defaults.js';
 import { getWeeklyTrainingReportData } from '../src/features/trainingV1/weeklyReport.js';
+import {
+  buildAvatarPatch,
+  buildLanguagePreferencePatch,
+  buildParentPinPatch,
+  buildProfileSettingsPatch,
+  buildThemePreferencePatch,
+  buildUsernamePatch,
+  buildUserPreferencesPatch,
+} from '../src/services/trainingProfileWrites.js';
 
 const results = [];
 
@@ -360,6 +369,59 @@ assertEqual(mixedV1Data.competitionGoalsV1[0].title, 'Custom User Goal', 'existi
 assertEqual(mixedV1Data.trainingPlansV1[0].title, 'Custom Athlete Plan', 'existing user-created plans are preserved');
 assertEqual(shouldSeedTrainingV1Plan(mixedV1Data, '2026-08-03'), true, 'weekly default plan is still considered missing when only custom plans exist');
 assertEqual(mixedV1Data.activeTrainingPlanId, 'user_plan_1', 'activeTrainingPlanId semantics remain untouched by default helpers');
+
+section('training profile write patches');
+assertDeepEqual(
+  buildLanguagePreferencePatch('en'),
+  { language: 'en' },
+  'buildLanguagePreferencePatch returns expected patch shape',
+);
+assertDeepEqual(
+  buildThemePreferencePatch('black'),
+  { theme: 'black' },
+  'buildThemePreferencePatch returns expected patch shape',
+);
+assertDeepEqual(
+  buildParentPinPatch('1234'),
+  { parentPin: '1234' },
+  'buildParentPinPatch returns expected patch shape',
+);
+assertDeepEqual(
+  buildUsernamePatch('Lindsay'),
+  { username: 'Lindsay' },
+  'buildUsernamePatch returns expected patch shape',
+);
+assertDeepEqual(
+  buildAvatarPatch('data:image/jpeg;base64,abc'),
+  { avatar: 'data:image/jpeg;base64,abc' },
+  'buildAvatarPatch returns expected patch shape',
+);
+
+const preferencesInput = { language: 'zh', theme: undefined, ignored: 'x' };
+const preferencesSnapshot = JSON.stringify(preferencesInput);
+assertDeepEqual(
+  buildUserPreferencesPatch(preferencesInput),
+  { language: 'zh' },
+  'buildUserPreferencesPatch omits undefined values and preserves field names',
+);
+assertEqual(
+  JSON.stringify(preferencesInput),
+  preferencesSnapshot,
+  'buildUserPreferencesPatch does not mutate input',
+);
+
+const profileSettingsInput = { username: 'Skater', parentPin: '', avatar: undefined, extra: 'ignored' };
+const profileSettingsSnapshot = JSON.stringify(profileSettingsInput);
+assertDeepEqual(
+  buildProfileSettingsPatch(profileSettingsInput),
+  { parentPin: '', username: 'Skater' },
+  'buildProfileSettingsPatch omits undefined values and preserves allowed field names',
+);
+assertEqual(
+  JSON.stringify(profileSettingsInput),
+  profileSettingsSnapshot,
+  'buildProfileSettingsPatch does not mutate input',
+);
 
 const failed = results.filter((result) => !result.ok);
 console.log(`\nSummary: ${results.length - failed.length}/${results.length} checks passed`);
