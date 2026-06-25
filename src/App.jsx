@@ -53,6 +53,12 @@ import { auth, db } from './firebase/firebaseApp';
 import { initializeFirestorePersistence } from './firebase/firestore';
 import { saveProfilePatch, subscribeToProfile } from './services/profileRepository';
 import {
+  EmptyState,
+  ModalShell,
+  SectionHeader,
+  StatCard,
+} from './components/shared';
+import {
   archiveCompetitionGoal,
   createCompetitionGoal,
   getActiveCompetitionGoals,
@@ -2889,22 +2895,10 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-center">
-              <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                <div className={`text-lg font-black ${tc.textHeading}`}>{todayExecutionSummary.totalDailyTasks}</div>
-                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.dailyTasksLabel}</div>
-              </div>
-              <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                <div className={`text-lg font-black ${tc.textHeading}`}>{todayExecutionSummary.completedDailyTasks}</div>
-                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.completedLabel}</div>
-              </div>
-              <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                <div className={`text-lg font-black ${tc.textHeading}`}>{todayExecutionSummary.planTasksAddedToToday}</div>
-                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.addedFromPlan}</div>
-              </div>
-              <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                <div className={`text-lg font-black ${tc.textHeading}`}>{todayExecutionSummary.planTasksAddedFromOtherDates}</div>
-                <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.addedFromOtherDates}</div>
-              </div>
+              <StatCard label={t.dailyTasksLabel} value={todayExecutionSummary.totalDailyTasks} className={`${tc.badgeBg} text-center`} labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+              <StatCard label={t.completedLabel} value={todayExecutionSummary.completedDailyTasks} className={`${tc.badgeBg} text-center`} labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+              <StatCard label={t.addedFromPlan} value={todayExecutionSummary.planTasksAddedToToday} className={`${tc.badgeBg} text-center`} labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+              <StatCard label={t.addedFromOtherDates} value={todayExecutionSummary.planTasksAddedFromOtherDates} className={`${tc.badgeBg} text-center`} labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
             </div>
           </div>
 
@@ -2923,26 +2917,11 @@ export default function App() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2 text-center">
-                <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                  <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.totalPlanTasks}</div>
-                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.planTasksLabel}</div>
-                </div>
-                <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                  <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.completedPlanTasks}</div>
-                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.completedPlanTasksLabel}</div>
-                </div>
-                <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                  <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.addedToTodayTasks}</div>
-                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.addedToToday}</div>
-                </div>
-                <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                  <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.dailyTasksCompleted}</div>
-                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.dailyTasksCompleted}</div>
-                </div>
-                <div className="col-span-2 bg-white/70 rounded-xl p-3 text-center">
-                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.adherence}</div>
-                  <div className={`text-2xl font-black ${tc.textHeading} mt-1`}>{weeklyAdherenceSummary.adherencePercent}%</div>
-                </div>
+                <StatCard label={t.planTasksLabel} value={weeklyAdherenceSummary.totalPlanTasks} className={`${tc.badgeBg} text-center`} labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+                <StatCard label={t.completedPlanTasksLabel} value={weeklyAdherenceSummary.completedPlanTasks} className={`${tc.badgeBg} text-center`} labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+                <StatCard label={t.addedToToday} value={weeklyAdherenceSummary.addedToTodayTasks} className={`${tc.badgeBg} text-center`} labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+                <StatCard label={t.dailyTasksCompleted} value={weeklyAdherenceSummary.dailyTasksCompleted} className={`${tc.badgeBg} text-center`} labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+                <StatCard label={t.adherence} value={`${weeklyAdherenceSummary.adherencePercent}%`} className="col-span-2 text-center" labelClassName={tc.textMuted} valueClassName={`text-2xl ${tc.textHeading}`} />
               </div>
             )}
           </div>
@@ -3861,35 +3840,39 @@ export default function App() {
 
     return (
       <div className="space-y-6 pb-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className={`text-2xl font-black ${tc.textHeading}`}>{t.goalsTitle}</h2>
-            <p className={`text-sm ${tc.textMuted} mt-1`}>{t.goalsSubtitle}</p>
-          </div>
-          <button
-            onClick={openAddGoalModal}
-            className={`${tc.btnPrimary} px-4 py-3 rounded-xl shadow-md font-bold text-sm flex items-center justify-center gap-2 shrink-0 active:scale-95 transition-all`}
-          >
-            <Plus size={18} /> {t.addGoal}
-          </button>
-        </div>
-
-        {activeGoals.length === 0 ? (
-          <div className={`${tc.cardBg} p-8 rounded-2xl shadow-sm border ${tc.borderLight} text-center space-y-4`}>
-            <div className={`w-16 h-16 mx-auto rounded-2xl ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary}`}>
-              <Target size={30} />
-            </div>
-            <div>
-              <h3 className={`font-black ${tc.textHeading}`}>{t.goalsTitle}</h3>
-              <p className={`text-sm ${tc.textMuted} mt-1 leading-relaxed`}>{t.noGoals}</p>
-            </div>
+        <SectionHeader
+          title={t.goalsTitle}
+          description={t.goalsSubtitle}
+          titleClassName={tc.textHeading}
+          descriptionClassName={tc.textMuted}
+          action={(
             <button
               onClick={openAddGoalModal}
-              className={`${tc.btnPrimary} px-5 py-3 rounded-xl shadow-md font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
+              className={`${tc.btnPrimary} px-4 py-3 rounded-xl shadow-md font-bold text-sm flex items-center justify-center gap-2 shrink-0 active:scale-95 transition-all`}
             >
               <Plus size={18} /> {t.addGoal}
             </button>
-          </div>
+          )}
+        />
+
+        {activeGoals.length === 0 ? (
+          <EmptyState
+            icon={<Target size={30} />}
+            title={t.goalsTitle}
+            description={t.noGoals}
+            className={`${tc.cardBg} p-8 rounded-2xl shadow-sm border ${tc.borderLight}`}
+            iconClassName={`${tc.badgeBg} ${tc.textPrimary}`}
+            titleClassName={tc.textHeading}
+            descriptionClassName={tc.textMuted}
+            action={(
+              <button
+                onClick={openAddGoalModal}
+                className={`${tc.btnPrimary} px-5 py-3 rounded-xl shadow-md font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
+              >
+                <Plus size={18} /> {t.addGoal}
+              </button>
+            )}
+          />
         ) : (
           <div className="space-y-4">
             {activeGoals.map(goal => <GoalCard key={goal.id} goal={goal} />)}
@@ -4070,10 +4053,8 @@ export default function App() {
   };
 
   const GoalDetailModal = () => {
-    if (!selectedGoalForDetails) return null;
-
     const goal = (data.competitionGoalsV1 || []).find((item) => item?.id === selectedGoalForDetails);
-    if (!goal) return null;
+    if (!selectedGoalForDetails || !goal) return null;
 
     const currentPerformance = getGoalCurrentPerformance(goal, data);
     const progress = getGoalProgressWithPB(goal, data);
@@ -4090,19 +4071,49 @@ export default function App() {
     const isArchived = goal.status === 'archived';
 
     return (
-      <div className="fixed inset-0 z-[85] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={closeGoalDetailModal}>
-        <div className={`${tc.cardBg} w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]`} onClick={(e) => e.stopPropagation()}>
-          <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg}`}>
-            <h3 className={`font-black ${tc.textHeading} flex items-center gap-2 min-w-0`}>
-              <Target size={18} className={tc.textPrimary} />
-              <span className="truncate">{t.viewDetails}</span>
-            </h3>
-            <button onClick={closeGoalDetailModal} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
-              <X size={20} />
+      <ModalShell
+        isOpen={Boolean(selectedGoalForDetails)}
+        onClose={closeGoalDetailModal}
+        title={t.viewDetails}
+        icon={<Target size={18} className={tc.textPrimary} />}
+        closeLabel={t.close}
+        overlayClassName="z-[85]"
+        className={tc.cardBg}
+        size="max-w-md"
+        headerClassName={`border-b ${tc.borderLight} ${tc.badgeBg} ${tc.textHeading}`}
+        closeButtonClassName={`${tc.textMuted} hover:text-red-500`}
+        bodyClassName="p-5 space-y-4"
+        footerClassName={`border-t ${tc.borderLight} ${tc.appBg}`}
+        footer={(
+          <div className="flex flex-wrap gap-2">
+            {!isArchived && (
+              <>
+                <button
+                  onClick={() => {
+                    closeGoalDetailModal();
+                    openEditGoalModal(goal);
+                  }}
+                  className={`${tc.btnPrimary} flex-1 min-w-[120px] py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all inline-flex items-center justify-center gap-2`}
+                >
+                  <Edit2 size={16} /> {t.editGoal}
+                </button>
+                <button
+                  onClick={() => archiveGoal(goal)}
+                  className="flex-1 min-w-[120px] py-3 rounded-xl font-bold bg-red-50 text-red-500 border border-red-100 active:scale-95 transition-all inline-flex items-center justify-center gap-2"
+                >
+                  <Archive size={16} /> {t.archiveGoal}
+                </button>
+              </>
+            )}
+            <button
+              onClick={closeGoalDetailModal}
+              className={`${tc.btnCancel} flex-1 min-w-[120px] py-3 rounded-xl font-bold active:scale-95 transition-all inline-flex items-center justify-center gap-2`}
+            >
+              <X size={16} /> {t.close}
             </button>
           </div>
-
-          <div className="p-5 overflow-y-auto space-y-4">
+        )}
+      >
             <section className={`${tc.badgeBg} rounded-2xl p-4 space-y-3`}>
               <div className="flex items-center justify-between gap-3">
                 <div className={`text-xs font-black uppercase ${tc.textMuted}`}>{t.goalOverview}</div>
@@ -4249,43 +4260,11 @@ export default function App() {
                 </div>
               )}
             </section>
-          </div>
-
-          <div className={`p-4 border-t ${tc.borderLight} ${tc.appBg} flex flex-wrap gap-2`}>
-            {!isArchived && (
-              <>
-                <button
-                  onClick={() => {
-                    closeGoalDetailModal();
-                    openEditGoalModal(goal);
-                  }}
-                  className={`${tc.btnPrimary} flex-1 min-w-[120px] py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all inline-flex items-center justify-center gap-2`}
-                >
-                  <Edit2 size={16} /> {t.editGoal}
-                </button>
-                <button
-                  onClick={() => archiveGoal(goal)}
-                  className="flex-1 min-w-[120px] py-3 rounded-xl font-bold bg-red-50 text-red-500 border border-red-100 active:scale-95 transition-all inline-flex items-center justify-center gap-2"
-                >
-                  <Archive size={16} /> {t.archiveGoal}
-                </button>
-              </>
-            )}
-            <button
-              onClick={closeGoalDetailModal}
-              className={`${tc.btnCancel} flex-1 min-w-[120px] py-3 rounded-xl font-bold active:scale-95 transition-all inline-flex items-center justify-center gap-2`}
-            >
-              <X size={16} /> {t.close}
-            </button>
-          </div>
-        </div>
-      </div>
+      </ModalShell>
     );
   };
 
   const WeeklyReportModal = () => {
-    if (!showWeeklyReportModal) return null;
-
     const weekStartDateStr = getWeekStartDateString(currentTime);
     const reportData = getWeeklyTrainingReportData(data, weekStartDateStr);
     const planSummary = reportData.planSummary;
@@ -4294,7 +4273,36 @@ export default function App() {
     const goalSummaries = reportData.goalSummaries || [];
 
     return (
-      <div className="fixed inset-0 z-[86] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in" onClick={closeWeeklyReportModal}>
+      <ModalShell
+        isOpen={showWeeklyReportModal}
+        onClose={closeWeeklyReportModal}
+        title={t.weeklyReport}
+        icon={<Download size={18} className={tc.textPrimary} />}
+        closeLabel={t.close}
+        overlayClassName="z-[86]"
+        className={`${tc.cardBg} weekly-report-print-root`}
+        size="max-w-2xl"
+        headerClassName={`border-b ${tc.borderLight} ${tc.badgeBg} weekly-report-print-hide ${tc.textHeading}`}
+        closeButtonClassName={`${tc.textMuted} hover:text-red-500 weekly-report-print-hide`}
+        bodyClassName="p-5 space-y-4"
+        footerClassName={`border-t ${tc.borderLight} ${tc.appBg} weekly-report-print-hide`}
+        footer={(
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => window.print()}
+              className={`${tc.btnPrimary} flex-1 min-w-[140px] py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all inline-flex items-center justify-center gap-2`}
+            >
+              <Download size={16} /> {t.printReport}
+            </button>
+            <button
+              onClick={closeWeeklyReportModal}
+              className={`${tc.btnCancel} flex-1 min-w-[140px] py-3 rounded-xl font-bold active:scale-95 transition-all inline-flex items-center justify-center gap-2`}
+            >
+              <X size={16} /> {t.close}
+            </button>
+          </div>
+        )}
+      >
         <style>{`
           @media print {
             body * {
@@ -4323,18 +4331,6 @@ export default function App() {
             }
           }
         `}</style>
-        <div className={`${tc.cardBg} weekly-report-print-root w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`} onClick={(e) => e.stopPropagation()}>
-          <div className={`p-4 border-b ${tc.borderLight} flex justify-between items-center ${tc.badgeBg} weekly-report-print-hide`}>
-            <h3 className={`font-black ${tc.textHeading} flex items-center gap-2 min-w-0`}>
-              <Download size={18} className={tc.textPrimary} />
-              <span className="truncate">{t.weeklyReport}</span>
-            </h3>
-            <button onClick={closeWeeklyReportModal} className={`p-1 ${tc.textMuted} hover:text-red-500 rounded-lg transition-colors`}>
-              <X size={20} />
-            </button>
-          </div>
-
-          <div className="p-5 overflow-y-auto space-y-4">
             <section className={`${tc.badgeBg} rounded-2xl p-4 space-y-3`}>
               <div className={`text-[11px] font-black uppercase ${tc.textMuted}`}>Blaze Skate Training</div>
               <div className={`text-2xl font-black ${tc.textHeading}`}>{t.weeklyTrainingReport}</div>
@@ -4396,26 +4392,11 @@ export default function App() {
                 <div className={`text-xs font-bold ${tc.textMuted}`}>{t.noWeeklyPlan}</div>
               ) : (
                 <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className="bg-white/70 rounded-xl p-3">
-                    <div className={`text-lg font-black ${tc.textHeading}`}>{adherenceSummary.totalPlanTasks}</div>
-                    <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.planTasksLabel}</div>
-                  </div>
-                  <div className="bg-white/70 rounded-xl p-3">
-                    <div className={`text-lg font-black ${tc.textHeading}`}>{adherenceSummary.completedPlanTasks}</div>
-                    <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.completedPlanTasksLabel}</div>
-                  </div>
-                  <div className="bg-white/70 rounded-xl p-3">
-                    <div className={`text-lg font-black ${tc.textHeading}`}>{adherenceSummary.addedToTodayTasks}</div>
-                    <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.addedToToday}</div>
-                  </div>
-                  <div className="bg-white/70 rounded-xl p-3">
-                    <div className={`text-lg font-black ${tc.textHeading}`}>{adherenceSummary.dailyTasksCompleted}</div>
-                    <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.dailyTasksCompleted}</div>
-                  </div>
-                  <div className="col-span-2 bg-white/70 rounded-xl p-3">
-                    <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.adherence}</div>
-                    <div className={`text-2xl font-black ${tc.textHeading} mt-1`}>{adherenceSummary.adherencePercent}%</div>
-                  </div>
+                  <StatCard label={t.planTasksLabel} value={adherenceSummary.totalPlanTasks} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+                  <StatCard label={t.completedPlanTasksLabel} value={adherenceSummary.completedPlanTasks} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+                  <StatCard label={t.addedToToday} value={adherenceSummary.addedToTodayTasks} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+                  <StatCard label={t.dailyTasksCompleted} value={adherenceSummary.dailyTasksCompleted} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+                  <StatCard label={t.adherence} value={`${adherenceSummary.adherencePercent}%`} className="col-span-2 text-center" labelClassName={tc.textMuted} valueClassName={`text-2xl ${tc.textHeading}`} />
                 </div>
               )}
             </section>
@@ -4423,18 +4404,9 @@ export default function App() {
             <section className={`${tc.badgeBg} rounded-2xl p-4 space-y-3`}>
               <div className={`text-xs font-black uppercase ${tc.textMuted}`}>{t.dailyExecutionSummary}</div>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="bg-white/70 rounded-xl p-3">
-                  <div className={`text-lg font-black ${tc.textHeading}`}>{dailyExecutionSummary.totalDailyTasks}</div>
-                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.dailyTasksLabel}</div>
-                </div>
-                <div className="bg-white/70 rounded-xl p-3">
-                  <div className={`text-lg font-black ${tc.textHeading}`}>{dailyExecutionSummary.completedDailyTasks}</div>
-                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.completedLabel}</div>
-                </div>
-                <div className="bg-white/70 rounded-xl p-3">
-                  <div className={`text-lg font-black ${tc.textHeading}`}>{dailyExecutionSummary.completionPercent}%</div>
-                  <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.progress}</div>
-                </div>
+                <StatCard label={t.dailyTasksLabel} value={dailyExecutionSummary.totalDailyTasks} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+                <StatCard label={t.completedLabel} value={dailyExecutionSummary.completedDailyTasks} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+                <StatCard label={t.progress} value={`${dailyExecutionSummary.completionPercent}%`} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
               </div>
               <div className={`text-xs font-bold ${tc.textMuted}`}>{t.dailyTasksCurrentNote}</div>
             </section>
@@ -4534,24 +4506,7 @@ export default function App() {
             <section className="pt-1">
               <div className={`text-xs font-bold ${tc.textMuted}`}>{t.generatedByBlaze}</div>
             </section>
-          </div>
-
-          <div className={`p-4 border-t ${tc.borderLight} ${tc.appBg} flex flex-wrap gap-2 weekly-report-print-hide`}>
-            <button
-              onClick={() => window.print()}
-              className={`${tc.btnPrimary} flex-1 min-w-[140px] py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all inline-flex items-center justify-center gap-2`}
-            >
-              <Download size={16} /> {t.printReport}
-            </button>
-            <button
-              onClick={closeWeeklyReportModal}
-              className={`${tc.btnCancel} flex-1 min-w-[140px] py-3 rounded-xl font-bold active:scale-95 transition-all inline-flex items-center justify-center gap-2`}
-            >
-              <X size={16} /> {t.close}
-            </button>
-          </div>
-        </div>
-      </div>
+      </ModalShell>
     );
   };
 
@@ -4664,50 +4619,56 @@ export default function App() {
 
     return (
       <div className="space-y-6 pb-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className={`text-2xl font-black ${tc.textHeading}`}>{t.plansTitle}</h2>
-            <p className={`text-sm ${tc.textMuted} mt-1`}>{t.plansSubtitle}</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 shrink-0">
-            <button
-              onClick={openTemplatePlanModal}
-              className={`${tc.btnCancel} px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all`}
-            >
-              <CalendarDays size={18} /> {t.createPlanFromTemplate}
-            </button>
-            <button
-              onClick={openCreatePlanModal}
-              className={`${tc.btnPrimary} px-4 py-3 rounded-xl shadow-md font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all`}
-            >
-              <Plus size={18} /> {t.createPlan}
-            </button>
-          </div>
-        </div>
-
-        {currentPlans.length === 0 ? (
-          <div className="space-y-5">
-            <div className={`${tc.cardBg} p-8 rounded-2xl shadow-sm border ${tc.borderLight} text-center space-y-4`}>
-              <div className={`w-16 h-16 mx-auto rounded-2xl ${tc.badgeBg} flex items-center justify-center ${tc.textPrimary}`}>
-                <CalendarDays size={30} />
-              </div>
-              <div>
-                <h3 className={`font-black ${tc.textHeading}`}>{t.plansTitle}</h3>
-                <p className={`text-sm ${tc.textMuted} mt-1 leading-relaxed`}>{t.noPlans}</p>
-              </div>
-              <button
-                onClick={openCreatePlanModal}
-                className={`${tc.btnPrimary} px-5 py-3 rounded-xl shadow-md font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
-              >
-                <Plus size={18} /> {t.createPlan}
-              </button>
+        <SectionHeader
+          title={t.plansTitle}
+          description={t.plansSubtitle}
+          titleClassName={tc.textHeading}
+          descriptionClassName={tc.textMuted}
+          action={(
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 shrink-0">
               <button
                 onClick={openTemplatePlanModal}
-                className={`${tc.btnCancel} px-5 py-3 rounded-xl font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
+                className={`${tc.btnCancel} px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all`}
               >
                 <CalendarDays size={18} /> {t.createPlanFromTemplate}
               </button>
+              <button
+                onClick={openCreatePlanModal}
+                className={`${tc.btnPrimary} px-4 py-3 rounded-xl shadow-md font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all`}
+              >
+                <Plus size={18} /> {t.createPlan}
+              </button>
             </div>
+          )}
+        />
+
+        {currentPlans.length === 0 ? (
+          <div className="space-y-5">
+            <EmptyState
+              icon={<CalendarDays size={30} />}
+              title={t.plansTitle}
+              description={t.noPlans}
+              className={`${tc.cardBg} p-8 rounded-2xl shadow-sm border ${tc.borderLight}`}
+              iconClassName={`${tc.badgeBg} ${tc.textPrimary}`}
+              titleClassName={tc.textHeading}
+              descriptionClassName={tc.textMuted}
+              action={(
+                <div className="flex flex-col items-center gap-3">
+                  <button
+                    onClick={openCreatePlanModal}
+                    className={`${tc.btnPrimary} px-5 py-3 rounded-xl shadow-md font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
+                  >
+                    <Plus size={18} /> {t.createPlan}
+                  </button>
+                  <button
+                    onClick={openTemplatePlanModal}
+                    className={`${tc.btnCancel} px-5 py-3 rounded-xl font-bold text-sm inline-flex items-center gap-2 active:scale-95 transition-all`}
+                  >
+                    <CalendarDays size={18} /> {t.createPlanFromTemplate}
+                  </button>
+                </div>
+              )}
+            />
 
             <div className={`${tc.cardBg} border ${tc.borderLight} rounded-2xl p-4 shadow-sm space-y-3`}>
               <button
@@ -4926,18 +4887,9 @@ export default function App() {
                     <div className={`text-xs font-bold ${tc.textMuted}`}>{t.noPlanTasksThisWeek}</div>
                   ) : (
                     <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                        <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.totalPlanTasks}</div>
-                        <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.planTasksLabel}</div>
-                      </div>
-                      <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                        <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.completedPlanTasks}</div>
-                        <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.completedPlanTasksLabel}</div>
-                      </div>
-                      <div className={`${tc.badgeBg} rounded-xl p-2`}>
-                        <div className={`text-lg font-black ${tc.textHeading}`}>{weeklyAdherenceSummary.planCompletionPercent}%</div>
-                        <div className={`text-[10px] font-bold ${tc.textMuted}`}>{t.adherence}</div>
-                      </div>
+                      <StatCard label={t.planTasksLabel} value={weeklyAdherenceSummary.totalPlanTasks} className={`${tc.badgeBg} text-center`} labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+                      <StatCard label={t.completedPlanTasksLabel} value={weeklyAdherenceSummary.completedPlanTasks} className={`${tc.badgeBg} text-center`} labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+                      <StatCard label={t.adherence} value={`${weeklyAdherenceSummary.planCompletionPercent}%`} className={`${tc.badgeBg} text-center`} labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
                     </div>
                   )}
                 </div>
@@ -4953,9 +4905,13 @@ export default function App() {
                 </div>
 
                 {sortedDays.length === 0 ? (
-                  <div className={`${tc.cardBg} border ${tc.borderLight} rounded-2xl p-6 text-center`}>
-                    <p className={`text-sm font-bold ${tc.textMuted}`}>{t.noPlanTasksInPlan}</p>
-                  </div>
+                  <EmptyState
+                    title={t.planTasksTitle}
+                    description={t.noPlanTasksInPlan}
+                    className={`${tc.cardBg} border ${tc.borderLight} rounded-2xl p-6`}
+                    titleClassName={tc.textHeading}
+                    descriptionClassName={`${tc.textMuted} font-bold`}
+                  />
                 ) : (
                   <div className="space-y-4">
                     {sortedDays.map(day => (
