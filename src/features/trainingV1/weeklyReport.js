@@ -10,25 +10,19 @@ import {
   getTodayExecutionSummary,
   getWeeklyPlanAdherenceSummary,
 } from './dashboardMetrics.js';
-
-const toDateString = (date) => (
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-);
-
-const addDays = (dateString, daysToAdd) => {
-  const [year, month, day] = String(dateString || '').split('-').map(Number);
-  if (!year || !month || !day) return '';
-  const date = new Date(year, month - 1, day + daysToAdd);
-  return toDateString(date);
-};
+import {
+  addDaysToDateString,
+  getTodayDateString,
+  toDateString,
+} from './utils/dateUtils.js';
 
 export const getWeeklyTrainingReportData = (data = {}, weekStartDateString) => {
   const safeWeekStartDate = typeof weekStartDateString === 'string' && weekStartDateString
     ? weekStartDateString
-    : toDateString(new Date());
-  const weekEndDate = addDays(safeWeekStartDate, 6);
+    : getTodayDateString();
+  const weekEndDate = addDaysToDateString(safeWeekStartDate, 6);
   const adherenceSummary = getWeeklyPlanAdherenceSummary(data, safeWeekStartDate);
-  const dailyExecutionSummary = getTodayExecutionSummary(data, toDateString(new Date()));
+  const dailyExecutionSummary = getTodayExecutionSummary(data, getTodayDateString());
   const goalsSummary = getGoalsSummary(data);
   const topGoals = goalsSummary.activeGoals.slice(0, 3);
 

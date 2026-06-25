@@ -8,23 +8,16 @@ import {
   getActiveTrainingPlan,
   getPlanTasksByDate,
   getPlanTasksForWeek,
-  normalizeTaskText,
 } from './plans.js';
-
-const toDateString = (date) => (
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-);
-
-const addDays = (dateString, daysToAdd) => {
-  const [year, month, day] = dateString.split('-').map(Number);
-  const date = new Date(year, month - 1, day + daysToAdd);
-  return toDateString(date);
-};
-
-export const getWeekDateRange = (startDateString) => ({
-  startDate: startDateString,
-  endDate: addDays(startDateString, 6),
-});
+import {
+  addDaysToDateString,
+  getWeekDateRange,
+  isDateStringInRange,
+} from './utils/dateUtils.js';
+import {
+  getTaskMatchKey,
+  normalizeTaskText,
+} from './utils/taskMatchUtils.js';
 
 const summarizeTasks = (tasks = []) => {
   const totalTasks = tasks.length;
@@ -78,15 +71,8 @@ export const getAllPlanTasksWithDates = (plan) => (
 
 export const getPlanTasksForDateRange = (plan, startDateString, endDateString) => (
   getAllPlanTasksWithDates(plan).filter(({ date, task }) => (
-    typeof date === 'string'
-      && date >= startDateString
-      && date <= endDateString
-      && task
+    isDateStringInRange(date, startDateString, endDateString) && task
   ))
-);
-
-const getTaskMatchKey = (task) => (
-  `${normalizeTaskText(task?.text)}::${normalizeTaskText(task?.target)}`
 );
 
 export const getDailyTasksMatchedToPlanTasks = (dailyTasks = [], plan) => {
@@ -132,7 +118,7 @@ export const getWeeklyPlanSummary = (data = {}, weekStartDateString) => {
   return {
     plan: activePlan,
     weekStartDate: weekStartDateString,
-    weekEndDate: addDays(weekStartDateString, 6),
+    weekEndDate: addDaysToDateString(weekStartDateString, 6),
     tasks,
     ...summarizeTasks(tasks),
   };
@@ -151,7 +137,7 @@ export const getWeeklyPlanAdherenceSummary = (data = {}, weekStartDateString, pl
   const uniqueAddedPlanTaskKeys = new Set(
     getDailyTasksMatchedToPlanTasks(dailyTasks, plan)
       .flatMap(({ matches }) => matches)
-      .filter(({ date }) => date >= startDate && date <= endDate)
+      .filter(({ date }) => isDateStringInRange(date, startDate, endDate))
       .map(({ task, date }) => `${date}::${getTaskMatchKey(task)}`)
   );
 
@@ -226,13 +212,13 @@ export const getSimplePlanStreak = (data = {}, todayString) => {
   const activePlan = getDashboardTrainingPlan(data);
   if (!activePlan) return 0;
 
-  const yesterdayString = addDays(todayString, -1);
+  const yesterdayString = addDaysToDateString(todayString, -1);
   let dateString = isPlanDateComplete(activePlan, todayString) ? todayString : yesterdayString;
   let streak = 0;
 
   while (isPlanDateComplete(activePlan, dateString)) {
     streak += 1;
-    dateString = addDays(dateString, -1);
+    dateString = addDaysToDateString(dateString, -1);
   }
 
   return streak;
@@ -240,13 +226,16 @@ export const getSimplePlanStreak = (data = {}, todayString) => {
 
 export const getPlanConsistencySummary = (data = {}, weekStartDateString) => {
   const activePlan = getDashboardTrainingPlan(data);
-  const weekDates = Array.from({ length: 7 }, (_, index) => addDays(weekStartDateString, index));
+  const weekDates = Array.from(
+    { length: 7 },
+    (_, index) => addDaysToDateString(weekStartDateString, index),
+  );
 
   if (!activePlan) {
     return {
       plan: null,
       weekStartDate: weekStartDateString,
-      weekEndDate: addDays(weekStartDateString, 6),
+      weekEndDate: addDaysToDateString(weekStartDateString, 6),
       daysWithCompletedTasks: 0,
       completedTasks: 0,
     };
@@ -264,7 +253,7 @@ export const getPlanConsistencySummary = (data = {}, weekStartDateString) => {
   }, {
     plan: activePlan,
     weekStartDate: weekStartDateString,
-    weekEndDate: addDays(weekStartDateString, 6),
+    weekEndDate: addDaysToDateString(weekStartDateString, 6),
     daysWithCompletedTasks: 0,
     completedTasks: 0,
   });

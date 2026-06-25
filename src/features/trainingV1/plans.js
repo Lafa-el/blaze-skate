@@ -1,3 +1,11 @@
+import {
+  addDaysToDateString,
+} from './utils/dateUtils.js';
+import {
+  doTasksMatchByTextAndTarget,
+  normalizeTaskText,
+} from './utils/taskMatchUtils.js';
+
 const PLAN_STATUSES = ['draft', 'active', 'completed', 'archived'];
 const TASK_CATEGORIES = [
   'ice',
@@ -33,16 +41,6 @@ const normalizeNullableNumber = (value) => (
 );
 
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
-
-const toDateString = (date) => (
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-);
-
-const addDays = (dateString, daysToAdd) => {
-  const [year, month, day] = dateString.split('-').map(Number);
-  const date = new Date(year, month - 1, day + daysToAdd);
-  return toDateString(date);
-};
 
 const getPlanTasks = (plan) => (
   (plan?.days || []).flatMap((day) => day?.tasks || [])
@@ -154,7 +152,10 @@ export const getPlanTasksByDate = (plan, dateString) => {
 };
 
 export const getPlanTasksForWeek = (plan, weekStartDateString) => {
-  const weekDates = new Set(Array.from({ length: 7 }, (_, index) => addDays(weekStartDateString, index)));
+  const weekDates = new Set(Array.from(
+    { length: 7 },
+    (_, index) => addDaysToDateString(weekStartDateString, index),
+  ));
 
   return (plan?.days || [])
     .filter((day) => weekDates.has(day?.date))
@@ -173,20 +174,9 @@ export const getWeeklyPlanCompletion = (plan) => {
   };
 };
 
-export const normalizeTaskText = (value) => (
-  String(value ?? '').trim().toLowerCase()
-);
-
 export const isPlanTaskAddedToToday = (planTask, dailyTasks = []) => {
-  const planTaskText = normalizeTaskText(planTask?.text);
-  const planTaskTarget = normalizeTaskText(planTask?.target);
-
-  if (!planTaskText) return false;
-
-  return dailyTasks.some((dailyTask) => (
-    normalizeTaskText(dailyTask?.text) === planTaskText
-      && normalizeTaskText(dailyTask?.target) === planTaskTarget
-  ));
+  if (!normalizeTaskText(planTask?.text)) return false;
+  return dailyTasks.some((dailyTask) => doTasksMatchByTextAndTarget(planTask, dailyTask));
 };
 
 export const getPlanTaskTodayStatus = (planTask, dailyTasks = []) => (

@@ -106,6 +106,10 @@ import {
   shouldSeedTrainingV1Plan,
 } from './features/trainingV1/trainingV1Defaults.js';
 import { getWeeklyTrainingReportData } from './features/trainingV1/weeklyReport.js';
+import {
+  addDaysToDateString,
+  getWeekStartDateString,
+} from './features/trainingV1/utils/dateUtils.js';
 
 initializeFirestorePersistence();
 
@@ -1238,18 +1242,6 @@ const formatDisplayTime = (totalSeconds) => {
 };
 // ==========================================
 
-const getPrevDayStr = (dateStr) => {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const date = new Date(y, m - 1, d - 1);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-};
-
-const getWeekStartDateString = (date) => {
-  const startOfWeek = new Date(date);
-  startOfWeek.setDate(date.getDate() - date.getDay());
-  return `${startOfWeek.getFullYear()}-${String(startOfWeek.getMonth() + 1).padStart(2, '0')}-${String(startOfWeek.getDate()).padStart(2, '0')}`;
-};
-
 const getRecordsKey = (dist) => {
   if (dist === '500m') return 'records';
   if (dist === '777m') return 'records777';
@@ -2030,7 +2022,7 @@ export default function App() {
     if (days.length === 0) return 0;
     
     const todayStr = currentDateStr;
-    const yesterdayStr = getPrevDayStr(todayStr);
+    const yesterdayStr = addDaysToDateString(todayStr, -1);
 
     if (!days.includes(todayStr) && !days.includes(yesterdayStr)) return 0;
 
@@ -2039,7 +2031,7 @@ export default function App() {
 
     while (days.includes(currentCheckStr)) {
       streak++;
-      currentCheckStr = getPrevDayStr(currentCheckStr);
+      currentCheckStr = addDaysToDateString(currentCheckStr, -1);
     }
     return streak;
   })();
