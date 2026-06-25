@@ -110,6 +110,12 @@ import {
   addDaysToDateString,
   getWeekStartDateString,
 } from './features/trainingV1/utils/dateUtils.js';
+import {
+  formatGoalSeconds,
+  formatSignedGoalSeconds,
+  formatTrendSummaryText,
+} from './features/trainingV1/utils/formatUtils.js';
+import { getRecordCollectionKeyForDistance } from './features/trainingV1/utils/recordUtils.js';
 
 initializeFirestorePersistence();
 
@@ -1242,16 +1248,6 @@ const formatDisplayTime = (totalSeconds) => {
 };
 // ==========================================
 
-const getRecordsKey = (dist) => {
-  if (dist === '500m') return 'records';
-  if (dist === '777m') return 'records777';
-  if (dist === '1000m') return 'records1000';
-  if (dist === '1500m') return 'records1500';
-  if (dist === '起跑' || dist === 'Start') return 'recordsStart';
-  if (dist === '单圈' || dist === 'Lap') return 'recordsLap';
-  return `records_${dist}`;
-};
-
 const createClientId = () => {
   return Date.now() + Math.random();
 };
@@ -1289,27 +1285,6 @@ const parseOptionalGoalSeconds = (value) => {
     isValid: Number.isFinite(parsed) && parsed >= 0,
     value: parsed,
   };
-};
-
-const formatGoalSeconds = (value) => (
-  typeof value === 'number' && Number.isFinite(value)
-    ? `${Number(value.toFixed(3))}s`
-    : '--'
-);
-
-const formatSignedGoalSeconds = (value) => (
-  typeof value === 'number' && Number.isFinite(value)
-    ? `${value > 0 ? '+' : ''}${Number(value.toFixed(3))}s`
-    : '--'
-);
-
-const formatTrendSummaryText = (trendSummary, t) => {
-  if (trendSummary?.achieved) return t.targetAchieved;
-  if (!trendSummary?.hasHistory) return t.noPbHistoryYet;
-  if (typeof trendSummary.improvementSeconds === 'number' && trendSummary.improvementSeconds > 0) {
-    return t.improvedBy.replace('{value}', Number(trendSummary.improvementSeconds.toFixed(3)));
-  }
-  return `${t.latestGap} ${formatSignedGoalSeconds(trendSummary.latestGapSeconds)}`;
 };
 
 const PLAN_TASK_CATEGORIES = ['ice', 'dryland', 'strength', 'running', 'mobility', 'recovery', 'video', 'mental', 'competition', 'other'];
@@ -2378,7 +2353,7 @@ export default function App() {
       let dateStr = newRecordDate || `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, '0')}-${String(currentTime.getDate()).padStart(2, '0')}`;
       const newRecord = { date: dateStr, time: time };
       
-      const key = getRecordsKey(selectedDistance);
+      const key = getRecordCollectionKeyForDistance(selectedDistance);
       const updatedRecords = [...(data[key] || []), newRecord];
       
       // 🚀 修正：录入成绩不再赠送积分
@@ -2554,7 +2529,7 @@ export default function App() {
 
     // 🏆 抓取所有设置项目中的 PB (个人最好成绩)
     const pbCards = currentDistNames.map(dist => {
-      const records = data[getRecordsKey(dist)] || [];
+      const records = data[getRecordCollectionKeyForDistance(dist)] || [];
       let bestRecord = null;
       if (records.length > 0) {
         // 核心逻辑：遍历该项目所有成绩，提取时间最小（最快）的那一次
@@ -3387,7 +3362,7 @@ export default function App() {
 
   const StatsView = () => {
     const getRecords = () => {
-      const key = getRecordsKey(selectedDistance);
+      const key = getRecordCollectionKeyForDistance(selectedDistance);
       return data[key] || [];
     };
 
@@ -3501,7 +3476,7 @@ export default function App() {
   const RecordManagementModal = () => {
     if (!showRecordModal) return null;
 
-    const key = getRecordsKey(selectedDistance);
+    const key = getRecordCollectionKeyForDistance(selectedDistance);
     const rawRecords = data[key] || [];
 
     // 🚀 核心修复 2：管理列表严格按照时间戳【倒序】排列（新 -> 老），方便查看和删除最新录入
@@ -3573,7 +3548,7 @@ export default function App() {
                         onClick={() => {
                           const confirmMsg = data.language === 'en' ? 'Delete this record?' : '确定要删除这条成绩吗？';
                           if (window.confirm(confirmMsg)) {
-                            const key = getRecordsKey(selectedDistance);
+                            const key = getRecordCollectionKeyForDistance(selectedDistance);
                             // 用时间戳和分数精准定位删除项，防止误删同分数据
                             const updatedRecords = rawRecords.filter(item => 
                               item.time !== r.time || item.date !== r.date
@@ -6268,8 +6243,6 @@ export default function App() {
           if (!selectedGoalDetail) return;
           archiveGoal(selectedGoalDetail);
         }}
-        formatGoalSeconds={formatGoalSeconds}
-        formatSignedGoalSeconds={formatSignedGoalSeconds}
       /> {/* V1.3 Step 1：挂载目标详情弹窗 */}
       <WeeklyReportModal
         isOpen={showWeeklyReportModal}
@@ -6279,8 +6252,6 @@ export default function App() {
         tc={tc}
         onClose={closeWeeklyReportModal}
         onPrint={() => window.print()}
-        formatGoalSeconds={formatGoalSeconds}
-        formatSignedGoalSeconds={formatSignedGoalSeconds}
       /> {/* V1.4 Step 1：挂载本周报告弹窗 */}
       {PlanManagementModal()} {/* V1 Step 3：挂载训练计划表单 */}
       {TemplatePlanManagementModal()} {/* V1.1 Step 4：挂载训练计划模板表单 */}

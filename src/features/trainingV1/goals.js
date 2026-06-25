@@ -1,3 +1,10 @@
+import {
+  getBestRecordForDistance as getBestRecordForDistanceFromUtils,
+  getRecordCollectionKeyForDistance,
+  getValidTimedRecordsForDistance,
+  normalizeRecordDistance,
+} from './utils/recordUtils.js';
+
 const GOAL_PRIORITIES = ['A', 'B', 'C'];
 const GOAL_STATUSES = ['active', 'completed', 'archived'];
 const PRIORITY_ORDER = { A: 0, B: 1, C: 2 };
@@ -19,37 +26,8 @@ const normalizeNullableNumber = (value) => (
 
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 
-export const normalizeGoalDistance = (value) => {
-  const raw = String(value ?? '').trim();
-  if (!raw) return '';
-
-  const compactLower = raw.replace(/\s+/g, '').toLowerCase();
-  if (compactLower === 'start' || raw === '起跑') return 'Start';
-  if (compactLower === 'lap' || raw === '单圈') return 'Lap';
-
-  const knownDistanceMatch = raw.match(/(^|[^0-9])(500|777|1000|1500)\s*m?([^0-9]|$)/i);
-  if (knownDistanceMatch) return `${knownDistanceMatch[2]}m`;
-
-  return raw.replace(/\s+/g, ' ');
-};
-
-export const getRecordsKeyForDistance = (distance) => {
-  const normalizedDistance = normalizeGoalDistance(distance);
-  if (normalizedDistance === '500m') return 'records';
-  if (normalizedDistance === '777m') return 'records777';
-  if (normalizedDistance === '1000m') return 'records1000';
-  if (normalizedDistance === '1500m') return 'records1500';
-  if (normalizedDistance === 'Start') return 'recordsStart';
-  if (normalizedDistance === 'Lap') return 'recordsLap';
-  return normalizedDistance ? `records_${normalizedDistance}` : null;
-};
-
-const getRecordKeysForDistance = (distance) => {
-  const raw = String(distance ?? '').trim();
-  const normalizedKey = getRecordsKeyForDistance(raw);
-  const rawKey = raw ? `records_${raw}` : null;
-  return [...new Set([normalizedKey, rawKey].filter(Boolean))];
-};
+export const normalizeGoalDistance = normalizeRecordDistance;
+export const getRecordsKeyForDistance = getRecordCollectionKeyForDistance;
 
 const getGoalDistanceCandidates = (goal) => (
   [goal?.targetDistance, goal?.eventName]
@@ -57,55 +35,13 @@ const getGoalDistanceCandidates = (goal) => (
     .filter(Boolean)
 );
 
-const toTimestamp = (dateString) => {
-  if (typeof dateString !== 'string' || !dateString.trim()) return null;
-  const timestamp = new Date(dateString.replace(/-/g, '/')).getTime();
-  return Number.isFinite(timestamp) ? timestamp : null;
-};
-
-export const getBestRecordForDistance = (data = {}, distance) => {
-  const recordsWithKeys = getRecordKeysForDistance(distance)
-    .flatMap((recordsKey) => (
-      Array.isArray(data[recordsKey])
-        ? data[recordsKey].map(record => ({ record, recordsKey }))
-        : []
-    ));
-
-  const bestRecordWithKey = recordsWithKeys.reduce((best, current) => {
-    const time = normalizeNullableNumber(current.record?.time);
-    if (time === null) return best;
-    if (!best || time < best.timeSeconds) {
-      return {
-        source: 'records',
-        timeSeconds: time,
-        date: typeof current.record?.date === 'string' ? current.record.date : null,
-        record: current.record,
-        recordsKey: current.recordsKey,
-      };
-    }
-    return best;
-  }, null);
-
-  return bestRecordWithKey;
-};
+export const getBestRecordForDistance = (data = {}, distance) => (
+  getBestRecordForDistanceFromUtils(data, distance)
+);
 
 export const getRecordHistoryForDistance = (data = {}, distance) => {
-  const recordsWithKeys = getRecordKeysForDistance(distance)
-    .flatMap((recordsKey) => (
-      Array.isArray(data[recordsKey])
-        ? data[recordsKey].map(record => ({ record, recordsKey }))
-        : []
-    ))
-    .map(({ record, recordsKey }) => ({
-      date: typeof record?.date === 'string' ? record.date : null,
-      timeSeconds: normalizeNullableNumber(record?.time),
-      timestamp: toTimestamp(record?.date),
-      recordsKey,
-    }))
-    .filter(record => record.date && record.timeSeconds !== null && record.timestamp !== null)
-    .sort((a, b) => {
-      return a.timestamp - b.timestamp;
-    });
+  const recordsWithKeys = getValidTimedRecordsForDistance(data, distance)
+    .sort((a, b) => a.timestamp - b.timestamp);
 
   return recordsWithKeys.map((record) => ({
     date: record.date,

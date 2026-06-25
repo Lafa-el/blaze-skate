@@ -1,6 +1,12 @@
 import { Download, X } from 'lucide-react';
 
 import { ModalShell, StatCard } from '../../components/shared';
+import {
+  formatDateLabel,
+  formatGoalSeconds,
+  formatPercent,
+  formatSignedGoalSeconds,
+} from '../trainingV1/utils/formatUtils.js';
 
 export default function WeeklyReportModal({
   isOpen,
@@ -10,8 +16,6 @@ export default function WeeklyReportModal({
   tc,
   onClose,
   onPrint,
-  formatGoalSeconds,
-  formatSignedGoalSeconds,
 }) {
   if (!isOpen || !reportData) return null;
 
@@ -87,12 +91,12 @@ export default function WeeklyReportModal({
           <div className="bg-white/70 rounded-xl p-3">
             <div className={tc.textMuted}>{t.startDate}</div>
             <div className={`${tc.textHeading} mt-1`}>
-              {(reportData.weekRange.startDate || '').replace(/-/g, '/')} - {(reportData.weekRange.endDate || '').replace(/-/g, '/')}
+              {formatDateLabel(reportData.weekRange.startDate)} - {formatDateLabel(reportData.weekRange.endDate)}
             </div>
           </div>
           <div className="bg-white/70 rounded-xl p-3">
             <div className={tc.textMuted}>{t.generatedDate}</div>
-            <div className={`${tc.textHeading} mt-1`}>{(reportData.generatedDate || '').replace(/-/g, '/')}</div>
+            <div className={`${tc.textHeading} mt-1`}>{formatDateLabel(reportData.generatedDate)}</div>
           </div>
           <div className="bg-white/70 rounded-xl p-3 col-span-2">
             <div className={tc.textMuted}>{t.athleteLabel}</div>
@@ -117,11 +121,11 @@ export default function WeeklyReportModal({
             </div>
             <div className="bg-white/70 rounded-xl p-3">
               <div className={tc.textMuted}>{t.startDate}</div>
-              <div className={`${tc.textHeading} mt-1`}>{(planSummary.startDate || '').replace(/-/g, '/')} </div>
+              <div className={`${tc.textHeading} mt-1`}>{formatDateLabel(planSummary.startDate)} </div>
             </div>
             <div className="bg-white/70 rounded-xl p-3">
               <div className={tc.textMuted}>{t.endDate}</div>
-              <div className={`${tc.textHeading} mt-1`}>{(planSummary.endDate || '').replace(/-/g, '/')} </div>
+              <div className={`${tc.textHeading} mt-1`}>{formatDateLabel(planSummary.endDate)} </div>
             </div>
             <div className="bg-white/70 rounded-xl p-3">
               <div className={tc.textMuted}>{t.status}</div>
@@ -145,7 +149,7 @@ export default function WeeklyReportModal({
             <StatCard label={t.completedPlanTasksLabel} value={adherenceSummary.completedPlanTasks} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
             <StatCard label={t.addedToToday} value={adherenceSummary.addedToTodayTasks} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
             <StatCard label={t.dailyTasksCompleted} value={adherenceSummary.dailyTasksCompleted} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
-            <StatCard label={t.adherence} value={`${adherenceSummary.adherencePercent}%`} className="col-span-2 text-center" labelClassName={tc.textMuted} valueClassName={`text-2xl ${tc.textHeading}`} />
+            <StatCard label={t.adherence} value={formatPercent(adherenceSummary.adherencePercent)} className="col-span-2 text-center" labelClassName={tc.textMuted} valueClassName={`text-2xl ${tc.textHeading}`} />
           </div>
         )}
       </section>
@@ -155,7 +159,7 @@ export default function WeeklyReportModal({
         <div className="grid grid-cols-3 gap-2 text-center">
           <StatCard label={t.dailyTasksLabel} value={dailyExecutionSummary.totalDailyTasks} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
           <StatCard label={t.completedLabel} value={dailyExecutionSummary.completedDailyTasks} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
-          <StatCard label={t.progress} value={`${dailyExecutionSummary.completionPercent}%`} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
+          <StatCard label={t.progress} value={dailyExecutionSummary.completionLabel || formatPercent(dailyExecutionSummary.completionPercent)} className="text-center" labelClassName={tc.textMuted} valueClassName={tc.textHeading} />
         </div>
         <div className={`text-xs font-bold ${tc.textMuted}`}>{t.dailyTasksCurrentNote}</div>
       </section>
@@ -201,7 +205,7 @@ export default function WeeklyReportModal({
                     </div>
                     <div className="bg-white rounded-lg p-2">
                       <div className={tc.textMuted}>{t.progress}</div>
-                      <div className={`${tc.textHeading} mt-0.5`}>{goal.progressPercent === null ? '--' : `${goal.progressPercent}%`}</div>
+                      <div className={`${tc.textHeading} mt-0.5`}>{formatPercent(goal.progressPercent)}</div>
                     </div>
                   </div>
                 </div>
@@ -241,7 +245,7 @@ export default function WeeklyReportModal({
                     <div className="bg-white rounded-lg p-2">
                       <div className={tc.textMuted}>{t.latestRecord}</div>
                       <div className={`${tc.textHeading} mt-0.5`}>
-                        {goal.trendSummary.latestRecordDate ? goal.trendSummary.latestRecordDate.replace(/-/g, '/') : '--'}
+                        {formatDateLabel(goal.trendSummary.latestRecordDate)}
                       </div>
                     </div>
                   </div>

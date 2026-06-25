@@ -8,6 +8,12 @@ import {
   getGoalTargetGapHistory,
   getGoalTrendSummary,
 } from '../trainingV1/goals.js';
+import {
+  formatDateLabel,
+  formatGoalSeconds,
+  formatPercent,
+  formatSignedGoalSeconds,
+} from '../trainingV1/utils/formatUtils.js';
 
 export default function GoalDetailModal({
   isOpen,
@@ -18,8 +24,6 @@ export default function GoalDetailModal({
   onClose,
   onEditGoal,
   onArchiveGoal,
-  formatGoalSeconds,
-  formatSignedGoalSeconds,
 }) {
   if (!isOpen || !goal) return null;
 
@@ -95,7 +99,7 @@ export default function GoalDetailModal({
           </div>
           <div className="bg-white/70 rounded-xl p-3">
             <div className={tc.textMuted}>{t.competitionDate}</div>
-            <div className={`${tc.textHeading} mt-1`}>{(goal.competitionDate || '').replace(/-/g, '/') || '--'}</div>
+            <div className={`${tc.textHeading} mt-1`}>{formatDateLabel(goal.competitionDate)}</div>
           </div>
           <div className="bg-white/70 rounded-xl p-3">
             <div className={tc.textMuted}>{t.eventName}</div>
@@ -129,7 +133,7 @@ export default function GoalDetailModal({
             <div className={tc.textMuted}>{performanceSourceLabel}</div>
             <div className={`${tc.textHeading} mt-1`}>{formatGoalSeconds(currentPerformance.timeSeconds)}</div>
             {currentPerformance.source === 'records' && currentPerformance.date && (
-              <div className={`${tc.textMuted} mt-1`}>{t.pbDate}: {currentPerformance.date.replace(/-/g, '/')}</div>
+              <div className={`${tc.textMuted} mt-1`}>{t.pbDate}: {formatDateLabel(currentPerformance.date)}</div>
             )}
           </div>
           <div className="bg-white/70 rounded-xl p-3">
@@ -138,7 +142,7 @@ export default function GoalDetailModal({
           </div>
           <div className="bg-white/70 rounded-xl p-3">
             <div className={tc.textMuted}>{t.progress}</div>
-            <div className={`${tc.textHeading} mt-1`}>{progress === null ? '--' : `${progress}%`}</div>
+            <div className={`${tc.textHeading} mt-1`}>{formatPercent(progress)}</div>
           </div>
           <div className="bg-white/70 rounded-xl p-3">
             <div className={tc.textMuted}>{t.status}</div>
@@ -191,11 +195,11 @@ export default function GoalDetailModal({
             </div>
             <div className="bg-white/70 rounded-xl p-3">
               <div className={tc.textMuted}>{t.latestRecord}</div>
-              <div className={`${tc.textHeading} mt-1`}>{trendSummary.latestRecordDate ? trendSummary.latestRecordDate.replace(/-/g, '/') : '--'}</div>
+              <div className={`${tc.textHeading} mt-1`}>{formatDateLabel(trendSummary.latestRecordDate)}</div>
             </div>
             <div className="bg-white/70 rounded-xl p-3">
               <div className={tc.textMuted}>{t.bestRecordDate}</div>
-              <div className={`${tc.textHeading} mt-1`}>{trendSummary.bestRecordDate ? trendSummary.bestRecordDate.replace(/-/g, '/') : '--'}</div>
+              <div className={`${tc.textHeading} mt-1`}>{formatDateLabel(trendSummary.bestRecordDate)}</div>
             </div>
           </div>
         )}
@@ -209,7 +213,7 @@ export default function GoalDetailModal({
           <div className="space-y-2">
             {recentHistory.map((record) => (
               <div key={`${goal.id}_${record.date}_${record.timeSeconds}`} className="grid grid-cols-[1.2fr_1fr_1fr] gap-2 bg-white/70 rounded-xl p-3 text-[11px] font-bold items-center">
-                <div className={tc.textMuted}>{record.date.replace(/-/g, '/')}</div>
+                <div className={tc.textMuted}>{formatDateLabel(record.date)}</div>
                 <div className={tc.textHeading}>{formatGoalSeconds(record.timeSeconds)}</div>
                 <div className="flex items-center justify-end gap-2">
                   <span className={record.achieved ? 'text-green-600' : tc.textHeading}>{formatSignedGoalSeconds(record.gapSeconds)}</span>

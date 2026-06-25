@@ -15,6 +15,7 @@ import {
   getTodayDateString,
   toDateString,
 } from './utils/dateUtils.js';
+import { formatPercent } from './utils/formatUtils.js';
 
 export const getWeeklyTrainingReportData = (data = {}, weekStartDateString) => {
   const safeWeekStartDate = typeof weekStartDateString === 'string' && weekStartDateString
@@ -51,6 +52,11 @@ export const getWeeklyTrainingReportData = (data = {}, weekStartDateString) => {
       completionPercent: dailyExecutionSummary.totalDailyTasks === 0
         ? 0
         : Math.round((dailyExecutionSummary.completedDailyTasks / dailyExecutionSummary.totalDailyTasks) * 100),
+      completionLabel: formatPercent(
+        dailyExecutionSummary.totalDailyTasks === 0
+          ? 0
+          : Math.round((dailyExecutionSummary.completedDailyTasks / dailyExecutionSummary.totalDailyTasks) * 100),
+      ),
     },
     goalSummaries: topGoals.map((goal) => {
       const currentPerformance = getGoalCurrentPerformance(goal, data);
