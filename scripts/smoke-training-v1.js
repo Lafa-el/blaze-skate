@@ -30,7 +30,19 @@ import {
   getGoalTargetGapHistory,
   getGoalTrendSummary,
 } from '../src/features/trainingV1/goals.js';
+import {
+  createTrainingPlanFromTemplate,
+  getTrainingPlanTemplates,
+} from '../src/features/trainingV1/planTemplates.js';
 import { getWeeklyPlanAdherenceSummary } from '../src/features/trainingV1/dashboardMetrics.js';
+import {
+  createDefaultLindsayGoals,
+  createDefaultLindsayWeeklyPlan,
+  createMissingDefaultLindsayGoals,
+  getMissingDefaultLindsayGoalInputs,
+  shouldSeedTrainingV1Goals,
+  shouldSeedTrainingV1Plan,
+} from '../src/features/trainingV1/trainingV1Defaults.js';
 import { getWeeklyTrainingReportData } from '../src/features/trainingV1/weeklyReport.js';
 
 const results = [];
@@ -231,6 +243,123 @@ assertEqual(report.goalSummaries.length, 1, 'weekly report returns goal summarie
 const emptyReport = getWeeklyTrainingReportData({ tasks: [], trainingPlansV1: [], competitionGoalsV1: [] }, '2026-06-21');
 assertEqual(emptyReport.goalSummaries.length, 0, 'weekly report handles no goals safely');
 assertEqual(emptyReport.planSummary.id, null, 'weekly report handles no plan safely');
+
+section('plan templates');
+const templates = getTrainingPlanTemplates();
+assert(Array.isArray(templates) && templates.length > 0, 'getTrainingPlanTemplates returns a non-empty array');
+assert(templates.some((template) => template.id === 'regular_week'), 'getTrainingPlanTemplates includes regular_week');
+assert(templates.some((template) => template.id === 'summer_camp_week'), 'getTrainingPlanTemplates includes summer_camp_week');
+const firstTemplate = templates.find((template) => template.id === 'regular_week');
+assert(Boolean(firstTemplate?.title?.en), 'template includes localized title shape');
+const clonedTemplates = getTrainingPlanTemplates();
+clonedTemplates[0].title.en = 'Mutated Title';
+assertEqual(getTrainingPlanTemplates()[0].title.en !== 'Mutated Title', true, 'getTrainingPlanTemplates returns cloned data');
+
+const templateOptions = {
+  titleOverride: 'Custom Sprint Week',
+  goalId: 'goal_link_1',
+  status: 'active',
+  language: 'zh',
+};
+const templateOptionsSnapshot = JSON.stringify(templateOptions);
+const templatedPlan = createTrainingPlanFromTemplate('regular_week', '2026-07-01', templateOptions);
+assert(typeof templatedPlan.id === 'string' && templatedPlan.id.length > 0, 'createTrainingPlanFromTemplate creates plan id');
+assertEqual(templatedPlan.title, 'Custom Sprint Week', 'createTrainingPlanFromTemplate respects title override');
+assertEqual(templatedPlan.status, 'active', 'createTrainingPlanFromTemplate preserves explicit status');
+assertEqual(templatedPlan.goalId, 'goal_link_1', 'createTrainingPlanFromTemplate preserves linked goal id');
+assertEqual(templatedPlan.startDate, '2026-07-01', 'createTrainingPlanFromTemplate preserves startDate');
+assertEqual(templatedPlan.endDate, '2026-07-07', 'createTrainingPlanFromTemplate generates 7-day endDate');
+assertEqual(Array.isArray(templatedPlan.days), true, 'createTrainingPlanFromTemplate returns days array');
+assertEqual(templatedPlan.days.length, 7, 'createTrainingPlanFromTemplate creates 7 days');
+assertDeepEqual(
+  templatedPlan.days.map((day) => day.date),
+  ['2026-07-01', '2026-07-02', '2026-07-03', '2026-07-04', '2026-07-05', '2026-07-06', '2026-07-07'],
+  'createTrainingPlanFromTemplate generates consecutive day dates',
+);
+assert(
+  templatedPlan.days.every((day) => Array.isArray(day.tasks) && day.tasks.length >= 1),
+  'createTrainingPlanFromTemplate keeps day task arrays populated',
+);
+assert(
+  templatedPlan.days.flatMap((day) => day.tasks).every((task) => (
+    typeof task.id === 'string'
+    && Object.prototype.hasOwnProperty.call(task, 'text')
+    && Object.prototype.hasOwnProperty.call(task, 'target')
+    && Object.prototype.hasOwnProperty.call(task, 'desc')
+    && Object.prototype.hasOwnProperty.call(task, 'category')
+    && Object.prototype.hasOwnProperty.call(task, 'durationMinutes')
+    && Object.prototype.hasOwnProperty.call(task, 'intensity')
+    && Object.prototype.hasOwnProperty.call(task, 'completed')
+    && Object.prototype.hasOwnProperty.call(task, 'completedAt')
+    && task.source === 'trainingPlanV1'
+  )),
+  'createTrainingPlanFromTemplate creates UI-ready plan task shape',
+);
+assertEqual(JSON.stringify(templateOptions), templateOptionsSnapshot, 'createTrainingPlanFromTemplate does not mutate options');
+const localizedPlan = createTrainingPlanFromTemplate('regular_week', '2026-07-01', { language: 'zh' });
+assertEqual(localizedPlan.title, '常规训练周', 'createTrainingPlanFromTemplate uses localized title when no override is provided');
+
+section('training V1 defaults');
+const defaultGoals = createDefaultLindsayGoals();
+assertEqual(defaultGoals.length, 3, 'createDefaultLindsayGoals returns expected core goal count');
+assert(defaultGoals.every((defaultGoal) => defaultGoal.status === 'active'), 'createDefaultLindsayGoals returns active default goals');
+assert(defaultGoals.some((defaultGoal) => defaultGoal.title === 'AGN 2027 500m'), 'createDefaultLindsayGoals includes 500m default goal');
+const defaultPlan = createDefaultLindsayWeeklyPlan('2026-08-03');
+assertEqual(defaultPlan.title, 'Lindsay Weekly Training Plan', 'createDefaultLindsayWeeklyPlan uses stable default title');
+assertEqual(defaultPlan.startDate, '2026-08-03', 'createDefaultLindsayWeeklyPlan preserves start date');
+assertEqual(defaultPlan.endDate, '2026-08-09', 'createDefaultLindsayWeeklyPlan generates 7-day end date');
+assertEqual(defaultPlan.status, 'draft', 'createDefaultLindsayWeeklyPlan keeps draft status');
+assertEqual(defaultPlan.days.length, 7, 'createDefaultLindsayWeeklyPlan creates 7 days');
+assert(defaultPlan.days.every((day) => Array.isArray(day.tasks) && day.tasks.length >= 1), 'createDefaultLindsayWeeklyPlan populates weekly tasks');
+
+const emptyV1Data = {
+  competitionGoalsV1: [],
+  trainingPlansV1: [],
+  activeTrainingPlanId: null,
+};
+assertEqual(shouldSeedTrainingV1Goals(emptyV1Data), true, 'shouldSeedTrainingV1Goals is true for empty V1 data');
+assertEqual(shouldSeedTrainingV1Plan(emptyV1Data, '2026-08-03'), true, 'shouldSeedTrainingV1Plan is true when weekly default plan is missing');
+assertEqual(getMissingDefaultLindsayGoalInputs(emptyV1Data).length, 3, 'getMissingDefaultLindsayGoalInputs returns all defaults for empty V1 data');
+assertEqual(createMissingDefaultLindsayGoals(emptyV1Data).length, 3, 'createMissingDefaultLindsayGoals creates all missing defaults for empty V1 data');
+
+const seededV1Data = {
+  competitionGoalsV1: createMissingDefaultLindsayGoals(emptyV1Data),
+  trainingPlansV1: [createDefaultLindsayWeeklyPlan('2026-08-03')],
+  activeTrainingPlanId: null,
+};
+assertEqual(shouldSeedTrainingV1Goals(seededV1Data), false, 'shouldSeedTrainingV1Goals is false after defaults are present');
+assertEqual(shouldSeedTrainingV1Plan(seededV1Data, '2026-08-03'), false, 'shouldSeedTrainingV1Plan is false after weekly default plan exists');
+assertEqual(getMissingDefaultLindsayGoalInputs(seededV1Data).length, 0, 'getMissingDefaultLindsayGoalInputs is empty after defaults are present');
+assertEqual(createMissingDefaultLindsayGoals(seededV1Data).length, 0, 'createMissingDefaultLindsayGoals is idempotent once defaults exist');
+
+const customGoal = {
+  id: 'user_goal_1',
+  title: 'Custom User Goal',
+  competitionName: 'Club Meet',
+  competitionDate: '2026-11-01',
+  eventName: '1500m',
+  targetDistance: '1500m',
+  status: 'active',
+};
+const customPlan = {
+  id: 'user_plan_1',
+  title: 'Custom Athlete Plan',
+  startDate: '2026-08-10',
+  endDate: '2026-08-16',
+  status: 'active',
+  days: [],
+};
+const mixedV1Data = {
+  competitionGoalsV1: [customGoal, defaultGoals[0]],
+  trainingPlansV1: [customPlan],
+  activeTrainingPlanId: 'user_plan_1',
+};
+const mixedMissingInputs = getMissingDefaultLindsayGoalInputs(mixedV1Data);
+assertEqual(mixedMissingInputs.length, 2, 'existing matching default goals are not duplicated while other defaults remain missing');
+assertEqual(mixedV1Data.competitionGoalsV1[0].title, 'Custom User Goal', 'existing user-created goals are preserved');
+assertEqual(mixedV1Data.trainingPlansV1[0].title, 'Custom Athlete Plan', 'existing user-created plans are preserved');
+assertEqual(shouldSeedTrainingV1Plan(mixedV1Data, '2026-08-03'), true, 'weekly default plan is still considered missing when only custom plans exist');
+assertEqual(mixedV1Data.activeTrainingPlanId, 'user_plan_1', 'activeTrainingPlanId semantics remain untouched by default helpers');
 
 const failed = results.filter((result) => !result.ok);
 console.log(`\nSummary: ${results.length - failed.length}/${results.length} checks passed`);
