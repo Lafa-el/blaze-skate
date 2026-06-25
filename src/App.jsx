@@ -57,7 +57,9 @@ import {
   SectionHeader,
   StatCard,
 } from './components/shared';
+import GoalCard from './features/goals/GoalCard';
 import GoalDetailModal from './features/goals/GoalDetailModal';
+import PlanCard from './features/plans/PlanCard';
 import WeeklyReportModal from './features/weeklyReport/WeeklyReportModal';
 import {
   archiveCompetitionGoal,
@@ -112,7 +114,6 @@ import {
 } from './features/trainingV1/utils/dateUtils.js';
 import {
   formatGoalSeconds,
-  formatSignedGoalSeconds,
   formatTrendSummaryText,
 } from './features/trainingV1/utils/formatUtils.js';
 import { getRecordCollectionKeyForDistance } from './features/trainingV1/utils/recordUtils.js';
@@ -3713,101 +3714,6 @@ export default function App() {
     const activeGoals = sortGoalsByPriorityAndDate(getActiveCompetitionGoals(goals));
     const archivedGoals = sortGoalsByPriorityAndDate(goals.filter(goal => goal?.status === 'archived'));
 
-    const GoalCard = ({ goal, isArchived = false }) => {
-      const currentPerformance = getGoalCurrentPerformance(goal, data);
-      const progress = getGoalProgressWithPB(goal, data);
-      const gap = getGoalGapWithPB(goal, data);
-      const achieved = progress === 100;
-      const performanceSourceLabel = currentPerformance.source === 'records'
-        ? t.recordSourcePB
-        : currentPerformance.source === 'goal'
-          ? t.manualCurrent
-          : '--';
-
-      return (
-        <div className={`${tc.cardBg} rounded-2xl shadow-sm border ${tc.borderLight} p-5 space-y-4 ${isArchived ? 'opacity-70' : ''}`}>
-          <div className="flex justify-between gap-3 items-start">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${goal.priority === 'A' ? 'bg-red-50 text-red-600 border border-red-100' : goal.priority === 'B' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
-                  {t.priority} {goal.priority}
-                </span>
-                <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${achieved ? 'bg-green-50 text-green-600 border border-green-100' : tc.badgeBg + ' ' + tc.textPrimary}`}>
-                  {achieved ? t.achieved : goal.status}
-                </span>
-              </div>
-              <h2 className={`text-lg font-black ${tc.textHeading} leading-tight truncate`}>{goal.title}</h2>
-              <p className={`text-xs ${tc.textMuted} font-bold mt-1 truncate`}>
-                {goal.competitionName || '--'} · {(goal.competitionDate || '').replace(/-/g, '/') || '--'}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className={`${tc.badgeBg} bg-opacity-40 rounded-xl p-3`}>
-              <div className={`text-[10px] font-black uppercase ${tc.textMuted}`}>{t.eventName}</div>
-              <div className={`text-sm font-black ${tc.textHeading} mt-1 truncate`}>{goal.eventName || '--'}</div>
-            </div>
-            <div className={`${tc.badgeBg} bg-opacity-40 rounded-xl p-3`}>
-              <div className={`text-[10px] font-black uppercase ${tc.textMuted}`}>{t.targetDistance}</div>
-              <div className={`text-sm font-black ${tc.textHeading} mt-1 truncate`}>{goal.targetDistance || '--'}</div>
-            </div>
-            <div className="bg-gray-50/70 rounded-xl p-3 border border-gray-100">
-              <div className="text-[10px] font-black uppercase text-gray-400">{performanceSourceLabel}</div>
-              <div className={`text-sm font-black ${tc.textHeading} mt-1`}>{formatGoalSeconds(currentPerformance.timeSeconds)}</div>
-              {currentPerformance.source === 'records' && currentPerformance.date && (
-                <div className="text-[10px] font-black text-gray-400 mt-1">
-                  {t.pbDate}: {currentPerformance.date.replace(/-/g, '/')}
-                </div>
-              )}
-            </div>
-            <div className="bg-gray-50/70 rounded-xl p-3 border border-gray-100">
-              <div className="text-[10px] font-black uppercase text-gray-400">{t.targetTimeSeconds}</div>
-              <div className={`text-sm font-black ${tc.textHeading} mt-1`}>{formatGoalSeconds(goal.targetTimeSeconds)}</div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className={`${achieved ? 'bg-green-50 text-green-700 border-green-100' : 'bg-yellow-50 text-yellow-700 border-yellow-100'} rounded-xl p-3 border`}>
-              <div className="text-[10px] font-black uppercase opacity-70">{t.gap}</div>
-              <div className="text-lg font-black mt-0.5">
-                {formatSignedGoalSeconds(gap)}
-              </div>
-            </div>
-            <div className={`${tc.badgeBg} rounded-xl p-3`}>
-              <div className={`text-[10px] font-black uppercase ${tc.textMuted}`}>{t.progress}</div>
-              <div className={`text-lg font-black ${tc.textPrimary} mt-0.5`}>{progress === null ? '--' : `${progress}%`}</div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => openGoalDetailModal(goal)}
-              className={`${tc.btnCancel} px-3 py-2 rounded-xl text-xs font-black inline-flex items-center gap-2 active:scale-95 transition-all`}
-            >
-              <Info size={14} /> {t.viewDetails}
-            </button>
-            {!isArchived && (
-              <>
-                <button
-                  onClick={() => openEditGoalModal(goal)}
-                  className={`${tc.badgeBg} ${tc.textPrimary} px-3 py-2 rounded-xl text-xs font-black inline-flex items-center gap-2 active:scale-95 transition-all`}
-                >
-                  <Edit2 size={14} /> {t.editGoal}
-                </button>
-                <button
-                  onClick={() => archiveGoal(goal)}
-                  className="bg-red-50 text-red-500 border border-red-100 px-3 py-2 rounded-xl text-xs font-black inline-flex items-center gap-2 active:scale-95 transition-all"
-                >
-                  <Archive size={14} /> {t.archiveGoal}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      );
-    };
-
     return (
       <div className="space-y-6 pb-4">
         <SectionHeader
@@ -3845,7 +3751,18 @@ export default function App() {
           />
         ) : (
           <div className="space-y-4">
-            {activeGoals.map(goal => <GoalCard key={goal.id} goal={goal} />)}
+            {activeGoals.map((goal) => (
+              <GoalCard
+                key={goal.id}
+                goal={goal}
+                data={data}
+                t={t}
+                tc={tc}
+                onViewDetails={() => openGoalDetailModal(goal)}
+                onEdit={() => openEditGoalModal(goal)}
+                onArchive={() => archiveGoal(goal)}
+              />
+            ))}
           </div>
         )}
 
@@ -3862,7 +3779,17 @@ export default function App() {
             </button>
             {showArchivedGoals && (
               <div className="space-y-3">
-                {archivedGoals.map(goal => <GoalCard key={goal.id} goal={goal} isArchived />)}
+                {archivedGoals.map((goal) => (
+                  <GoalCard
+                    key={goal.id}
+                    goal={goal}
+                    data={data}
+                    t={t}
+                    tc={tc}
+                    isArchived
+                    onViewDetails={() => openGoalDetailModal(goal)}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -4251,36 +4178,16 @@ export default function App() {
                   const isRecentlyRestored = recentlyRestoredPlanId === plan.id;
 
                   return (
-                    <div key={plan.id} className={`${tc.badgeBg} rounded-xl p-3 flex items-center justify-between gap-3`}>
-                      <div className="min-w-0">
-                        <div className={`text-sm font-black ${tc.textHeading} truncate`}>{plan.title}</div>
-                        <div className={`text-[10px] font-bold ${tc.textMuted} mt-1 flex flex-wrap gap-2`}>
-                          <span>{plan.status}</span>
-                          <span>{(plan.startDate || '').replace(/-/g, '/')}</span>
-                          {plan.focus && <span className="truncate">{plan.focus}</span>}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {isRecentlyRestored && (
-                          <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-green-50 text-green-600 border border-green-100">
-                            {t.restored}
-                          </span>
-                        )}
-                        {isActivePlan && !isRecentlyRestored && (
-                          <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${tc.badgeBg} ${tc.textPrimary}`}>
-                            {t.activePlan}
-                          </span>
-                        )}
-                        {!isSelected && (
-                          <button
-                            onClick={() => selectTrainingPlan(plan.id)}
-                            className={`${tc.btnCancel} px-3 py-2 rounded-lg text-[11px] font-black active:scale-95 transition-all`}
-                          >
-                            {t.viewPlan}
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                    <PlanCard
+                      key={plan.id}
+                      plan={plan}
+                      t={t}
+                      tc={tc}
+                      isActive={isActivePlan}
+                      isSelected={isSelected}
+                      isRecentlyRestored={isRecentlyRestored}
+                      onSelect={!isSelected ? () => selectTrainingPlan(plan.id) : undefined}
+                    />
                   );
                 })}
               </div>
@@ -4304,22 +4211,14 @@ export default function App() {
               ) : showArchivedPlans ? (
                 <div className="space-y-2">
                   {archivedPlans.map((plan) => (
-                    <div key={plan.id} className="bg-gray-50/80 border border-gray-200 rounded-xl p-3 flex items-center justify-between gap-3 opacity-75">
-                      <div className="min-w-0">
-                        <div className="text-sm font-black text-gray-700 truncate">{plan.title}</div>
-                        <div className="text-[10px] font-bold text-gray-500 mt-1 flex flex-wrap gap-2">
-                          <span>{plan.status}</span>
-                          <span>{(plan.startDate || '').replace(/-/g, '/')}</span>
-                          {plan.focus && <span className="truncate">{plan.focus}</span>}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => restoreArchivedPlan(plan)}
-                        className={`${tc.btnCancel} px-3 py-2 rounded-lg text-[11px] font-black active:scale-95 transition-all shrink-0`}
-                      >
-                        {t.restorePlan}
-                      </button>
-                    </div>
+                    <PlanCard
+                      key={plan.id}
+                      plan={plan}
+                      t={t}
+                      tc={tc}
+                      isArchived
+                      onRestore={() => restoreArchivedPlan(plan)}
+                    />
                   ))}
                 </div>
               ) : null}
