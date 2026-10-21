@@ -5846,9 +5846,22 @@ export default function App() {
     );
   };
 
+  const ArchiveBanner = () => (
+    <div className="fixed top-0 inset-x-0 z-[80] border-b border-amber-300 bg-amber-50">
+      <div className="mx-auto flex max-w-md items-start gap-3 px-3 py-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-bold leading-snug text-amber-950">训练数据已迁移至 SkatingX 新平台，本站为只读存档。</p>
+          <p className="mt-0.5 text-[10px] leading-snug text-amber-800">Training data has moved to the new SkatingX platform. This site is now a read-only archive.</p>
+        </div>
+        <a href="https://app.skatingx.com" className="mt-0.5 shrink-0 rounded-full bg-amber-700 px-3 py-2 text-[12px] font-bold text-white">前往新平台</a>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className={`min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans max-w-md mx-auto shadow-2xl relative overflow-hidden`}>
+        <ArchiveBanner />
         <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-blue-50/80 to-transparent z-0"></div>
         <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-orange-200/40 rounded-full blur-3xl z-0"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-purple-200/40 rounded-full blur-3xl z-0"></div>
@@ -5887,13 +5900,14 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen ${tc.appBg} ${tc.appText} font-sans max-w-md mx-auto shadow-2xl relative pb-24 transition-colors duration-300`}>
+    <div className={`min-h-screen ${tc.appBg} ${tc.appText} font-sans max-w-md mx-auto shadow-2xl relative pb-24 pt-28 transition-colors duration-300`}>
+      <ArchiveBanner />
       <style dangerouslySetInnerHTML={{__html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
       
-      <header className={`flex justify-between items-center px-5 py-3 sticky top-0 ${tc.headerBg} backdrop-blur-md z-40 border-b ${tc.borderLight} shadow-sm transition-colors duration-300`}>
+      <header className={`flex justify-between items-center px-5 py-3 sticky top-28 ${tc.headerBg} backdrop-blur-md z-40 border-b ${tc.borderLight} shadow-sm transition-colors duration-300`}>
         <div className="flex items-center gap-2.5">
           <div className="h-10 w-10 min-w-[40px] rounded-xl shadow-md border border-cyan-100/60 bg-gradient-to-br from-cyan-50 via-blue-100 to-blue-300 flex items-center justify-center relative overflow-hidden group shrink-0">
              <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/80 to-transparent"></div>

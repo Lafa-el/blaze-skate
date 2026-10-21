@@ -1,0 +1,12 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /artifacts/blaze-skate-production/users/{userId}/profile/main {
+      allow get: if request.auth != null && request.auth.uid == userId;
+      allow list, write: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
